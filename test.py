@@ -6,7 +6,7 @@
 #import copy
 
 
-import _C_mixextend
+from pymix import _C_mixextend
 import numpy
 
 a = numpy.array([1,2,3,4])
@@ -35,7 +35,7 @@ print r
 #
 #for i in range(10):
 #    dist = d.sample()
-#    print dist.phi   
+#    print dist.phi
 
 
 
@@ -364,7 +364,7 @@ rep = 6
 #pi = [0.4, 0.6]
 #gen = mixture.MixtureModel(2,pi,[n1,n2])
 #
-#random.seed(3586662)        
+#random.seed(3586662)
 #data = gen.sampleDataSet(10)
 #
 #print data.internalData
@@ -479,21 +479,21 @@ rep = 6
 #
 #
 #
-## building data likelihood factor matrix for the current group structure      
+## building data likelihood factor matrix for the current group structure
 #l = numarray.zeros( (model.dist_nr, model.G, data.N),dtype='Float64' )
 #for j in range(model.dist_nr):
 #    for lead_j in model.leaders[j]:
-#        l_row = model.components[lead_j][j].pdf(data.getInternalFeature(j) )  
+#        l_row = model.components[lead_j][j].pdf(data.getInternalFeature(j) )
 #        l[j,lead_j,:] = l_row
 #        for v in model.groups[j][lead_j]:
 #            l[j,v,:] = l_row
 #
 ## g is the matrix of log posterior probabilities of the components given the data
-#g = numarray.sum(l) 
+#g = numarray.sum(l)
 #for k in range(model.G):
 #    g[k,:] += numarray.log(model.pi[k])
 #
-#sum_logs = numarray.zeros(data.N,dtype='Float64')    
+#sum_logs = numarray.zeros(data.N,dtype='Float64')
 #g_norm = numarray.zeros((model.G, data.N),dtype='Float64')
 #for n in range(data.N):
 #    sum_logs[n] = mixture.sumlogs(g[:,n])
@@ -507,7 +507,7 @@ rep = 6
 #    print tt.tolist()
 #print
 #
-#lk = sum(sum_logs) 
+#lk = sum(sum_logs)
 #
 #print '\nlk = ',lk
 #
@@ -525,11 +525,11 @@ rep = 6
 #
 #data_j = data.getInternalFeature(0)
 #candidate_dist = copy.copy(model.components[0][0])
-#model.prior.compPrior[j].mapMStep(candidate_dist, tau_pool, data_j,  pi_pool)  
+#model.prior.compPrior[j].mapMStep(candidate_dist, tau_pool, data_j,  pi_pool)
 #
 #print '  ->',candidate_dist
 #
-#l_row = candidate_dist.pdf(data_j)   
+#l_row = candidate_dist.pdf(data_j)
 #
 #print 'l_row =',l_row
 #
@@ -543,7 +543,7 @@ rep = 6
 #    print tt.tolist()
 #print
 #
-#sum_logs = numarray.zeros(data.N,dtype='Float64')    
+#sum_logs = numarray.zeros(data.N,dtype='Float64')
 #for n in range(data.N):
 #    sum_logs[n] = mixture.sumlogs(g_1[:,n])
 #lk_1 = sum(sum_logs)
@@ -557,13 +557,13 @@ rep = 6
 #
 #
 #old_part_g = g[0:2,:]
-#old_sum_logs = numarray.zeros(data.N,dtype='Float64')    
+#old_sum_logs = numarray.zeros(data.N,dtype='Float64')
 #for n in range(data.N):
 #    old_sum_logs[n] = mixture.sumlogs(old_part_g[:,n])
 #old_lk_term = sum(old_sum_logs)
 #
 #new_part_g = g_1[0:2,:]
-#new_sum_logs = numarray.zeros(data.N,dtype='Float64')    
+#new_sum_logs = numarray.zeros(data.N,dtype='Float64')
 #for n in range(data.N):
 #    new_sum_logs[n] = mixture.sumlogs(new_part_g[:,n])
 #new_lk_term = sum(new_sum_logs)
@@ -575,7 +575,7 @@ rep = 6
 #lk_test2 = 0.0
 #for j in range(data.N):
 #    l_ij = numarray.exp( g[:,j] )
-#    #print   l_ij 
+#    #print   l_ij
 #
 #    sum_l_ij = sum(l_ij)
 #    lk_test2 += numarray.log( sum_l_ij  )
@@ -623,7 +623,7 @@ rep = 6
 #
 #for d in pd:
 #    print d
-#    
+#
 
 
 #def my_log(arr):
@@ -631,10 +631,10 @@ rep = 6
 #    for i,x in enumerate(arr):
 #        if x == 0.0:
 #            res[i] = float('-inf')
-#        else:    
+#        else:
 #            res[i] = math.log(x)
 #
-#    return res        
+#    return res
 #
 #def getData(N,nr_0):
 #
@@ -662,11 +662,11 @@ rep = 6
 #
 #dat = getData(N,nr_0)
 #timing.start()
-#ind1 = numarray.where(dat == 0.0)[0]       
-#dat[ind1] = float('inf')  
-## computing log likelihood 
+#ind1 = numarray.where(dat == 0.0)[0]
+#dat[ind1] = float('inf')
+## computing log likelihood
 #res = numarray.log(dat)  # XXX use mylog function
-#res[ind1] = float('-inf')  
+#res[ind1] = float('-inf')
 #
 #timing.finish()
 #print "time", float(timing.micro()) / 1000000
@@ -676,19 +676,19 @@ rep = 6
 #timing.start()
 #print dat
 #
-#ind1 = numarray.where(dat == 0.0)[0]       
+#ind1 = numarray.where(dat == 0.0)[0]
 #print "ind1",ind1
-#ind2 = numarray.where(dat != 0.0)[0]       
+#ind2 = numarray.where(dat != 0.0)[0]
 ##dat[ind1] = float('inf')
 #print "ind2",ind2
-## computing log likelihood 
-#dat[ind2] = numarray.log(dat[ind2]) 
+## computing log likelihood
+#dat[ind2] = numarray.log(dat[ind2])
 #
 #print dat
 #
 ## replace inf values with -inf to complete calculations
 ##ind2 = numarray.where(dat == float('inf'))[0]
-#dat[ind1] = float('-inf')  
+#dat[ind1] = float('-inf')
 #
 #timing.finish()
 #print "time", float(timing.micro()) / 1000000
@@ -744,7 +744,7 @@ rep = 6
 #p_sum = 0
 #for k in range(curr_K+1):
 #    p_sum += weights[k]
-#    if r <= p_sum:               
+#    if r <= p_sum:
 #        break
 #print "        chosen comp",k
 
@@ -771,16 +771,16 @@ rep = 6
 #    grand = p.sampleG()
 #    pl[i] = grand
 #    ps += grand
-#    
+#
 #    inv_grand = 1.0 / grand
-#    inv_pl[i] = inv_grand 
-#    inv_ps += inv_grand 
+#    inv_pl[i] = inv_grand
+#    inv_ps += inv_grand
 #
 #
 #print "shape =", shape
 #print "scale =", scale,"\n"
 #
-#print "Gamma:"   
+#print "Gamma:"
 #print "mean = ",ps / nr, " -> theroetical: ", shape,"*", scale, "= ", shape * scale
 #print "var =", mixture.variance(pl)," -> theroetical:", shape,"*", scale**2   , "= ", shape*scale**2
 #
@@ -789,7 +789,7 @@ rep = 6
 #print "\ninv_shape =", inv_shape
 #print "inv_scale =", inv_scale
 #
-#print "\nInverse Gamma:"   
-#print "mean = ",inv_ps / nr," -> theroetical:", inv_scale,"/ (", inv_shape,"- 1) = ",inv_scale / (inv_shape-1)  
+#print "\nInverse Gamma:"
+#print "mean = ",inv_ps / nr," -> theroetical:", inv_scale,"/ (", inv_shape,"- 1) = ",inv_scale / (inv_shape-1)
 #print "var =", mixture.variance(inv_pl), " -> theroetical:", inv_scale,"**2 / ( (",inv_shape," - 1)**2 (",inv_shape,"- 2) ) = ", inv_scale**2 / ((inv_shape-1)**2 * (inv_shape-2))
 #
