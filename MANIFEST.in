@@ -1,0 +1,5 @@
+include examples/*.py
+include GPL.txt
+include examples/*.fa
+include testwrite.mix
+include C_mixextend.h
