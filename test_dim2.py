@@ -1,6 +1,5 @@
 from mixture import *
-from random import *
-import timing
+from util.times.timer import Timer
 
 pdList= []
 for j in range(3):
@@ -10,7 +9,7 @@ for j in range(3):
         f = lambda x: x / sum(par)
         par = map(f,par)
 
-    
+
         dList.append( MultinomialDistribution(6,6,par))
 
     pdList.append( ProductDistribution(dList))
@@ -33,7 +32,7 @@ for j in range(3):
         f = lambda x: x / sum(par2)
         par2 = map(f,par2)
 
-    
+
         dList2.append( MultinomialDistribution(6,6,par2))
 
     pdList2.append( ProductDistribution(dList2))
@@ -44,10 +43,7 @@ g = lambda x: x / sum(piList2)
 piList2 = map(g,piList2)
 
 mix2 = MixtureModel(3,piList2,pdList2)
-timing.start()
-mix2.EM(dat,40,0.1)
-timing.finish()
-print "time", float(timing.micro()) / 1000000
-#evaluate(pred, true)
+with Timer("time"):
+    mix2.EM(dat,40,0.1)
 
 

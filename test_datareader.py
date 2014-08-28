@@ -2,6 +2,8 @@ import random
 from mixture import *
 
 #d = DataSet(["test.txt","drd1.txt","pheno.txt"])
+from test_mixture import SNP
+
 d = DataSet(["test.txt","drd1.txt","pheno.txt"])
 print d
 
@@ -16,7 +18,7 @@ for i in range(25):
     p2.append(random.random())
     p3.append(random.random())
     p4.append(random.random())
-    
+
 g1 = lambda x: x/sum(p1)
 p1 = map(g1,p1)
 
