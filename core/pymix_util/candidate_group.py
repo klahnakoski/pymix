@@ -5,7 +5,7 @@ import numpy
 
 from core.pymix_util.errors import ConvergenceFailureEM, InvalidPosteriorDistribution
 from core.pymix_util.dataset import DataSet
-from core.pymix_util.maths import sumlogs
+from core.pymix_util.maths import sum_logs
 from core.pymix_util.stats import sym_kl_dist
 
 

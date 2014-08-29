@@ -20,8 +20,10 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 ################################################################################
+from pymix import _C_mixextend
 
 import numpy
+import scipy
 
 
 def get_normalized_posterior_matrix(data):
@@ -33,3 +35,18 @@ def get_normalized_posterior_matrix(data):
 def substract_matrix(a, b):
     result = numpy.subtract(a, b)
     return result
+
+def add_matrix(a, b):
+    result = numpy.add(a, b)
+    return result
+
+def wrap_gsl_dirichlet_sample(alpha, n):
+    result = scipy.random.dirichlet(alpha, n)
+    return result
+
+def set_gsl_rng_seed(seed):
+    _C_mixextend.set_gsl_rng_seed(seed)
+
+
+
+

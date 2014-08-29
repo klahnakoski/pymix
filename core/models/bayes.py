@@ -1,16 +1,16 @@
 import copy
-from pymix import _C_mixextend
 import random
-import numpy
 import sys
+import numpy
+
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.product import ProductDistribution
 from core.models.mixture import MixtureModel
-from core.pymix_util import setPartitions
+from core.pymix_util import setPartitions, mixextend, stats
 from core.pymix_util.candidate_group import CandidateGroup
 from core.pymix_util.dataset import DataSet
 from core.pymix_util.errors import InvalidPosteriorDistribution, ConvergenceFailureEM
-from core.pymix_util.maths import matrixSumlogs, sumlogs
+from core.pymix_util.maths import matrix_sum_logs, sum_logs
 from core.pymix_util.setPartitions import init_last, prev_partition
 from core.pymix_util.stats import sym_kl_dist
 
@@ -225,7 +225,7 @@ class BayesMixtureModel(MixtureModel):
         for k in range(self.G):
             g[k, :] += numpy.log(self.pi[k])
 
-        sum_logs = matrixSumlogs(g)
+        sum_logs = matrix_sum_logs(g)
 
         try:
             g_norm = g - sum_logs
@@ -283,7 +283,7 @@ class BayesMixtureModel(MixtureModel):
 
                 # if there was an exception we have to compute each
                 # entry in g_wo_j seperately to set -inf - -inf = -inf
-                g_wo_j = _C_mixextend.substract_matrix(g, l[j])
+                g_wo_j = mixextend.substract_matrix(g, l[j])
 
             # checking whether feature j is already fully merged
             nr_lead = len(self.leaders[j])
@@ -403,8 +403,8 @@ class BayesMixtureModel(MixtureModel):
                             l_j_1[v, :] = l_row
 
                         # get updated unnormalized posterior matrix
-                        _C_mixextend.add_matrix(g, g_wo_j, l_j_1)
-                        sum_logs = matrixSumlogs(g)
+                        g = mixextend.add_matrix(g_wo_j, l_j_1)
+                        sum_logs = matrix_sum_logs(g)
                         lk_1 = numpy.sum(sum_logs)
 
                         # computing posterior as model selection criterion
@@ -529,7 +529,7 @@ class BayesMixtureModel(MixtureModel):
         for k in range(self.G):
             g[k, :] += numpy.log(self.pi[k])
 
-        sum_logs = matrixSumlogs(g)
+        sum_logs = matrix_sum_logs(g)
         g_norm = g - sum_logs
         tau = numpy.exp(g_norm)
 
@@ -580,7 +580,7 @@ class BayesMixtureModel(MixtureModel):
             except FloatingPointError:
                 # if there was an exception we have to compute each
                 # entry in g_wo_j seperately to set -inf - -inf = -inf
-                g_wo_j = _C_mixextend.substract_matrix(g, l[j])
+                g_wo_j = mixextend.substract_matrix(g, l[j])
 
 
             # checking whether feature j is already fully merged
@@ -683,7 +683,7 @@ class BayesMixtureModel(MixtureModel):
 
                 # get updated unnormalized posterior matrix
                 g = g_wo_j + l_j_1
-                sum_logs = matrixSumlogs(g)
+                sum_logs = matrix_sum_logs(g)
                 lk_1 = numpy.sum(sum_logs)
 
                 # computing posterior as model selection criterion
@@ -785,7 +785,7 @@ class BayesMixtureModel(MixtureModel):
         for k in range(self.G):
             g[k, :] += numpy.log(self.pi[k])
 
-        sum_logs = matrixSumlogs(g)
+        sum_logs = matrix_sum_logs(g)
         g_norm = g - sum_logs
         tau = numpy.exp(g_norm)
 
@@ -827,7 +827,7 @@ class BayesMixtureModel(MixtureModel):
             except FloatingPointError:
                 # if there was an exception we have to compute each
                 # entry in g_wo_j seperately to set -inf - -inf = -inf
-                g_wo_j = _C_mixextend.substract_matrix(g, l[j])
+                g_wo_j = mixextend.substract_matrix(g, l[j])
 
             term = 0
 
@@ -866,7 +866,7 @@ class BayesMixtureModel(MixtureModel):
             M.dist_prior = cdist_prior
             L[tuple(range(self.G))] = M
 
-            sum_logs = matrixSumlogs(g_wo_j + l_row)
+            sum_logs = matrix_sum_logs(g_wo_j + l_row)
 
             temp = copy.copy(l_row)
             temp = temp.reshape(1, data.N)
@@ -1001,7 +1001,7 @@ class BayesMixtureModel(MixtureModel):
                         for v in groups_j[merge_cand1]:
                             l_j_1[v, :] = l_row
 
-                        sum_logs = matrixSumlogs(g)
+                        sum_logs = matrix_sum_logs(g)
                         lk_1 = numpy.sum(sum_logs)
 
                         # computing posterior as model selection criterion
@@ -1154,7 +1154,7 @@ class BayesMixtureModel(MixtureModel):
         sum_logs = numpy.zeros(data.N, dtype='Float64')
         g_norm = numpy.zeros((self.G, data.N), dtype='Float64')
         for n in range(data.N):
-            sum_logs[n] = sumlogs(g[:, n])
+            sum_logs[n] = stats.sum_logs(g[:, n])
             # normalizing log posterior
             g_norm[:, n] = g[:, n] - sum_logs[n]
 

@@ -3,7 +3,7 @@ import numpy
 from core.pymix_util.errors import InvalidPosteriorDistribution
 from core.pymix_util.constrained_dataset import ConstrainedDataSet
 from core.pymix_util.dataset import DataSet
-from core.pymix_util.maths import sumlogs
+from core.pymix_util.maths import sum_logs
 from core.models.mixture import MixtureModel
 
 
@@ -88,7 +88,7 @@ class LabeledMixtureModel(MixtureModel):
 
         log_col_sum = numpy.zeros(data.N, dtype='Float64')  # array of column sums of log_l
         for j in range(data.N):
-            log_col_sum[j] = sumlogs(log_l[:, j]) # sum over jth column of log_l
+            log_col_sum[j] = sum_logs(log_l[:, j]) # sum over jth column of log_l
             # if posterior is invalid, check for model validity
             if log_col_sum[j] == float('-inf'):
                 # if self is at the top of hierarchy, the model is unable to produce the

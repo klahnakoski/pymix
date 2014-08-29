@@ -3,6 +3,7 @@ from pymix import _C_mixextend
 import numpy
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.multinomial import MultinomialDistribution
+from core.pymix_util import mixextend
 from core.pymix_util.candidate_group import CandidateGroup
 from core.pymix_util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from core.priors.prior import PriorDistribution
@@ -51,7 +52,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
         """
         Samples from Dirichlet distribution
         """
-        phi = _C_mixextend.wrap_gsl_dirichlet_sample(self.alpha, self.M)
+        phi = mixextend.wrap_gsl_dirichlet_sample(self.alpha, self.M)
 
         d = DiscreteDistribution(self.M, phi)
         return d

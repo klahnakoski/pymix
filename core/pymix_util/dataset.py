@@ -254,7 +254,7 @@ class DataSet(object):
             self.row_headers = row_headers
 
         self.dataMatrix = List
-
+        return self
 
     def fromFiles(self, fileNames, sep="\t", missing="*", fileID=None, IDheader=False, IDindex=None, silent=0):
         """
@@ -492,7 +492,7 @@ class DataSet(object):
                 #ex.message += ' ( Sample '+str(self.sampleIDs[i])+', index = '+str(i)+' )'
                 print ' ( Sample ' + str(self.sampleIDs[i]) + ', index = ' + str(i) + ' )'
 
-                raise
+                raise ex
 
             templist.append(dat)
 

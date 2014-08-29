@@ -32,15 +32,19 @@
 """
 Mixtures of HMMs (requires the GHMM package)
 """
-from core import mixture
-import ghmm
-import numpy
 import copy
+import numpy
+
+import ghmm
+from .distributions.prob import ProbDistribution
+from .distributions.product import ProductDistribution
+from .pymix_util.constrained_dataset import ConstrainedDataSet
+from .pymix_util.errors import InvalidDistributionInput
 
 
-class SequenceDataSet(mixture.ConstrainedDataSet):
+class SequenceDataSet(ConstrainedDataSet):
     def __init__(self):
-        mixture.ConstrainedDataSet.__init__(self)
+        ConstrainedDataSet.__init__(self)
 
         # Sequence DataSets introduce a whole lot of tedious index book-keeping into the DataSet
         # since we cannot store the sequence objects
@@ -63,7 +67,7 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
             raise NotImplementedError, "No copying of complex DataSets yet."
 
 
-    def fromGHMM(self,List,sequences, IDs = None, col_header=None):
+    def fromGHMM(self, List, sequences, IDs=None, col_header=None):
         """
         Construct a complex DataSet. The non-sequence data is given as a Python list 'List', the
         sequence data as GHMM SequenceSet objects in the 'sequences' list. There has to be one
@@ -92,9 +96,9 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
             self.sampleIDs = IDs
 
         if not col_header:
-             l = range(self.p)
-             self.headers = []
-             for k in l:
+            l = range(self.p)
+            self.headers = []
+            for k in l:
                 self.headers.append(str(k))
         else:
             assert len(col_header) == self.p
@@ -110,7 +114,7 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
         #print self.dataMatrix
         #print self.complexData
 
-    def internalInit(self,m):
+    def internalInit(self, m):
         """
         Initializes the internal representation of the data
         used by the EM algorithm.
@@ -119,25 +123,25 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
 
 
         """
-        assert m.p == self.p,"Invalid dimensions in data and model."+str(m.p)+' '+str(self.p)
+        assert m.p == self.p, "Invalid dimensions in data and model." + str(m.p) + ' ' + str(self.p)
 
         if self.complex:
             # set complexFeature flags
             self.complexFeature = []
 
             if self.p == 1:
-                if isinstance(m.components[0], mixture.ProductDistribution):
+                if isinstance(m.components[0], ProductDistribution):
                     assert m.components[0].dist_nr == 1
-                    assert isinstance(m.components[0].distList[0],HMM)
+                    assert isinstance(m.components[0].distList[0], HMM)
                 else:
-                    assert isinstance(m.components[0],HMM)
+                    assert isinstance(m.components[0], HMM)
 
                 self.complexFeature = [1]
                 self.complexDataIndexMap[0] = 0
 
             else:
                 ind = 0
-                for i in range( m.components[0].dist_nr ):
+                for i in range(m.components[0].dist_nr):
 
 
                     if isinstance(m.components[0].distList[i], HMM):
@@ -147,11 +151,10 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
                     else:
                         self.complexFeature.append(0)
 
-
         templist = []
         for i in range(len(self.dataMatrix)):
 
-            [t,dat] = m.components[0].formatData(self.dataMatrix[i])
+            [t, dat] = m.components[0].formatData(self.dataMatrix[i])
 
             #print self.dataMatrix[i] ,"->",dat
 
@@ -173,19 +176,19 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
 
 
     def removeFeatures(self, ids):
-        raise NotImplementedError,"Needs implementation"
+        raise NotImplementedError, "Needs implementation"
 
-    def removeSamples(self,fid,min_value,max_value):
-        raise NotImplementedError,"Needs implementation"
+    def removeSamples(self, fid, min_value, max_value):
+        raise NotImplementedError, "Needs implementation"
 
     def maskDataSet(self, valueToMask, maskValue):
-        raise NotImplementedError,"Needs implementation"
+        raise NotImplementedError, "Needs implementation"
 
     def maskFeatures(self, headerList, valueToMask, maskValue):
-        raise NotImplementedError,"Needs implementation"
+        raise NotImplementedError, "Needs implementation"
 
     def getExternalFeature(self, fid):
-        raise NotImplementedError,"Needs implementation"
+        raise NotImplementedError, "Needs implementation"
 
     def getInternalFeature(self, i):
         """
@@ -204,9 +207,9 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
         if i == 0:
             prev_index = 0
         else:
-            prev_index =  self.suff_dataRange[i-1]
+            prev_index = self.suff_dataRange[i - 1]
 
-        this_index =  self.suff_dataRange[i]
+        this_index = self.suff_dataRange[i]
 
         #print "suff_dataRange",self.suff_dataRange
         #print "i",i, "->",self.complexFeature[i]
@@ -219,37 +222,35 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
                 #print "COMPLEX!"
 
                 internal_index = self.complexDataIndexMap[i]
-                return self.complexData[internal_index ]
+                return self.complexData[internal_index]
 
         if self.p == 1:   # only a single feature
             return self.internalData[:]
 
         elif (this_index - prev_index) == 1:   # multiple features, feature 'i' has single dimension
-            return numpy.take(self.internalData,(this_index-1,),axis=1)
+            return numpy.take(self.internalData, (this_index - 1,), axis=1)
         else:
-            return self.internalData[:,prev_index:this_index ]  # multiple features, feature 'i' has multiple dimensions
+            return self.internalData[:, prev_index:this_index]  # multiple features, feature 'i' has multiple dimensions
 
-    def extractSubset(self,ids):
-        raise NotImplementedError,"Needs implementation"
-
-
+    def extractSubset(self, ids):
+        raise NotImplementedError, "Needs implementation"
 
 
-def getHMM(emissionDomain, distribution, A, B, pi,name=None):
+def getHMM(emissionDomain, distribution, A, B, pi, name=None):
     """
-    Takes HMM-style parameter matrices and returns a mixture.HMM object which was
+    Takes HMM-style parameter matrices and returns a HMM object which was
     intialised with a GHMM object using these parameters.
     """
-    hmm = ghmm.HMMFromMatrices(emissionDomain, distribution, A, B, pi,hmmName=name)
-    return HMM(hmm,1)
+    hmm = ghmm.HMMFromMatrices(emissionDomain, distribution, A, B, pi, hmmName=name)
+    return HMM(hmm, 1)
 
 
-class HMM(mixture.ProbDistribution):
+class HMM(ProbDistribution):
     """
     Wrapper class for GHMM Hidden Markov Models.
     """
 
-    def __init__(self,hmm,iterations):
+    def __init__(self, hmm, iterations):
         """
         Interface to ghmm.HMMFromMatrices
         """
@@ -259,26 +260,24 @@ class HMM(mixture.ProbDistribution):
         self.p = 1   # we consider each sequence set to be a single features, so p is one.
 
         #  getting the free parameters of a GHMM object requires iteration over all states
-        self.freeParams = self.hmm.N-1 # pi
-        self.freeParams += (self.hmm.N-1) * self.hmm.N  # transitions
+        self.freeParams = self.hmm.N - 1 # pi
+        self.freeParams += (self.hmm.N - 1) * self.hmm.N  # transitions
         for i in range(self.hmm.N):
-            if isinstance(self.hmm.emissionDomain,ghmm.Alphabet):
+            if isinstance(self.hmm.emissionDomain, ghmm.Alphabet):
                 # discrete emissions
-                self.freeParams += (self.hmm.M-1)  # XXX for now only first order HMMS ** self.hmm.order[i]
+                self.freeParams += (self.hmm.M - 1)  # XXX for now only first order HMMS ** self.hmm.order[i]
             elif isinstance(self.hmm.emissionDomain, ghmm.Float):
                 # gaussian emissions
-                self.freeParams += (self.hmm.M * 2) + (self.hmm.M -1)
+                self.freeParams += (self.hmm.M * 2) + (self.hmm.M - 1)
             else:
-                raise TypeError, "Unknown EmissionDomain "+str(self.hmm.emissionDomain.__class__)
-
-
+                raise TypeError, "Unknown EmissionDomain " + str(self.hmm.emissionDomain.__class__)
 
         self.suff_p = 1  # since we save the whole sequence set under on index suff_p is 1
         self.dist_nr = 1
-        self.iterations=iterations
+        self.iterations = iterations
 
 
-    def __eq__(self,other):
+    def __eq__(self, other):
         raise NotImplementedError, "Needs implementation"
 
     def __str__(self):
@@ -288,15 +287,15 @@ class HMM(mixture.ProbDistribution):
     def __copy__(self):
         raise NotImplementedError, "Needs implementation"
 
-    def pdf(self,data):
+    def pdf(self, data):
 
-        if isinstance(data, SequenceDataSet ):
+        if isinstance(data, SequenceDataSet):
             assert len(data.complexData) == 1
             data = data.complexData[0]
         elif isinstance(data, ghmm.SequenceSet):
             pass
         else:
-            raise TypeError,"Unknown/Invalid input type:"+str(data)
+            raise TypeError, "Unknown/Invalid input type:" + str(data)
 
 
         #print "pdf "+str(self.hmm.cmodel.name) +":"
@@ -304,51 +303,51 @@ class HMM(mixture.ProbDistribution):
         return numpy.array(self.hmm.loglikelihoods(data), dtype='Float64')
 
 
-    def MStep(self,posterior,data,mix_pi=None):
+    def MStep(self, posterior, data, mix_pi=None):
 
-        if isinstance(data,SequenceDataSet):
+        if isinstance(data, SequenceDataSet):
             assert len(data.complexData) == 1
             data = data.complexData[0]
-        elif isinstance(data,ghmm.SequenceSet):
+        elif isinstance(data, ghmm.SequenceSet):
             pass
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
 
         # set sequence weights according to posterior
         for i in range(len(data)):
-            data.setWeight(i,posterior[i])
+            data.setWeight(i, posterior[i])
 
         # run BaumWelch for parameter update
-        self.hmm.baumWelch(data,self.iterations, 0.0001)
+        self.hmm.baumWelch(data, self.iterations, 0.0001)
 
 
     def sample(self):
         raise NotImplementedError
 
-    def sampleSet(self,nr):
+    def sampleSet(self, nr):
         raise NotImplementedError
 
 
-    def isValid(self,x):
-        if not isinstance(x,ghmm.SequenceSet):
+    def isValid(self, x):
+        if not isinstance(x, ghmm.SequenceSet):
             raise InvalidDistributionInput, "\nInvalid data in HMM."
 
-    def sufficientStatistics(self,x):
-       pass
-       #raise NotImplementedError, "Needs implementation"
+    def sufficientStatistics(self, x):
+        pass
+        #raise NotImplementedError, "Needs implementation"
 
 
-    def flatStr(self,offset):
+    def flatStr(self, offset):
         raise NotImplementedError, "Needs implementation"
 
-    def posteriorTraceback(self,x):
+    def posteriorTraceback(self, x):
         raise NotImplementedError, "Kawoom !"
 
     def update_suff_p(self):
         return self.suff_p
 
-    def merge(self,dlist,weights):
-       raise NotImplementedError, "Kawoom !"
+    def merge(self, dlist, weights):
+        raise NotImplementedError, "Kawoom !"
 
     def sortStr(self):
         raise NotImplementedError, "Kawoom !"

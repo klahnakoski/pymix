@@ -3,10 +3,11 @@ from pymix import _C_mixextend
 import numpy
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.multinomial import MultinomialDistribution
+from core.pymix_util import mixextend
 from core.pymix_util.errors import InvalidDistributionInput
 from core.priors.prior import PriorDistribution
 from core.pymix_util.candidate_group import CandidateGroup
-from core.pymix_util.maths import sumlogs
+from core.pymix_util.maths import sum_logs, matrix_sum_logs
 
 
 class DirichletMixturePrior(PriorDistribution):
@@ -61,7 +62,7 @@ class DirichletMixturePrior(PriorDistribution):
             logp_list = numpy.zeros(self.G, dtype='Float64')
             for i in range(self.G):
                 logp_list[i] = self.log_pi[i] + self.dComp[i].pdf(m)
-            res = sumlogs(logp_list)
+            res = sum_logs(logp_list)
             return res
 
         elif type(m) == list:
@@ -72,7 +73,7 @@ class DirichletMixturePrior(PriorDistribution):
             for i in range(len(m)):  # XXX slow
                 logp_mat[:, i] += self.log_pi
 
-            res = _C_mixextend.matrix_sum_logs(logp_mat)
+            res = matrix_sum_logs(logp_mat)
             return res
         else:
             raise TypeError
@@ -105,7 +106,7 @@ class DirichletMixturePrior(PriorDistribution):
         @return: numpy of length self.G containing the posterior of component membership
         """
         prior_post = numpy.array([dirich.pdf(dist) + self.log_pi[i] for i, dirich in enumerate(self.dComp)], dtype='Float64')
-        log_sum = sumlogs(prior_post)
+        log_sum = sum_logs(prior_post)
         prior_post -= log_sum
 
         prior_post = numpy.exp(prior_post)

@@ -1,7 +1,6 @@
 ## function sumlogs is borrowed from GQLMixture.py
 
 import numpy
-from pymix import _C_mixextend
 
 
 def sumlogs_purepy(a):
@@ -35,13 +34,13 @@ def sumlogs_purepy(a):
     return result
 
 
-def sumlogs(a):
+def sum_logs(a):
     m = numpy.max(a)  # Maximal value must not be unique
     result = numpy.log(sum(numpy.exp(a - m))) + m
     return result
 
 
-def matrixSumlogs(a):
+def matrix_sum_logs(a):
     m = numpy.max(a)  # Maximal value must not be unique
     result = numpy.log(sum(numpy.exp(a - m))) + m
     return result

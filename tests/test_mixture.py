@@ -35,11 +35,9 @@ Unittests for the Pymix package.
 import unittest
 import copy
 import random
-
-from pymix import _C_mixextend
 import numpy
-from core import BaseTest
 
+from core import BaseTest
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.exponential import ExponentialDistribution
 from core.distributions.multinomial import MultinomialDistribution
@@ -47,6 +45,7 @@ from core.distributions.multinormal import MultiNormalDistribution
 from core.distributions.normal import NormalDistribution
 from core.distributions.product import ProductDistribution
 from core.priors.normal_gamma import NormalGammaPrior
+from core.pymix_util import mixextend
 from core.pymix_util.errors import InvalidDistributionInput
 from core.mixture import modelSelection
 from core.models.bayes import BayesMixtureModel
@@ -303,6 +302,7 @@ class DataSetTests(BaseTest):
                 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1',
                 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL2',
                 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL1'])
+
         Thread.run("testtranspose", inner)
 
     def testinternalinit(self):
@@ -1605,20 +1605,28 @@ class BayesMixtureModelTests(BaseTest):
 
         self.DNA = Alphabet(['A', 'C', 'G', 'T'])
         random.seed(3586662)
-        _C_mixextend.set_gsl_rng_seed(3586662)
+        mixextend.set_gsl_rng_seed(3586662)
 
-        comps = [ProductDistribution([DiscreteDistribution(4, [0.12753376538325797, 0.50616311046923801, 0.20698023329453394, 0.15932289085297005], self.DNA),
-            DiscreteDistribution(4, [0.42479119171723906, 0.30837836771484017, 0.24099154348478288, 0.025838897083137909], self.DNA),
-            DiscreteDistribution(4, [0.072678020806599297, 0.74303442328419766, 0.17342774138519285, 0.010859814524010233], self.DNA),
-            DiscreteDistribution(4, [0.41290501940439173, 0.26045689115571397, 0.026675238506973845, 0.29996285093292041], self.DNA)]),
-            ProductDistribution([DiscreteDistribution(4, [0.47242332711053769, 0.05503582379855871, 0.032325320190801962, 0.44021552890010163], self.DNA),
+        comps = [
+            ProductDistribution([
+                DiscreteDistribution(4, [0.12753376538325797, 0.50616311046923801, 0.20698023329453394, 0.15932289085297005], self.DNA),
+                DiscreteDistribution(4, [0.42479119171723906, 0.30837836771484017, 0.24099154348478288, 0.025838897083137909], self.DNA),
+                DiscreteDistribution(4, [0.072678020806599297, 0.74303442328419766, 0.17342774138519285, 0.010859814524010233], self.DNA),
+                DiscreteDistribution(4, [0.41290501940439173, 0.26045689115571397, 0.026675238506973845, 0.29996285093292041], self.DNA)
+            ]),
+            ProductDistribution([
+                DiscreteDistribution(4, [0.47242332711053769, 0.05503582379855871, 0.032325320190801962, 0.44021552890010163], self.DNA),
                 DiscreteDistribution(4, [0.26615339532148219, 0.34344782681526098, 0.26154605901673872, 0.12885271884651808], self.DNA),
                 DiscreteDistribution(4, [0.26917515170707557, 0.057407992738203517, 0.60606234492675792, 0.067354510627962966], self.DNA),
-                DiscreteDistribution(4, [0.10597559898421849, 0.54316942248339628, 0.011512954838178956, 0.3393420236942063], self.DNA)]),
-            ProductDistribution([DiscreteDistribution(4, [0.34086877560660928, 0.17411602775602431, 0.19669116610293322, 0.28832403053443317], self.DNA),
+                DiscreteDistribution(4, [0.10597559898421849, 0.54316942248339628, 0.011512954838178956, 0.3393420236942063], self.DNA)
+            ]),
+            ProductDistribution([
+                DiscreteDistribution(4, [0.34086877560660928, 0.17411602775602431, 0.19669116610293322, 0.28832403053443317], self.DNA),
                 DiscreteDistribution(4, [0.38241462847792057, 0.16967035154094584, 0.29945566811349167, 0.14845935186764186], self.DNA),
                 DiscreteDistribution(4, [0.057210950173245387, 0.34948659755634709, 0.57122905601480312, 0.022073396255604422], self.DNA),
-                DiscreteDistribution(4, [0.0081482169238704712, 0.85961621432433211, 0.034233188370958081, 0.098002380380839305], self.DNA)])]
+                DiscreteDistribution(4, [0.0081482169238704712, 0.85961621432433211, 0.034233188370958081, 0.098002380380839305], self.DNA)
+            ])
+        ]
 
         pi = [0.11792710681100915, 0.27129691282064256, 0.61077598036834835]
 

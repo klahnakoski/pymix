@@ -47,7 +47,7 @@ from core.distributions.discrete import DiscreteDistribution
 from core.models.mixture import MixtureModel
 from core.pymix_util import mixextend, setPartitions
 from core.pymix_util.candidate_group import CandidateGroup
-from core.pymix_util.maths import matrixSumlogs
+from core.pymix_util.maths import matrix_sum_logs
 from core.pymix_util.setPartitions import generate_all_partitions
 
 
@@ -91,7 +91,7 @@ def updateStructureBayesianFullEnumeration(model, data, objFunction='MAP', silen
     for k in range(model.G):
         g[k, :] += numpy.log(model.pi[k])
 
-    sum_logs = matrixSumlogs(g)
+    sum_logs = matrix_sum_logs(g)
     g_norm = g - sum_logs
     tau = numpy.exp(g_norm)
 
@@ -295,7 +295,7 @@ def updateStructureBayesianFullEnumeration(model, data, objFunction='MAP', silen
         #            print gg.tolist()
 
 
-        sum_logs = matrixSumlogs(g_1)
+        sum_logs = matrix_sum_logs(g_1)
         lk_1 = numpy.sum(sum_logs)
 
         #print '\n  *** likelihood =', lk_1
@@ -422,7 +422,7 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
     for k in range(model.G):
         g[k, :] += numpy.log(model.pi[k])
 
-    sum_logs = matrixSumlogs(g)
+    sum_logs = matrix_sum_logs(g)
     g_norm = g - sum_logs
     tau = numpy.exp(g_norm)
 
@@ -654,7 +654,7 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
         #            print gg.tolist()
 
 
-        sum_logs = matrixSumlogs(g_1)
+        sum_logs = matrix_sum_logs(g_1)
         lk_1 = numpy.sum(sum_logs)
 
         #print '\n  *** likelihood =', lk_1

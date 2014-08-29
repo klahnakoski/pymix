@@ -1,15 +1,16 @@
 import copy
 import math
-from pymix import _C_mixextend
 import random
-import numpy
 import sys
-from core.pymix_util import mixextend
+
+import numpy
+
+from ..pymix_util import mixextend
 from ..distributions.prob import ProbDistribution
 from ..distributions.product import ProductDistribution
 from ..pymix_util.errors import InvalidPosteriorDistribution, ConvergenceFailureEM, InvalidDistributionInput
 from ..pymix_util.dataset import DataSet
-from ..pymix_util.maths import sumlogs, dict_intersection
+from ..pymix_util.maths import sum_logs, dict_intersection
 from ..pymix_util.stats import entropy, sym_kl_dist, get_posterior
 
 
@@ -282,7 +283,7 @@ class MixtureModel(ProbDistribution):
 
         p = numpy.zeros(len(x), dtype='Float64')
         for j in range(len(x)):
-            p[j] = sumlogs(logp_list[:, j])
+            p[j] = sum_logs(logp_list[:, j])
         return p
 
     def sample(self):
@@ -573,7 +574,7 @@ class MixtureModel(ProbDistribution):
             log_l[i] = log_pi[i] + self.components[i].pdf(data)
 
         for j in range(data.N):
-            log_col_sum[j] = sumlogs(log_l[:, j]) # sum over jth column of log_l
+            log_col_sum[j] = sum_logs(log_l[:, j]) # sum over jth column of log_l
 
             # if posterior is invalid, check for model validity
             if log_col_sum[j] == float('-inf'):
@@ -1249,7 +1250,7 @@ class MixtureModel(ProbDistribution):
                     tb.append(ll)
                 tb_arr = numpy.array(tb, dtype='Float64')
                 for i in range(len(tb[0])):
-                    s = sumlogs(tb_arr[:, i])
+                    s = sum_logs(tb_arr[:, i])
                     tb_arr[:, i] = tb_arr[:, i] - s
                 exp_arr = numpy.exp(tb_arr)
                 exp_tb = exp_arr.tolist()
@@ -1340,7 +1341,7 @@ class MixtureModel(ProbDistribution):
             g[k, :] += numpy.log(self.pi[k])
         sum_logs = numpy.zeros(data.N, dtype='Float64')
         for n in range(data.N):
-            sum_logs[n] = sumlogs(g[:, n])
+            sum_logs[n] = sum_logs(g[:, n])
         lk = sum(sum_logs)
         for j in range(self.dist_nr):
             # initialize free parameters
@@ -1426,7 +1427,7 @@ class MixtureModel(ProbDistribution):
 
                 sum_logs = numpy.zeros(data.N, dtype='Float64')
                 for n in range(data.N):
-                    sum_logs[n] = sumlogs(g[:, n])
+                    sum_logs[n] = sum_logs(g[:, n])
                 lk_1 = sum(sum_logs)
                 full_BIC_1 = -2 * lk_1 + (full_fp_1 * numpy.log(data.N))
                 AIC_0 = -2 * lk + ( 2 * full_fp_0 )

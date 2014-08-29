@@ -1,9 +1,8 @@
 ## function sumlogs is borrowed from GQLMixture.py
 import math
 import numpy
-from pymix import _C_mixextend
 from core.pymix_util import mixextend
-from core.pymix_util.maths import sumlogs
+from core.pymix_util.maths import sum_logs
 
 
 def kl_dist(d1, d2):
@@ -192,7 +191,7 @@ def random_vector(nr, normal=1.0):
 
     alpha = numpy.array([1.0] * nr)
 
-    p = _C_mixextend.wrap_gsl_dirichlet_sample(alpha, nr)
+    p = mixextend.wrap_gsl_dirichlet_sample(alpha, nr)
 
     if float(normal) != 1.0:
         p = p * normal
@@ -227,7 +226,7 @@ def get_loglikelihood(mix_model, data):  # old implementation XXX
     for i in range(mix_model.G):
         l[i] = numpy.log(mix_model.pi[i]) + mix_model.components[i].pdf(data)
     for j in range(len(data)):
-        col_sum[j] = sumlogs(l[:, j]) # sum over jth column of l
+        col_sum[j] = sum_logs(l[:, j]) # sum over jth column of l
     log_p = numpy.sum(col_sum)
     return log_p
 

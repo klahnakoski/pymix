@@ -117,43 +117,47 @@ from core import mixture
 ##print adhd
 
 #-----------------------------------------------------------------------------------
+from core.distributions.dirichlet import DirichletDistribution
+from core.distributions.discrete import DiscreteDistribution
+from core.distributions.normal import NormalDistribution
+from core.distributions.product import ProductDistribution
+from core.models.bayes import BayesMixtureModel
+from core.pymix_util.alphabet import Alphabet
+from core.pymix_util.stats import random_vector
 
 G = 3
 p = 4
 # Bayesian Mixture with three components and four discrete features
-piPrior = mixture.DirichletDistribution(G,[1.0]*G)
+piPrior = DirichletDistribution(G, [1.0] * G)
 
-compPrior= []
+compPrior = []
 for i in range(2):
-    compPrior.append( mixture.DirichletDistribution(4,[1.02,1.02,1.02,1.02]) )
+    compPrior.append(DirichletDistribution(4, [1.02, 1.02, 1.02, 1.02]))
 for i in range(2):
-    compPrior.append( mixture.NormalGammaDistribution( 1.0,2.0,3.0,4.0 ) )
+    compPrior.append(NormalGammaDistribution(1.0, 2.0, 3.0, 4.0))
 
-mixPrior = mixture.MixturePrior(0.7,0.7,piPrior, compPrior)
+mixPrior = MixturePrior(0.7, 0.7, piPrior, compPrior)
 
-DNA = mixture.Alphabet(['A','C','G','T'])
+DNA = Alphabet(['A', 'C', 'G', 'T'])
 comps = []
 for i in range(G):
     dlist = []
     for j in range(2):
-       phi = mixture.random_vector(4)
-       dlist.append( mixture.DiscreteDistribution(4,phi,DNA))
+        phi = random_vector(4)
+        dlist.append(DiscreteDistribution(4, phi, DNA))
     for j in range(2):
-       mu = j+1.0
-       sigma = j+0.5
-       dlist.append( mixture.NormalDistribution(mu,sigma))
+        mu = j + 1.0
+        sigma = j + 0.5
+        dlist.append(NormalDistribution(mu, sigma))
 
+    comps.append(ProductDistribution(dlist))
+pi = random_vector(G)
 
-    comps.append(mixture.ProductDistribution(dlist))
-pi = mixture.random_vector(G)
-
-m = mixture.BayesMixtureModel(G,pi, comps, mixPrior, struct = 1)
+m = BayesMixtureModel(G, pi, comps, mixPrior, struct=1)
 
 mixture.writeMixture(m, 'test.bmix')
 
-
-m2 = mixture.readMixture('test.bmix')
-
+m2 = readMixture('test.bmix')
 
 print m2
 print m2.prior

@@ -4,7 +4,7 @@ import time
 import gc
 
 import numpy
-from pymix import setPartitions
+
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.normal import NormalDistribution
 from core.distributions.product import ProductDistribution
@@ -12,6 +12,7 @@ from core.models.bayes import BayesMixtureModel
 from core.models.mixture import MixtureModel
 from core.priors.dirichlet import DirichletPrior
 from core.priors.mixture_model import MixtureModelPrior
+from core.pymix_util import setPartitions
 from core.pymix_util.maths import dict_intersection
 from core.pymix_util.stats import sym_kl_dist, get_loglikelihood, random_vector
 
@@ -70,12 +71,12 @@ def getRandomMixture(G, p, KL_lower, KL_upper, dtypes='discgauss', M=4,seed = No
 
 #    if seed:
 #        random.seed(seed)
-#        _C_mixextend.set_gsl_rng_seed(seed)
+#        mixextend.set_gsl_rng_seed(seed)
 #        #print '*** seed=',seed
 #
 #    else: # XXX debug
 #        seed = random.randint(1,9000000)
-#        _C_mixextend.set_gsl_rng_seed(seed)
+#        mixextend.set_gsl_rng_seed(seed)
 #        random.seed(seed)
 #        #print '*** seed=',seed
 
@@ -169,12 +170,12 @@ def getRandomCSIMixture(G, p, KL_lower, KL_upper, M=8, dtypes='discgauss', seed 
 
 #    if seed:
 #        random.seed(seed)
-#        _C_mixextend.set_gsl_rng_seed(seed)
+#        mixextend.set_gsl_rng_seed(seed)
 #        #print '*** seed=',seed
 #
 #    else: # XXX debug
 #        seed = random.randint(1,9999999)
-#        _C_mixextend.set_gsl_rng_seed(seed)
+#        mixextend.set_gsl_rng_seed(seed)
 #        random.seed(seed)
 #        #print '*** seed=',seed
 
@@ -355,12 +356,12 @@ def getRandomCSIMixture_conditionalDists(G, p, KL_lower, KL_upper, M=8, dtypes='
 
 #    if seed:
 #        random.seed(seed)
-#        _C_mixextend.set_gsl_rng_seed(seed)
+#        mixextend.set_gsl_rng_seed(seed)
 #        #print '*** seed=',seed
 #
 #    else: # XXX debug
 #        seed = random.randint(1,9999999)
-#        _C_mixextend.set_gsl_rng_seed(seed)
+#        mixextend.set_gsl_rng_seed(seed)
 #        random.seed(seed)
 #        #print '*** seed=',seed
 
@@ -770,13 +771,13 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 
 #    if seed != None:
 #        random.seed(seed)
-#        _C_mixextend.set_gsl_rng_seed(seed)
+#        mixextend.set_gsl_rng_seed(seed)
 #        print '*** given seed=',seed
 #
 #    else: # XXX debug
 #        seed = random.randint(1,999999999)
 #        random.seed(seed)
-#        _C_mixextend.set_gsl_rng_seed(seed)
+#        mixextend.set_gsl_rng_seed(seed)
 #        print '*** random seed=',seed
 
 
@@ -1063,13 +1064,13 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
 #    if seed != None:
 #        random.seed(seed)
-#        _C_mixextend.set_gsl_rng_seed(seed)
+#        mixextend.set_gsl_rng_seed(seed)
 #        print '*** given seed=',seed
 #
 #    else: # XXX debug
 #        seed = random.randint(1,999999999)
 #        random.seed(seed)
-#        _C_mixextend.set_gsl_rng_seed(seed)
+#        mixextend.set_gsl_rng_seed(seed)
 #        print '*** random seed=',seed
 
 

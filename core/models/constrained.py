@@ -9,7 +9,7 @@ from core.models.labeled import LabeledMixtureModel
 from core.models.mixture import MixtureModel
 from core.pymix_util.constrained_dataset import ConstrainedDataSet
 from core.pymix_util.dataset import DataSet
-from core.pymix_util.maths import sumlogs
+from core.pymix_util.maths import sum_logs
 
 
 class ConstrainedMixtureModel(MixtureModel):
@@ -332,7 +332,7 @@ class ConstrainedMixtureModel(MixtureModel):
 
             #print '->',log_l[:,i]
 
-            log_col_sum[i] = sumlogs(log_l[:, i]) # sum over jth column of log_l
+            log_col_sum[i] = sum_logs(log_l[:, i]) # sum over jth column of log_l
             # if posterior is invalid, check for model validity
             if log_col_sum[i] == float('-inf'):
 
