@@ -1,8 +1,7 @@
-/.svn
-/.idea
-/*.iml
-/__pycache__
-/*.pyc
-/util/.svn
-/tests/util/.svn
-/*.mix
+.svn
+.idea
+*.iml
+__pycache__
+.svn
+*.mix
+*.pyc

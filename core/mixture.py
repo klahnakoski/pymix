@@ -48,7 +48,7 @@ from core.pymix_util.alphabet import Alphabet,IntegerRange
 from string import split,replace,join
 import numpy
 from numpy import linalg as la
-import setPartitions
+
 import sys
 import re
 import cStringIO, tokenize

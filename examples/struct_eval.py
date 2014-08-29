@@ -1,6 +1,6 @@
 from core import mixture
 import random
-import numarray
+from numpy import numarray
 
 data = mixture.DataSet()
 

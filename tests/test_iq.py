@@ -1,6 +1,6 @@
 from core import mixture
 import random
-import numarray
+from numpy import numarray
 
 VNTR = mixture.Alphabet( ['.', '2/4', '2/7', '3/4', '3/7', '4/4', '4/6', '4/7', '4/8', '4/9', '7/7'] )
 DIAG = mixture.Alphabet(['.','0','8','1'])

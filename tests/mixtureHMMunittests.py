@@ -32,11 +32,12 @@
 import unittest
 from core import mixture
 import ghmm
-import numarray
+from numpy import numarray
 from core import mixtureHMM
+from tests.mixtureunittests import BaseTest
 
 
-class HMMTests(unittest.TestCase):
+class HMMTests(BaseTest):
     def setUp(self):
         # building generating models
         self.DIAG = mixture.Alphabet(['.','0','8','1'])

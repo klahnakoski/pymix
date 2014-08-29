@@ -1,55 +1,55 @@
-from mixture import *
-import numarray
+from core.mixture import *
+from numpy import numarray
 from Graph import *
 
 
 
 def compStructure(v1,v2):
     nr_v = len(v1)
-    
+
     G1 = Graph()
     G2 = Graph()
-    
-    
+
+
     for p in range(len(v1[0])):
-    
+
         for i in range(1,nr_v+1):
             G1.AddVertex()
             G2.AddVertex()
-        
+
         # finding number of unique entries in v1 and v2
         d_v1 = {}
         d_v2 = {}
-        
+
         v1_ind = 0
         v2_ind = 0
         for i in range(nr_v):
-            if not d_v1.has_key( v1[i,p] ):   
+            if not d_v1.has_key( v1[i,p] ):
                 t = numarray.where( v1[:,p] == v1[i,p] )
-   #             d_v1[v1[i,p]] = 
-            
+   #             d_v1[v1[i,p]] =
+
                 v1_ind +=1
-            if not d_v2.has_key( v2[i,p] ):   
+            if not d_v2.has_key( v2[i,p] ):
                 d_v2[v2[i,p]] = v2_ind
                 v2_ind += 1
 
   #      for k in d_v1.keys():
-            
-        
-        
+
+
+
         #print d_v1
         #print d_v2
-    
-    
-    
-    
+
+
+
+
 #    for i in range(len(matrix)):
 #        for j in range(len(matrix)):
 #            if (i == j):
 #                continue
 #            G.AddEdge(i+1,j+1,matrix[i][j])
 #    return G
-    
+
 
 
 G = numarray.array([ [3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 3, 3, 3, 3, 1, 3, 3, 3, 1, 3, 3, 3, 3, 3, 3] ,
@@ -172,8 +172,8 @@ mix.updateStructureGlobal(data)
 
 plot = numarray.zeros(( mix.G,mix.dist_nr ) )
 for i in range(mix.dist_nr):
-    
-    for l in mix.leaders[i]:    
+
+    for l in mix.leaders[i]:
         plot[l,i] = l+1
         for g in mix.groups[i][l]:
            plot[g,i] = l+1
@@ -193,7 +193,7 @@ for k in range(5):
     #print m
     #print m.leaders
     #print m.groups
-    
+
     logp = m.randMaxEM(data,15,40,0.1,tilt=0,silent=1)
     ch = m.updateStructureGlobal(data)
 
@@ -204,12 +204,12 @@ for k in range(5):
     #print m.groups
 
 
-    
-    
+
+
     plot2 = numarray.zeros(( m.G,m.dist_nr ) )
     for i in range(m.dist_nr):
-    
-        for l in m.leaders[i]:    
+
+        for l in m.leaders[i]:
             plot2[l,i] = l+1
             for g in m.groups[i][l]:
                plot2[g,i] = l+1
