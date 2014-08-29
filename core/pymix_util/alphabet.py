@@ -34,6 +34,19 @@ import copy
 
 
 class EmissionDomain:
+    """ Abstract base class for emissions produced by an HMM.
+
+        There can be two representations for emissions:
+        1) An internal, used in ghmm.py and the ghmm C-library
+        2) An external, used in your particular application
+
+        Example:
+        The underlying library represents symbols from a finite,
+        discrete domain as integers (see Alphabet).
+
+        EmissionDomain is the identity mapping
+    """
+
     def internal(self, emission):
         """ Given a emission return the internal representation
         """
@@ -149,6 +162,8 @@ class Alphabet(EmissionDomain):
 DNA = Alphabet(['a','c','g','t'])
 AminoAcids = Alphabet(['A','C','D','E','F','G','H','I','K','L',
                        'M','N','P','Q','R','S','T','V','W','Y'])
+
+
 def IntegerRange(a,b):
     l = range(a,b)
     for i,s in enumerate(l):
@@ -168,5 +183,8 @@ class Float(EmissionDomain):
         self.CDataType = "double" # flag indicating which C data type should be used
 
     def isAdmissable(self, emission):
-        return isinstance(emission,float)
+        """ Check whether emission is admissable (contained in) the domain
+            raises GHMMOutOfDomain else
+        """
+        return isinstance(emission, float)
 

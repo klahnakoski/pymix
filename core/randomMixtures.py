@@ -5,15 +5,24 @@ import gc
 
 import numpy
 from pymix import setPartitions
+from core.distributions.discrete import DiscreteDistribution
+from core.distributions.normal import NormalDistribution
+from core.distributions.product import ProductDistribution
+from core.mixture import dict_intersection
+from core.models.bayes import BayesMixtureModel
+from core.models.mixture import MixtureModel
+from core.priors.dirichlet import DirichletPrior
+from core.priors.mixture_model import MixtureModelPrior
+from core.pymix_util.stats import sym_kl_dist, get_loglikelihood, random_vector
 
 from examples import fullEnumerationExhaustive
 from core import mixture
-import StructureLearningVariants
+from examples.crp import NormalGammaPrior
 
 
 def updateHyperparameters(model, data, delta):
     for j,p in enumerate(model.prior.compPrior):
-        if isinstance(p, mixture.NormalGammaPrior):
+        if isinstance(p, NormalGammaPrior):
             data_j = data.getInternalFeature(j)
             p.setParams(data_j,model.G)
 
@@ -28,7 +37,7 @@ def product_distribution_sym_kl_dist(p1,p2):
     """
     d = 0.0
     for j in range(p1.dist_nr):
-        d += mixture.sym_kl_dist(p1[j],p2[j])
+        d += sym_kl_dist(p1[j],p2[j])
     return d
 
 def get_random_pi(G,min_val):
@@ -61,12 +70,12 @@ def getRandomMixture(G, p, KL_lower, KL_upper, dtypes='discgauss', M=4,seed = No
 
 #    if seed:
 #        random.seed(seed)
-#        mixture._C_mixextend.set_gsl_rng_seed(seed)
+#        _C_mixextend.set_gsl_rng_seed(seed)
 #        #print '*** seed=',seed
 #
 #    else: # XXX debug
 #        seed = random.randint(1,9000000)
-#        mixture._C_mixextend.set_gsl_rng_seed(seed)
+#        _C_mixextend.set_gsl_rng_seed(seed)
 #        random.seed(seed)
 #        #print '*** seed=',seed
 
@@ -100,14 +109,14 @@ def getRandomMixture(G, p, KL_lower, KL_upper, dtypes='discgauss', M=4,seed = No
             if featureTypes[j] == 0:
                 acc = 0
                 while acc == 0:
-                    cand = mixture.DiscreteDistribution(M, mixture.random_vector(M) )
+                    cand = DiscreteDistribution(M, random_vector(M) )
 
                     #print 'cand:',cand
 
                     acc = 1
 
                     for d in c_j:
-                        KL_dist = mixture.sym_kl_dist(d,cand)
+                        KL_dist = sym_kl_dist(d,cand)
                         if KL_dist > KL_upper or KL_dist < KL_lower:
                             #print '  *', cand, 'rejected:', d , KL_dist
                             acc = 0
@@ -120,14 +129,14 @@ def getRandomMixture(G, p, KL_lower, KL_upper, dtypes='discgauss', M=4,seed = No
                     mu = random.uniform(min_mu, max_mu)
                     sigma = random.uniform(min_sigma, max_sigma)
 
-                    cand = mixture.NormalDistribution(mu, sigma )
+                    cand = NormalDistribution(mu, sigma )
 
                     #print 'cand:',cand
 
                     acc = 1
 
                     for d in c_j:
-                        KL_dist = mixture.sym_kl_dist(d,cand)
+                        KL_dist = sym_kl_dist(d,cand)
                         if KL_dist > KL_upper or KL_dist < KL_lower:
                             #print '  *', cand, 'rejected:', d , KL_dist
                             acc = 0
@@ -146,11 +155,11 @@ def getRandomMixture(G, p, KL_lower, KL_upper, dtypes='discgauss', M=4,seed = No
 
     comps = []
     for i in range(G):
-        comps.append( mixture.ProductDistribution( [ C[j][i] for j in range(p) ] ) )
+        comps.append( ProductDistribution( [ C[j][i] for j in range(p) ] ) )
 
     pi = get_random_pi(G,0.1)
 
-    m = mixture.MixtureModel(G,pi, comps,struct=1)
+    m = MixtureModel(G,pi, comps,struct=1)
     m.updateFreeParams()
 
     return m
@@ -160,19 +169,19 @@ def getRandomCSIMixture(G, p, KL_lower, KL_upper, M=8, dtypes='discgauss', seed 
 
 #    if seed:
 #        random.seed(seed)
-#        mixture._C_mixextend.set_gsl_rng_seed(seed)
+#        _C_mixextend.set_gsl_rng_seed(seed)
 #        #print '*** seed=',seed
 #
 #    else: # XXX debug
 #        seed = random.randint(1,9999999)
-#        mixture._C_mixextend.set_gsl_rng_seed(seed)
+#        _C_mixextend.set_gsl_rng_seed(seed)
 #        random.seed(seed)
 #        #print '*** seed=',seed
 
 
 
     if disc_sampling_dist == None:
-        discSamp = mixture.DirichletPrior(M,[1.0] * M ) # uniform sampling
+        discSamp = DirichletPrior(M,[1.0] * M ) # uniform sampling
     else:
         discSamp = disc_sampling_dist
 
@@ -254,7 +263,7 @@ def getRandomCSIMixture(G, p, KL_lower, KL_upper, M=8, dtypes='discgauss', seed 
 
                     acc = 1
                     for d in c_j:
-                        KL_dist = mixture.sym_kl_dist(c_j[d],cand)
+                        KL_dist = sym_kl_dist(c_j[d],cand)
 
                         #print c_j[d],cand, KL_dist
 
@@ -276,11 +285,11 @@ def getRandomCSIMixture(G, p, KL_lower, KL_upper, M=8, dtypes='discgauss', seed 
                 while acc == 0:
                     mu = random.uniform(min_mu, max_mu)
                     sigma = random.uniform(min_sigma, max_sigma)
-                    cand = mixture.NormalDistribution(mu, sigma )
+                    cand = NormalDistribution(mu, sigma )
                     acc = 1
 
                     for d in c_j:
-                        KL_dist = mixture.sym_kl_dist(c_j[d],cand)
+                        KL_dist = sym_kl_dist(c_j[d],cand)
                         if KL_dist > KL_upper or KL_dist < KL_lower:
                             acc = 0
                             tries += 1
@@ -306,30 +315,30 @@ def getRandomCSIMixture(G, p, KL_lower, KL_upper, M=8, dtypes='discgauss', seed 
 
     comps = []
     for i in range(G):
-        comps.append( mixture.ProductDistribution( [ C[j][i] for j in range(p) ] ) )
+        comps.append( ProductDistribution( [ C[j][i] for j in range(p) ] ) )
 
     pi = get_random_pi(G, 0.3 / G)
     #print '** pi =',pi
 
 
     # create prior
-    piprior = mixture.DirichletPrior(G,[2.0]*G)
+    piprior = DirichletPrior(G,[2.0]*G)
 
     cprior = []
     for j in range(p):
         if featureTypes[j] == 0:
-            cprior.append( mixture.DirichletPrior(M,[1.02]*M))
+            cprior.append( DirichletPrior(M,[1.02]*M))
 
         elif featureTypes[j] == 1:
-            cprior.append( mixture.NormalGammaPrior(0,0,0,0))   # dummy parameters, to be set later
+            cprior.append( NormalGammaPrior(0,0,0,0))   # dummy parameters, to be set later
 
         else:
             RuntimeError
 
-    mprior = mixture.MixtureModelPrior(0.1,0.1, piprior, cprior)
+    mprior = MixtureModelPrior(0.1,0.1, piprior, cprior)
 
 
-    m = mixture.BayesMixtureModel(G,pi, comps, mprior, struct =1)
+    m = BayesMixtureModel(G,pi, comps, mprior, struct =1)
     m.leaders = leaders
     m.groups = groups
 
@@ -346,19 +355,19 @@ def getRandomCSIMixture_conditionalDists(G, p, KL_lower, KL_upper, M=8, dtypes='
 
 #    if seed:
 #        random.seed(seed)
-#        mixture._C_mixextend.set_gsl_rng_seed(seed)
+#        _C_mixextend.set_gsl_rng_seed(seed)
 #        #print '*** seed=',seed
 #
 #    else: # XXX debug
 #        seed = random.randint(1,9999999)
-#        mixture._C_mixextend.set_gsl_rng_seed(seed)
+#        _C_mixextend.set_gsl_rng_seed(seed)
 #        random.seed(seed)
 #        #print '*** seed=',seed
 
 
 
     if disc_sampling_dist == None:
-        discSamp = mixture.DirichletPrior(M,[1.0] * M ) # uniform sampling
+        discSamp = DirichletPrior(M,[1.0] * M ) # uniform sampling
     else:
         discSamp = disc_sampling_dist
 
@@ -440,7 +449,7 @@ def getRandomCSIMixture_conditionalDists(G, p, KL_lower, KL_upper, M=8, dtypes='
 
                     acc = 1
                     for d in c_j:
-                        KL_dist = mixture.sym_kl_dist(c_j[d],cand)
+                        KL_dist = sym_kl_dist(c_j[d],cand)
 
                         #print c_j[d],cand, KL_dist
 
@@ -462,11 +471,11 @@ def getRandomCSIMixture_conditionalDists(G, p, KL_lower, KL_upper, M=8, dtypes='
                 while acc == 0:
                     mu = random.uniform(min_mu, max_mu)
                     sigma = random.uniform(min_sigma, max_sigma)
-                    cand = mixture.NormalDistribution(mu, sigma )
+                    cand = NormalDistribution(mu, sigma )
                     acc = 1
 
                     for d in c_j:
-                        KL_dist = mixture.sym_kl_dist(c_j[d],cand)
+                        KL_dist = sym_kl_dist(c_j[d],cand)
                         if KL_dist > KL_upper or KL_dist < KL_lower:
                             acc = 0
                             tries += 1
@@ -492,30 +501,30 @@ def getRandomCSIMixture_conditionalDists(G, p, KL_lower, KL_upper, M=8, dtypes='
 
     comps = []
     for i in range(G):
-        comps.append( mixture.ProductDistribution( [ C[j][i] for j in range(p) ] ) )
+        comps.append( ProductDistribution( [ C[j][i] for j in range(p) ] ) )
 
     pi = get_random_pi(G, 0.3 / G)
     #print '** pi =',pi
 
 
     # create prior
-    piprior = mixture.DirichletPrior(G,[2.0]*G)
+    piprior = DirichletPrior(G,[2.0]*G)
 
     cprior = []
     for j in range(p):
         if featureTypes[j] == 0:
-            cprior.append( mixture.DirichletPrior(M,[1.02]*M))
+            cprior.append( DirichletPrior(M,[1.02]*M))
 
         elif featureTypes[j] == 1:
-            cprior.append( mixture.NormalGammaPrior(0,0,0,0))   # dummy parameters, to be set later
+            cprior.append( NormalGammaPrior(0,0,0,0))   # dummy parameters, to be set later
 
         else:
             RuntimeError
 
-    mprior = mixture.MixtureModelPrior(0.1,0.1, piprior, cprior)
+    mprior = MixtureModelPrior(0.1,0.1, piprior, cprior)
 
 
-    m = mixture.BayesMixtureModel(G,pi, comps, mprior, struct =1)
+    m = BayesMixtureModel(G,pi, comps, mprior, struct =1)
     m.leaders = leaders
     m.groups = groups
 
@@ -534,7 +543,7 @@ def printModel(m,title):
     for jj in range(m.dist_nr):
         print 'Feature', jj,':'
         for ll in m.leaders[jj]:
-            if isinstance(m.components[ll][jj], mixture.DiscreteDistribution):
+            if isinstance(m.components[ll][jj], DiscreteDistribution):
                 f = lambda x: '%.3f' % x
                 print '  ',[ll]+  m.groups[jj][ll],':', map(f, m.components[ll][jj].phi)
             else:
@@ -601,7 +610,7 @@ def checkComponentRedundancy(leaders, groups):
                     # for each candidate group
                     for j,cand_dict in enumerate(candidate_dicts):
                         # find intersection
-                        inter_d = mixture.dict_intersection(cand_dict, adict)
+                        inter_d = dict_intersection(cand_dict, adict)
                         if len(inter_d) >= 2:
                             new_candidate_dicts.append(inter_d)
                 candidate_dicts = new_candidate_dicts
@@ -647,7 +656,7 @@ def matchModelStructures(gen, m):
         for i1 in range(m.G):
             kldists = numpy.zeros(m.G)
             for i2 in range(m.G):
-                kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], gen.components[i2][j])
+                kldists[i2] = sym_kl_dist(m.components[i1][j], gen.components[i2][j])
             cg = numpy.where( kldists == kldists.min() )[0]
 
             gen_csi[j][tuple(cg)].append(i1)
@@ -671,7 +680,7 @@ def matchModelStructures(gen, m):
         for i1 in range(m.G):
             kldists = numpy.zeros(m.G)
             for i2 in range(m.G):
-                kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], gen.components[i2][j])
+                kldists[i2] = sym_kl_dist(m.components[i1][j], gen.components[i2][j])
             cg = numpy.where( kldists == kldists.min() )[0]
             cmaps[j][i1]=cg
 
@@ -761,13 +770,13 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 
 #    if seed != None:
 #        random.seed(seed)
-#        mixture._C_mixextend.set_gsl_rng_seed(seed)
+#        _C_mixextend.set_gsl_rng_seed(seed)
 #        print '*** given seed=',seed
 #
 #    else: # XXX debug
 #        seed = random.randint(1,999999999)
 #        random.seed(seed)
-#        mixture._C_mixextend.set_gsl_rng_seed(seed)
+#        _C_mixextend.set_gsl_rng_seed(seed)
 #        print '*** random seed=',seed
 
 
@@ -778,7 +787,7 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 
     # XXX update NormalGammaPrior hyperparameters
     for j in range(gen.dist_nr):
-        if isinstance(gen.prior.compPrior[j], mixture.NormalGammaPrior):
+        if isinstance(gen.prior.compPrior[j], NormalGammaPrior):
             gen.prior.compPrior[j].setParams(data.getInternalFeature(j), gen.G)
 
     gen.prior.structPriorHeuristic(delta, data.N)
@@ -835,7 +844,7 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
-                    kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], gen.components[i2][j])
+                    kldists[i2] = sym_kl_dist(m.components[i1][j], gen.components[i2][j])
                 print i1,'->', kldists.argmin(), map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
 
 
@@ -1010,15 +1019,15 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 
 
 
-#    dtop = mixture.structureAccuracy(gen,m1)
-#    dfull_fixed = mixture.structureAccuracy(gen,m2)
-#    dfull = mixture.structureAccuracy(gen,m4)
-#    dbottom = mixture.structureAccuracy(gen,m3)
+#    dtop = structureAccuracy(gen,m1)
+#    dfull_fixed = structureAccuracy(gen,m2)
+#    dfull = structureAccuracy(gen,m4)
+#    dbottom = structureAccuracy(gen,m3)
 
-    logp_top = mixture.get_loglikelihood(m1, data) + m1.prior.pdf(m1)
-    logp_full_fixed = mixture.get_loglikelihood(m2, data) + m2.prior.pdf(m2)
-    logp_full = mixture.get_loglikelihood(m4, data) + m4.prior.pdf(m4)
-    logp_bottom = mixture.get_loglikelihood(m3, data) + m3.prior.pdf(m3)
+    logp_top = get_loglikelihood(m1, data) + m1.prior.pdf(m1)
+    logp_full_fixed = get_loglikelihood(m2, data) + m2.prior.pdf(m2)
+    logp_full = get_loglikelihood(m4, data) + m4.prior.pdf(m4)
+    logp_bottom = get_loglikelihood(m3, data) + m3.prior.pdf(m3)
 
 
     if (not (round(logp_top,3) <= round(logp_full,3) ) or not (round(logp_full_fixed,3) <= round(logp_full,3))
@@ -1054,13 +1063,13 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
 #    if seed != None:
 #        random.seed(seed)
-#        mixture._C_mixextend.set_gsl_rng_seed(seed)
+#        _C_mixextend.set_gsl_rng_seed(seed)
 #        print '*** given seed=',seed
 #
 #    else: # XXX debug
 #        seed = random.randint(1,999999999)
 #        random.seed(seed)
-#        mixture._C_mixextend.set_gsl_rng_seed(seed)
+#        _C_mixextend.set_gsl_rng_seed(seed)
 #        print '*** random seed=',seed
 
 
@@ -1071,7 +1080,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
     # XXX update NormalGammaPrior hyperparameters
     for j in range(gen.dist_nr):
-        if isinstance(gen.prior.compPrior[j], mixture.NormalGammaPrior):
+        if isinstance(gen.prior.compPrior[j], NormalGammaPrior):
             gen.prior.compPrior[j].setParams(data.getInternalFeature(j), gen.G)
 
     gen.prior.structPriorHeuristic(delta, data.N)
@@ -1173,10 +1182,10 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 #    print 'Accuracy:',mixture.structureAccuracy(gen,m4)
 
 
-    logp_top = mixture.get_loglikelihood(m1, data) + m1.prior.pdf(m1)
-    logp_full_fixed = mixture.get_loglikelihood(m2, data) + m2.prior.pdf(m2)
-    logp_full = mixture.get_loglikelihood(m4, data) + m4.prior.pdf(m4)
-    logp_bottom = mixture.get_loglikelihood(m3, data) + m3.prior.pdf(m3)
+    logp_top = get_loglikelihood(m1, data) + m1.prior.pdf(m1)
+    logp_full_fixed = get_loglikelihood(m2, data) + m2.prior.pdf(m2)
+    logp_full = get_loglikelihood(m4, data) + m4.prior.pdf(m4)
+    logp_bottom = get_loglikelihood(m3, data) + m3.prior.pdf(m3)
 
 
     if (not (round(logp_top,3) <= round(logp_full,3) ) or not (round(logp_full_fixed,3) <= round(logp_full,3))
@@ -1204,7 +1213,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 #    for j in range(gen.dist_nr):
 #        for i1 in range(m.G):
 #            for i2 in range(m.G):
-#                train_diff += mixture.sym_kl_dist(m.components[i1][j], m.components[i2][j])
+#                train_diff += sym_kl_dist(m.components[i1][j], m.components[i2][j])
 
     mix_dist1 =  mixtureKLdistance(gen,m)
     mix_dist2 =  mixtureKLdistance(m, gen)
@@ -1262,7 +1271,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
-                    kldists[i2] = mixture.sym_kl_dist(gen.components[i1][j], gen.components[i2][j])
+                    kldists[i2] = sym_kl_dist(gen.components[i1][j], gen.components[i2][j])
                 print map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
 
         print '\nTrained distances to self:'
@@ -1272,7 +1281,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
-                    kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], m.components[i2][j])
+                    kldists[i2] = sym_kl_dist(m.components[i1][j], m.components[i2][j])
                 print map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
 
 
@@ -1283,7 +1292,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
-                    kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], gen.components[i2][j])
+                    kldists[i2] = sym_kl_dist(m.components[i1][j], gen.components[i2][j])
                 print i1,'->', kldists.argmin(), map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
 
 
@@ -1340,7 +1349,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
-                    kldists[i2] = mixture.sym_kl_dist(gen.components[i1][j], gen.components[i2][j])
+                    kldists[i2] = sym_kl_dist(gen.components[i1][j], gen.components[i2][j])
                 print i1,':', map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
 
         print '\nTrained distances to self:'
@@ -1350,7 +1359,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
-                    kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], m.components[i2][j])
+                    kldists[i2] = sym_kl_dist(m.components[i1][j], m.components[i2][j])
                 print i1,':', map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
 
 
@@ -1362,7 +1371,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
-                    kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], gen.components[i2][j])
+                    kldists[i2] = sym_kl_dist(m.components[i1][j], gen.components[i2][j])
                 print i1,'->', kldists.argmin(), map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
 
 
@@ -1403,10 +1412,10 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 #        print '** all equal.'
 
 
-#    dtop = mixture.structureAccuracy(gen,m1)
-#    dfull_fixed = mixture.structureAccuracy(gen,m2)
-#    dfull = mixture.structureAccuracy(gen,m4)
-#    dbottom = mixture.structureAccuracy(gen,m3)
+#    dtop = structureAccuracy(gen,m1)
+#    dfull_fixed = structureAccuracy(gen,m2)
+#    dfull = structureAccuracy(gen,m4)
+#    dbottom = structureAccuracy(gen,m3)
 
 
 
@@ -1487,12 +1496,12 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
         m = copy.copy(gen)
         # XXX update NormalGammaPrior hyperparameters
         for j in range(m.dist_nr):
-            if isinstance(m.prior.compPrior[j], mixture.NormalGammaPrior):
+            if isinstance(m.prior.compPrior[j], NormalGammaPrior):
                 m.prior.compPrior[j].setParams(data.getInternalFeature(j), m.G)
                 #m.prior.compPrior[j].scale = m.prior.compPrior[j].scale * 100 # XXX TEST
 
 
-        #m.prior.piPrior = mixture.DirichletPrior(G,[(N/10.0)/G]*G)  # XXX try strong pi prior
+        #m.prior.piPrior = DirichletPrior(G,[(N/10.0)/G]*G)  # XXX try strong pi prior
 
         m.prior.structPriorHeuristic(0.05, data.N)
 

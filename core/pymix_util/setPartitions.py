@@ -1,10 +1,10 @@
 ################################################################################
-# 
+#
 #       This file is part of the Python Mixture Package
 #
-#       file:   setPartitions.py 
-#       author: Benjamin Georgi 
-#  
+#       file:   setPartitions.py
+#       author: Benjamin Georgi
+#
 #       Copyright (C) 2004-2009 Benjamin Georgi
 #       Copyright (C) 2004-2009 Max-Planck-Institut fuer Molekulare Genetik,
 #                               Berlin
@@ -29,15 +29,16 @@
 #
 ################################################################################
 
-""" 
+"""
 
  The following functions enumerate all possible partitions of a set
  Necessary for the structure learning with exhaustive enumeration.
- 
+
  Based on 'Efficient Generation of Set Partitions' by Michael Orlov
- www.cs.bgu.ac.il/~orlovm/papers/partitions.pdf 
+ www.cs.bgu.ac.il/~orlovm/papers/partitions.pdf
 
 """
+import random
 
 import numpy
 
@@ -47,14 +48,14 @@ def init_first(l):
 
 
     return kap, maxkap
-    
-    
+
+
 def init_last(l):
     kap = numpy.arange(l)
     maxkap = numpy.arange(l)
 
 
-    return kap, maxkap    
+    return kap, maxkap
 
 
 def next_partition(kappa, M):
@@ -65,13 +66,13 @@ def next_partition(kappa, M):
         #print 'i=',i
         if kappa[i] <= M[i-1]:
             #print i,'!'
-            
+
             kappa[i] += 1
             M[i] = numpy.max([M[i],kappa[i]])  # XXX slow
             for j in range(i+1,len(kappa)):
                 kappa[j] = kappa[0]
                 M[j] = M[i]
-            return kappa,M                
+            return kappa,M
 
     #print 'Finish !'
     return None
@@ -94,24 +95,24 @@ def decode_partition(set, kappa, M):
     """
 
     nr_part = M[-1]
-    
+
     #print nr_part,'different partitions'
-    
+
     part = []
     for i in range(int(nr_part+1)):
         i_ind = numpy.where(kappa == i)[0]
         #print i, i_ind
-        
+
         part.append( tuple(set[i_ind]) )
 
-    return part        
+    return part
 
 def encode_partition(leaders, groups, G):
     """
     Given a CSI model structure, return the index vector representation of the corresponding partition
     """
     v = [0] * G
-    
+
     for i,l in enumerate(leaders):
         v[l] = i
         for g in groups[l]:
@@ -123,7 +124,7 @@ def encode_partition(leaders, groups, G):
 def generate_all_partitions(G,order='forward'):
     """
     Returns a list of all possible partitions for a set of cardinality G.
-    
+
     Warning: for large G output gets huge
     """
 
@@ -151,9 +152,9 @@ def generate_all_partitions(G,order='forward'):
 
             ind += 1
 
-        return P     
-        
-        
+        return P
+
+
     elif order == 'reverse':
         set = numpy.arange(G+1)
 
@@ -179,10 +180,10 @@ def generate_all_partitions(G,order='forward'):
 
             ind += 1
 
-        return P     
-        
+        return P
+
     else:
-        raise TypeError           
+        raise TypeError
 
 
 def get_partitions_w_cardinality(G,R):
@@ -197,8 +198,8 @@ def get_partitions_w_cardinality(G,R):
         if len(p) == R:
             res.append(p)
 
-    return res    
-    
+    return res
+
 
 def get_random_partition(G):
     #nr = random.randint(1,G+1)  # number of subgroups
@@ -208,8 +209,8 @@ def get_random_partition(G):
 
     for i in range(G):
         kap[i] = random.randint(0,G)
-    
-    #print kap    
+
+    #print kap
 
     # post-process to remove empty subsets
     d = {}
@@ -218,9 +219,9 @@ def get_random_partition(G):
         if not d.has_key(e):
             d[e] = ind
             ind += 1
-    
+
     #print d
-    
+
     for i,e in enumerate(kap):
         kap[i] = d[e]
 
@@ -228,11 +229,11 @@ def get_random_partition(G):
             for i2 in range(i,G):
                 M[i2] = kap[i]
 
-    
+
     #print kap
     #print M
-    
+
     return decode_partition(set,kap,M)
 
 
-            
+

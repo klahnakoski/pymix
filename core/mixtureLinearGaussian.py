@@ -1,28 +1,24 @@
+import random
+
 from numpy.linalg import linalg as la
 from numpy.oldnumeric.functions import argmax
-from core import mixture
 import numpy
-import random
-import copy
 import scipy.stats
-import math
-import scipy.stats
-from core.mixture import InvalidDistributionInput
+from core.distributions.prob import ProbDistribution
+
+from core.priors.prior import PriorDistribution
+from core.pymix_util.dataset import DataSet
+from core.pymix_util.errors import InvalidDistributionInput, MixtureError
 
 
-class EmptyComponent(mixture.MixtureError):
+class EmptyComponent(MixtureError):
     """
     Raised if a Component is empty.
     """
-
-    def __init__(self, message):
-        self._message = message
-
-    def __str__(self):
-        return str(self.message)
+    pass
 
 
-class LinearGaussianDistribution(mixture.ProbDistribution):
+class LinearGaussianDistribution(ProbDistribution):
     """
     Linear Gaussian Distribution
     """
@@ -61,7 +57,7 @@ class LinearGaussianDistribution(mixture.ProbDistribution):
         return True
 
     def pdf(self, data):
-        if isinstance(data, mixture.DataSet):
+        if isinstance(data, DataSet):
             dt = data.internalData
         elif isinstance(data, numpy.ndarray):
             dt = data
@@ -87,7 +83,7 @@ class LinearGaussianDistribution(mixture.ProbDistribution):
 
         res = scipy.stats.norm.pdf(y - xbt, 0, self.sigma[0])
         if self.noise > 0:
-            print noise
+            print self.noise
             res = (1 - self.noise) * res + self.noise * scipy.stats.norm.pdf(y, 0, 5)
         outliers = res < float(1e-307)
         #print 'min', res[outliers], numpy.nonzero(outliers) #, self.beta[0]+numpy.dot(x[numpy.argmin(res)],self.beta[1:])
@@ -95,7 +91,7 @@ class LinearGaussianDistribution(mixture.ProbDistribution):
         return numpy.log(res)
 
     def MStep(self, posterior, data, mix_pi=None):
-        if isinstance(data, mixture.DataSet):
+        if isinstance(data, DataSet):
             dt = data.internalData
         elif isinstance(data, numpy.ndarray):
             dt = data
@@ -136,7 +132,7 @@ class LinearGaussianDistribution(mixture.ProbDistribution):
         self.currentPosterior = posterior
 
     def predict(self, data, posterior=[]):
-        if isinstance(data, mixture.DataSet):
+        if isinstance(data, DataSet):
             dt = data.internalData
         elif isinstance(data, numpy.ndarray):
             dt = data
@@ -194,7 +190,7 @@ class LinearGaussianDistribution(mixture.ProbDistribution):
         return "\t" * offset + ";LinearGaussian;" + str(self.p) + ";" + str(self.mu.tolist()) + ";" + str(self.sigma.tolist()) + "\n"
 
 
-class LinearGaussianPriorDistribution(mixture.PriorDistribution):
+class LinearGaussianPriorDistribution(PriorDistribution):
     """ Gausian prior with 0 mean as prior distribuion """
 
     def __init__(self, alpha, fixed=1):
@@ -254,7 +250,7 @@ class LinearGaussianPriorDistribution(mixture.PriorDistribution):
 
         assert isinstance(dist, LinearGaussianDistribution)
 
-        if isinstance(data, mixture.DataSet):
+        if isinstance(data, DataSet):
             dt = data.internalData
         elif isinstance(data, numpy.ndarray):
             dt = data
@@ -323,7 +319,7 @@ def evaluateRegression(mix, data, type=2, train=[], sparse=[]):
          3 - user expected y
     """
 
-    if isinstance(data, mixture.DataSet):
+    if isinstance(data, DataSet):
         dt = data.internalData
     elif isinstance(data, numpy.ndarray):
         dt = data

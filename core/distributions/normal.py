@@ -1,0 +1,180 @@
+import copy
+import random
+import math
+from pymix import _C_mixextend
+import numpy
+from core.distributions.prob import ProbDistribution
+from core.pymix_util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
+from core.pymix_util.dataset import DataSet
+
+
+class NormalDistribution(ProbDistribution):
+    """
+    Univariate Normal Distribution
+
+    """
+
+    def __init__(self, mu, sigma):
+        """
+        Constructor
+
+        @param mu: mean parameter
+        @param sigma: standard deviation parameter
+        """
+        self.p = 1
+        self.suff_p = 1
+        self.mu = mu
+        self.sigma = sigma
+
+        self.freeParams = 2
+
+        self.min_sigma = 0.25  # minimal standard deviation
+
+    def __eq__(self, other):
+        res = False
+        if isinstance(other, NormalDistribution):
+            if numpy.allclose(other.mu, self.mu) and numpy.allclose(other.sigma, self.sigma):
+                res = True
+        return res
+
+    def __copy__(self):
+        return NormalDistribution(copy.deepcopy(self.mu), copy.deepcopy(self.sigma))
+
+    def __str__(self):
+        return "Normal:  [" + str(self.mu) + ", " + str(self.sigma) + "]"
+
+
+    def pdf(self, data):
+
+        # Valid input arrays will have the form [[sample1],[sample2],...] or
+        # [sample1,sample2, ...], the latter being the input format to the extension function,
+        # so we might have to reformat the data
+        if isinstance(data, DataSet):
+            assert data.internalData is not None, "Internal data not initialized."
+            nr = len(data.internalData)
+            assert data.internalData.shape == (nr, 1), 'shape = ' + str(data.internalData.shape)
+
+            x = numpy.transpose(data.internalData)[0]
+
+        elif isinstance(data, numpy.ndarray):
+            nr = len(data)
+
+            if data.shape == (nr, 1):  # data format needs to be changed
+                x = numpy.transpose(data)[0]
+            elif data.shape == (nr,):
+                x = data
+            else:
+                raise TypeError, 'Invalid data shape: ' + str(data.shape)
+        else:
+            raise TypeError, "Unknown/Invalid input type:" + str(type(data))
+
+        # computing log likelihood
+        res = _C_mixextend.wrap_gsl_ran_gaussian_pdf(self.mu, self.sigma, x)
+
+        return numpy.log(res)
+
+    def sample(self):
+        return random.normalvariate(self.mu, self.sigma)
+
+
+    def sampleSet(self, nr):
+        res = numpy.zeros(nr, dtype='Float64')
+
+        for i in range(nr):
+            res[i] = self.sample()
+
+        return res
+
+    def sufficientStatistics(self, posterior, data):
+        """
+        Returns sufficient statistics for a given data set and posterior. In case of the Normal distribution
+        this is the dot product of a vector of component membership posteriors with the data and the square
+        of the data.
+
+        @param posterior: numpy vector of component membership posteriors
+        @param data: numpy vector holding the data
+
+        @return: list with dot(posterior, data) and dot(posterior, data**2)
+        """
+        return numpy.array([numpy.dot(posterior, data)[0], numpy.dot(posterior, data ** 2)[0]], dtype='Float64')
+
+
+    def MStep(self, posterior, data, mix_pi=None):
+        # data has to be reshaped for parameter estimation
+        if isinstance(data, DataSet):
+            x = data.internalData[:, 0]
+        elif isinstance(data, numpy.ndarray):
+            x = data[:, 0]
+
+        else:
+            raise TypeError, "Unknown/Invalid input to MStep."
+        nr = len(x)
+
+        sh = x.shape
+        assert sh == (nr,)  # XXX debug
+
+        post_sum = numpy.sum(posterior)
+
+        # checking for valid posterior: if post_sum is zero, this component is invalid
+        # for this data set
+        if post_sum != 0.0:
+            # computing ML estimates for mu and sigma
+            new_mu = numpy.dot(posterior, x) / post_sum
+            new_sigma = math.sqrt(numpy.dot(posterior, (x - new_mu) ** 2) / post_sum)
+        else:
+            raise InvalidPosteriorDistribution, "Sum of posterior is zero: " + str(self) + " has zero likelihood for data set."
+
+        if new_sigma < self.min_sigma:
+        # enforcing non zero variance estimate
+            new_sigma = self.min_sigma
+
+        # assigning updated parameter values
+        self.mu = new_mu
+        self.sigma = new_sigma
+
+    def isValid(self, x):
+        try:
+            float(x)
+        except (ValueError):
+            #print "Invalid data: ",x,"in NormalDistribution."
+            raise InvalidDistributionInput, "\n\tInvalid data: " + str(x) + " in NormalDistribution."
+
+    def formatData(self, x):
+        if isinstance(x, list) and len(x) == 1:
+            x = x[0]
+        self.isValid(x)  # make sure x is valid argument
+        return [self.p, [x]]
+
+
+    def flatStr(self, offset):
+        offset += 1
+        return "\t" * +offset + ";Norm;" + str(self.mu) + ";" + str(self.sigma) + "\n"
+
+    def posteriorTraceback(self, x):
+        return self.pdf(x)
+
+    def merge(self, dlist, weights):
+        raise DeprecationWarning, 'Part of the outdated structure learning implementation.'
+        assert len(dlist) + 1 == len(weights)
+
+        norm = sum(weights)
+        m_mu = self.mu * weights[0]
+        #print self.mu," * ", coeff ,"= ",m_mu
+
+        for i in range(len(dlist)):
+            assert isinstance(dlist[i], NormalDistribution)
+
+            #print m_mu, " += ",
+
+            m_mu += weights[i + 1] * dlist[i].mu
+            #print dlist[i].mu," * ", coeff ,"= ",m_mu
+            #m_sigma += coeff * dlist[i].sigma
+
+        m_mu = m_mu / norm
+        m_sigma = weights[0] * ( self.sigma + ( self.mu - m_mu) ** 2 )
+        for i in range(len(dlist)):
+            m_sigma += weights[i + 1] * ( dlist[i].sigma + ( dlist[i].mu - m_mu) ** 2 )
+
+        self.mu = m_mu
+        self.sigma = m_sigma / norm
+
