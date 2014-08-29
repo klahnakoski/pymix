@@ -1958,7 +1958,7 @@ class MixtureModelTests(BaseTest):
         self.assertEqual(g.components[0].distList[0], {"mu": 2.38220637305, "sigma": 0.34999339552})
         self.assertEqual(g.components[0].distList[1], {"M": 4, "p": 3, "phi": [0.22222222, 0.44444444, 0.22222222, 0.11111111]})
         self.assertEqual(g.components[0].distList[2], {"M": 4, "phi": [2.49875062e-04, 6.66333500e-01, 3.33166750e-01, 2.49875062e-04]})
-        self.assertEqual(g.components[0].distList[3], {"lambd": [0.725388448525]})
+        self.assertEqual(g.components[0].distList[3], {"lambd": 0.725388448525})
         self.assertAlmostEqual(g.components[0].distList[4], {
             "mu": [-0.047241636484129997, 1.88664266223455],
             "sigma": [[0.68770018725283, 0.88014718559524996], [0.88014718559524996, 1.1868910971984099]]
@@ -1973,7 +1973,7 @@ class MixtureModelTests(BaseTest):
         self.assertEqual(g.components[1].distList[0], {"mu": -2.60101221587, "sigma": 0.744405770895})
         self.assertEqual(g.components[1].distList[1], {"M": 4, "p": 3, "phi": [0.46666667, 0.2, 0.23333333, 0.1]})
         self.assertEqual(g.components[1].distList[2], {"M": 4, "phi": [9.99750062e-02, 3.99900025e-01, 2.49937516e-04, 4.99875031e-01]})
-        self.assertEqual(g.components[1].distList[3], {"lambd": [2.34674997335]})
+        self.assertEqual(g.components[1].distList[3], {"lambd": 2.34674997335})
         self.assertAlmostEqual(g.components[1].distList[4], {
             "mu": [1.2031898954151901, -2.2125948910136199],
             "sigma": [[0.15099010970408, 0.060671540603359997], [0.060671540603359997, 0.65526254779920001]]
