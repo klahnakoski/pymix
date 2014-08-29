@@ -1,4 +1,5 @@
 ## function sumlogs is borrowed from GQLMixture.py
+
 import numpy
 from pymix import _C_mixextend
 

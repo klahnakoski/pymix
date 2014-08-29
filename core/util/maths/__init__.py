@@ -110,8 +110,10 @@ class Math(object):
         """
         if value == None:
             return None
+        else:
+            value = float(value)
 
-        if digits != None:
+        if digits is None:
             m = pow(10, math.ceil(math.log10(value)))
             return __builtin__.round(value / m, digits) * m
 

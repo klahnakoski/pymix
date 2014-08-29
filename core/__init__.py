@@ -1,29 +1,61 @@
+## encoding: utf-8
+################################################################################
+#
+#  This file is part of the Python Mixture Package
+#
+#  Author: Kyle Lahnakoski (kyle@lahnakoski.com)
+#
+#  This library is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU Library General Public
+#  License as published by the Free Software Foundation; either
+#  version 2 of the License, or (at your option) any later version.
+#
+#  This library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  Library General Public License for more details.
+#
+#  You should have received a copy of the GNU Library General Public
+#  License along with this library; if not, write to the Free
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+################################################################################
+
 import unittest
 from numpy import ndarray
-from core.util.env.logs import Log
-from core.util.structs.wraps import wrap
+from .util.env.logs import Log
+from .util.maths import Math
+from .util.structs.wraps import wrap
 
 
-def assertAlmostEqual(self, first, second, places=None, msg=None, delta=None):
+class BaseTest(unittest.TestCase):
+    def assertAlmostEqual(self, first, second, places=None, msg=None, delta=None):
+        assertAlmostEqual(first, second, places=places, msg=msg, delta=delta)
+
+    def assertEqual(self, first, second, msg=None):
+        self.assertAlmostEqual(first, second, msg=msg)
+
+
+def assertAlmostEqual(first, second, places=None, msg=None, delta=None):
     if isinstance(second, dict):
         first = wrap({"value": first})
         second = wrap(second)
         for k, v2 in second.items():
             v1 = first["value." + unicode(k)]
-            assertAlmostEqual(self, v1, v2)
+            assertAlmostEqual(v1, v2)
     elif isinstance(first, (list, ndarray)) and isinstance(second, (list, ndarray)):
         for a, b in zip(first, second):
-            assertAlmostEqual(self, a, b, places=places, msg=msg, delta=delta)
+            assertAlmostEqual(a, b, places=places, msg=msg, delta=delta)
     else:
-        if self is None:
-            assertAlmostEqualValue(first, second, places=places, msg=msg, delta=delta)
-        else:
-            unittest.TestCase.assertAlmostEqual(self, first, second, places=places, msg=msg, delta=delta)
+        # if self is None:
+        #     assertAlmostEqualValue(first, second, places=places, msg=msg, delta=delta)
+        # else:
+        assertAlmostEqualValue(first, second, places=places, msg=msg, delta=delta)
 
 
 def assertAlmostEqualValue(first, second, places=None, msg=None, delta=None):
     """
-    Snagged from unittest/case.py
+    Snagged from unittest/case.py, then modified (Aug2014)
     """
     if first == second:
         # shortcut
@@ -44,7 +76,7 @@ def assertAlmostEqualValue(first, second, places=None, msg=None, delta=None):
         if places is None:
             places = 7
 
-        if round(abs(second - first), places) == 0:
+        if Math.round(first, digits=places) == Math.round(second, digits=places):
             return
 
         standardMsg = '%s != %s within %r places' % (
@@ -52,4 +84,8 @@ def assertAlmostEqualValue(first, second, places=None, msg=None, delta=None):
             repr(second),
             places
         )
-    raise Log.error(msg + ": (" + standardMsg + ")")
+    raise AssertionError(msg + ": (" + standardMsg + ")")
+
+
+
+

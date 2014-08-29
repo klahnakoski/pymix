@@ -1,11 +1,11 @@
 import copy
 import random
 import math
-from pymix import _C_mixextend
+from scipy import stats
 import numpy
-from core.distributions.prob import ProbDistribution
-from core.pymix_util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
-from core.pymix_util.dataset import DataSet
+from .prob import ProbDistribution
+from ..pymix_util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
+from ..pymix_util.dataset import DataSet
 
 
 class NormalDistribution(ProbDistribution):
@@ -69,8 +69,7 @@ class NormalDistribution(ProbDistribution):
             raise TypeError, "Unknown/Invalid input type:" + str(type(data))
 
         # computing log likelihood
-        res = _C_mixextend.wrap_gsl_ran_gaussian_pdf(self.mu, self.sigma, x)
-
+        res = stats.norm.pdf(x, loc=self.mu, scale=self.sigma)
         return numpy.log(res)
 
     def sample(self):
@@ -155,26 +154,3 @@ class NormalDistribution(ProbDistribution):
 
     def merge(self, dlist, weights):
         raise DeprecationWarning, 'Part of the outdated structure learning implementation.'
-        assert len(dlist) + 1 == len(weights)
-
-        norm = sum(weights)
-        m_mu = self.mu * weights[0]
-        #print self.mu," * ", coeff ,"= ",m_mu
-
-        for i in range(len(dlist)):
-            assert isinstance(dlist[i], NormalDistribution)
-
-            #print m_mu, " += ",
-
-            m_mu += weights[i + 1] * dlist[i].mu
-            #print dlist[i].mu," * ", coeff ,"= ",m_mu
-            #m_sigma += coeff * dlist[i].sigma
-
-        m_mu = m_mu / norm
-        m_sigma = weights[0] * ( self.sigma + ( self.mu - m_mu) ** 2 )
-        for i in range(len(dlist)):
-            m_sigma += weights[i + 1] * ( dlist[i].sigma + ( dlist[i].mu - m_mu) ** 2 )
-
-        self.mu = m_mu
-        self.sigma = m_sigma / norm
-

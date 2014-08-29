@@ -38,7 +38,7 @@ import random
 
 from pymix import _C_mixextend
 import numpy
-import core
+from core import BaseTest
 
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.exponential import ExponentialDistribution
@@ -130,14 +130,6 @@ def _testTupleLists(tcase, list1, list2, places):
     for i in range(len(list1)):
         tcase.assertAlmostEqual(list1[i][0], list2[i][0], places)
         tcase.assertEqual(list1[i][1], list2[i][1], places)
-
-
-class BaseTest(unittest.TestCase):
-    def assertAlmostEqual(self, first, second, places=None, msg=None, delta=None):
-        core.assertAlmostEqual(self, first, second, places=places, msg=msg, delta=delta)
-
-    def assertEqual(self, first, second, msg=None):
-        self.assertAlmostEqual(first, second, msg=msg)
 
 
 class DataSetTests(BaseTest):
@@ -2808,9 +2800,9 @@ class ModelSelectionTests(BaseTest):
         tBIC = [4172.0691607116069, 1057.3561873187775, 1156.2216432806276]
         tAIC = [4205.095011641547, 1028.6993152729087, 1111.9337501188302]
         for i in range(3):
-            self.assertAlmostEqual(NEC[i], tNEC[i], 16)
-            self.assertAlmostEqual(BIC[i], tBIC[i], 16)
-            self.assertAlmostEqual(AIC[i], tAIC[i], 16)
+            self.assertAlmostEqual(NEC[i], tNEC[i], places=15)
+            self.assertAlmostEqual(BIC[i], tBIC[i], places=15)
+            self.assertAlmostEqual(AIC[i], tAIC[i], places=15)
 
         self.assertEqual(mlist[numpy.argmin(NEC)].G, 2)
         self.assertEqual(mlist[numpy.argmin(BIC)].G, 2)

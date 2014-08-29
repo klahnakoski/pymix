@@ -91,7 +91,7 @@ class MultinomialDistribution(ProbDistribution):
                 res[j] += (log_phi[i] * x[j, i])
 
         res2 = numpy.sum(x * log_phi, axis=1)
-        assertAlmostEqual(None, res, res2)
+        assertAlmostEqual(res, res2)
 
         return res
 

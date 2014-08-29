@@ -1,8 +1,5 @@
 import unittest
-import random
 import copy
-
-import numpy
 
 from core import mixtureLinearGaussian
 from tests.mixtureunittests import BaseTest

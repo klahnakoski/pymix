@@ -40,12 +40,10 @@ organized in a hierarchical fashion.
 
 
 """
-import math
 import sys
 import logging
 import numpy
 
-from pymix import _C_mixextend  # import C extension
 from core.pymix_util.stats import get_loglikelihood
 from core.pymix_util import setPartitions
 
@@ -221,24 +219,4 @@ def modelSelection(data, models, silent=False, NEC=1):
         print "Minimal AIC at G = " + str(G_list[AIC_min]) + " with " + str(AIC[AIC_min])
 
     return (NEC, BIC, AIC)
-
-
-def get_posterior(mix_model, data, logreturn=True):
-    # matrix of posterior probs: components# * (sequence positions)#
-    log_l = numpy.zeros((mix_model.G, len(data)), dtype='Float64')
-
-    # computing log posterior distribution
-    for i in range(mix_model.G):
-        log_l[i] = math.log(mix_model.pi[i]) + mix_model.components[i].pdf(data)
-
-
-    # computing data log likelihood as criteria of convergence
-    # log_l is normalized in-place and likelihood is returned as log_p
-    log_p = _C_mixextend.get_normalized_posterior_matrix(log_l)
-
-    if logreturn == True:
-        return log_l
-    else:
-        return numpy.exp(log_l)
-
 

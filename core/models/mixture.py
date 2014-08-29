@@ -4,13 +4,13 @@ from pymix import _C_mixextend
 import random
 import numpy
 import sys
-from core.distributions.prob import ProbDistribution
-from core.distributions.product import ProductDistribution
-from core.pymix_util.errors import InvalidPosteriorDistribution, ConvergenceFailureEM, InvalidDistributionInput
-from core.mixture import get_posterior
-from core.pymix_util.dataset import DataSet
-from core.pymix_util.maths import sumlogs, dict_intersection
-from core.pymix_util.stats import entropy, sym_kl_dist
+from core.pymix_util import mixextend
+from ..distributions.prob import ProbDistribution
+from ..distributions.product import ProductDistribution
+from ..pymix_util.errors import InvalidPosteriorDistribution, ConvergenceFailureEM, InvalidDistributionInput
+from ..pymix_util.dataset import DataSet
+from ..pymix_util.maths import sumlogs, dict_intersection
+from ..pymix_util.stats import entropy, sym_kl_dist, get_posterior
 
 
 class MixtureModel(ProbDistribution):
@@ -626,17 +626,21 @@ class MixtureModel(ProbDistribution):
         # compute log of mix_posterior (if present)
         if mix_posterior is not None:
             log_mix_posterior = numpy.log(mix_posterior)
+        else:
+            log_mix_posterior = None
 
         # computing log posterior distribution
         for i in range(self.G):
             #print i,self.components[i].pdf(data).tolist()
 
             # XXX cache redundant pdfs for models with CSI structure
-            log_l[i] = log_pi[i] + self.components[i].pdf(data)
+            pdf = self.components[i].pdf(data)
+            log_l[i] = log_pi[i] + pdf
 
         # log_l is normalized in-place
         #print sum(numpy.exp(log_l)==float('-inf'))
-        log_p = _C_mixextend.get_normalized_posterior_matrix(log_l)
+        (log_l, log_p) = mixextend.get_normalized_posterior_matrix(log_l)
+
         if log_p == float('-inf'):
             raise InvalidPosteriorDistribution, "Invalid posterior distribution."
 
