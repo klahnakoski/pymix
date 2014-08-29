@@ -838,6 +838,8 @@ class MixtureModel(ProbDistribution):
         # for lower hierarchy mixture we need the log of mix_posterior
         if mix_posterior is not None:
             log_mix_posterior = numpy.log(mix_posterior)
+        else:
+            log_mix_posterior = None
 
         while 1:
             log_p = 0.0
@@ -852,7 +854,7 @@ class MixtureModel(ProbDistribution):
 
             # computing data log likelihood as criteria of convergence
             # log_l is normalized in-place and likelihood is returned as log_p
-            log_p = _C_mixextend.get_normalized_posterior_matrix(log_l)
+            (log_l, log_p) = mixextend.get_normalized_posterior_matrix(log_l)
 
             # adjusting posterior for lower hierarchy mixtures
             if mix_posterior is not None:
@@ -865,7 +867,6 @@ class MixtureModel(ProbDistribution):
             # update prior hyper parametes in an empirical Bayes fashion, if appropriate
             if prior.constant_hyperparams == 0:
                 prior.updateHyperparameters(self, l, data)
-
 
             # we have to take the parameter prior into account to form the objective function
             # Since we assume independence between parameters in different components, the prior

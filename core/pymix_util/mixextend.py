@@ -28,3 +28,8 @@ def get_normalized_posterior_matrix(data):
     logsum = numpy.log(numpy.sum(numpy.exp(data), axis=0))
     result = data - logsum
     return result, numpy.sum(logsum)
+
+
+def substract_matrix(a, b):
+    result = numpy.subtract(a, b)
+    return result

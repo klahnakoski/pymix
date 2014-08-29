@@ -2,6 +2,7 @@
 import math
 import numpy
 from pymix import _C_mixextend
+from core.pymix_util import mixextend
 from core.pymix_util.maths import sumlogs
 
 
@@ -242,11 +243,9 @@ def get_posterior(mix_model, data, logreturn=True):
 
     # computing data log likelihood as criteria of convergence
     # log_l is normalized in-place and likelihood is returned as log_p
-    log_p = _C_mixextend.get_normalized_posterior_matrix(log_l)
+    (log_l, log_p) = mixextend.get_normalized_posterior_matrix(log_l)
 
     if logreturn == True:
         return log_l
     else:
         return numpy.exp(log_l)
-
-

@@ -1,8 +1,7 @@
 import unittest
 import copy
 
-from core import mixtureLinearGaussian
-from tests.mixtureunittests import BaseTest
+from core import mixtureLinearGaussian, BaseTest
 
 
 class LinearGaussianDistributionTests(BaseTest):

@@ -36,19 +36,15 @@ def sumlogs_purepy(a):
 
 
 def sumlogs(a):
-    """
-    Call to C extension function sum_logs.
-    """
-    m = max(a) # Maximal value must not be unique
-    result = _C_mixextend.sum_logs(a, m)
+    m = numpy.max(a)  # Maximal value must not be unique
+    result = numpy.log(sum(numpy.exp(a - m))) + m
     return result
 
 
-def matrixSumlogs(mat):
-    """
-    Call to C extension function matrix_sum_logs
-    """
-    return _C_mixextend.matrix_sum_logs(mat)
+def matrixSumlogs(a):
+    m = numpy.max(a)  # Maximal value must not be unique
+    result = numpy.log(sum(numpy.exp(a - m))) + m
+    return result
 
 
 def dict_intersection(d1, d2):

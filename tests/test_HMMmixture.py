@@ -2,7 +2,7 @@
 #
 #       This file is part of the Python Mixture Package
 #
-#       file:    mixtureunittests.py
+#       file:    test_mixture.py
 #       author: Benjamin Georgi
 #
 #       Copyright (C) 2004-2007 Benjamin Georgi

@@ -7,6 +7,7 @@ from core.distributions.discrete import DiscreteDistribution
 from core.distributions.product import ProductDistribution
 from core.models.bayes import BayesMixtureModel
 from core.models.mixture import MixtureModel
+from core.pymix_util import mixextend
 from core.pymix_util.candidate_group import CandidateGroup
 from core.pymix_util.constrained_dataset import ConstrainedDataSet
 from core.pymix_util.dataset import DataSet
@@ -204,6 +205,8 @@ class labeledBayesMixtureModel(BayesMixtureModel):
         # for lower hierarchy mixture we need the log of mix_posterior
         if mix_posterior is not None:
             log_mix_posterior = numpy.log(mix_posterior)
+        else:
+            log_mix_posterior = None
 
         while 1:
             log_p = 0.0
@@ -230,7 +233,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
 
             # computing data log likelihood as criteria of convergence
             # log_l is normalized in-place and likelihood is returned as log_p
-            log_p = _C_mixextend.get_normalized_posterior_matrix(log_l)
+            (log_l, log_p) = mixextend.get_normalized_posterior_matrix(log_l)
 
             # adjusting posterior for lower hierarchy mixtures
             if mix_posterior is not None:

@@ -2,7 +2,7 @@
 #
 #       This file is part of the Python Mixture Package
 #
-#       file:    mixtureunittests.py
+#       file:    test_mixture.py
 #       author: Benjamin Georgi
 #
 #       Copyright (C) 2004-2009 Benjamin Georgi
@@ -113,6 +113,8 @@ from core.pymix_util.dataset import DataSet
 #            print ' '*14 ,row,','
 #    print ' '*8 +'data.fromList(l)'
 #    print ' '*8 +'data.internalInit(gen)'
+from core.util.thread.threads import Thread
+
 
 def _testLists(tcase, list1, list2, places):
     tcase.assertEqual(len(list1), len(list2))
@@ -142,64 +144,69 @@ class DataSetTests(BaseTest):
         self.d2 = DataSet()
 
     def testfromfile(self):
-        self.d1.fromFile('./tests/test_fromfile0.txt')
+        def inner(please_stop):
+            Thread.sleep(2)
+            self.d1.fromFile('./tests/test_fromfile0.txt')
 
-        self.assertEqual(self.d1.headers, ['DLCL-0042', 'DLCL-0007', 'DLCL-0031', '"DLCL-0036;OCT"', 'DLCL-0030', 'DLCL-0004',
-            'DLCL-0029', 'DLCL-0008', 'DLCL-0052', 'DLCL-0034', 'DLCL-0051', 'DLCL-0011', 'DLCL-0032', 'DLCL-0006',
-            'DLCL-0049', 'DLCL-0039', 'DLCL-0001', 'DLCL-0018', 'DLCL-0037', 'DLCL-0010', 'DLCL-0015', 'DLCL-0026',
-            'DLCL-0005', 'DLCL-0023', 'DLCL-0027', 'DLCL-0024', 'DLCL-0013', 'DLCL-0002', 'DLCL-0016', 'DLCL-0020',
-            'DLCL-0003', 'DLCL-0014', 'DLCL-0048', 'DLCL-0033', 'DLCL-0025', 'DLCL-0040', 'DLCL-0017', 'DLCL-0028',
-            'DLCL-0012', 'DLCL-0021', 'DLCL-0041', 'DLCL-0009'])
+            self.assertEqual(self.d1.headers, ['DLCL-0042', 'DLCL-0007', 'DLCL-0031', '"DLCL-0036;OCT"', 'DLCL-0030', 'DLCL-0004',
+                'DLCL-0029', 'DLCL-0008', 'DLCL-0052', 'DLCL-0034', 'DLCL-0051', 'DLCL-0011', 'DLCL-0032', 'DLCL-0006',
+                'DLCL-0049', 'DLCL-0039', 'DLCL-0001', 'DLCL-0018', 'DLCL-0037', 'DLCL-0010', 'DLCL-0015', 'DLCL-0026',
+                'DLCL-0005', 'DLCL-0023', 'DLCL-0027', 'DLCL-0024', 'DLCL-0013', 'DLCL-0002', 'DLCL-0016', 'DLCL-0020',
+                'DLCL-0003', 'DLCL-0014', 'DLCL-0048', 'DLCL-0033', 'DLCL-0025', 'DLCL-0040', 'DLCL-0017', 'DLCL-0028',
+                'DLCL-0012', 'DLCL-0021', 'DLCL-0041', 'DLCL-0009'])
 
-        self.assertEqual(self.d1.sampleIDs, ['1357915', '1358277', '1358064', '1072873', '627173', '1357623', '1072356',
-            '1335756', '125294', '1268758', '1252094', '701768', '52564', '815774', 'LC4125', 'LC4103', '428103', '1371997',
-            '428103___1', '90', '703791', '682938', '1272464', '1336130', '128088', '1250670', '1369098', '504877', '1356583',
-            '713347', '705272', '1355435', '814768', '1367394', '1320051', '1287454', '1355426', '1287889', '1353111',
-            '727551', '824602', '1300358', '298320', '298320___1', '815541', '429234', '701152', '301649', '1351622', '1340918',
-            '1353149', '1339405', '1285581', '713080', '1251353', '1371030', '278808', '1286750', '1352434', '824198', '592498',
-            '685371', '684361', '1354190', '153010', '1368529', '1355174', '809851', '686038', '1143183', '1301588', '490387',
-            '1354710', '815845', '341889', '711771', '815555', '815555___1', '1333834', '469370', '1341161', '345032',
-            '345032___1', '1316750', '1356425', '1272279', '1183989', '364941', '1290386', '47475', '1340120', '1353711',
-            '490387___1', '813460', '1184052', '1351987', '704783', '752785', '549218', '728241', '1289318', '1339105',
-            '1341422', '1355289', '1370612', '1356091', '1353782', '1334943', '1356654', '1234404', '685761', '1305138',
-            '1354224', '1354224___1', '1288235', '1240756', '115281', '1240750', '1283152', '1270393', '1351623', '1305158',
-            '815623', '1290438', '1335255', '1355045', '1334380', '1335782', '1356993', '1338245', '1355098', '686352',
-            '1318612', '1671251', '1672022', '1357222', '1370670', '1368415', '1368505', '814360', '1372090', '1370776',
-            '1369330', '1333775', '1357940', '1367790', '154493', '684328', '1241117', '1340139', '826131', '93', '1367632',
-            '1130479', '162174', '259241', '207715', '1242115', '1240638', '1241211', '1350713', '491166', '221619', '1318920',
-            '491166___1', '35356', '701504', '714394', '1305171', '1300154', '814979', '814979___1', '1241854', '686199',
-            '213502', '1307025', '1351990', '740604', '293425___1', '1240813', '1172268', '840451', '725263', '254080', '1367995',
-            '42062', '814841', '292524', '1233864', '1339768', '1351095', '1270669', '754080', '1235193', '344134___1', '1240959',
-            '1240590', '1240959___1', '1241741', '771065', '162165', '162772', '162772___1', '746300', '510467', '1356323',
-            '1340461', '1335780', '701622', '824639', '666448', '1300528', '1341297', '455210', '1353133', '1340443', '30209',
-            '1234475', '510002', '1354154', '52408', '713213', '511387', '116801', '1352981', '1371026', '1372343', '1372323',
-            '1352964', '527073', '1326908', '1335634', '1370519', '1335796'])
+            self.assertEqual(self.d1.sampleIDs, ['1357915', '1358277', '1358064', '1072873', '627173', '1357623', '1072356',
+                '1335756', '125294', '1268758', '1252094', '701768', '52564', '815774', 'LC4125', 'LC4103', '428103', '1371997',
+                '428103___1', '90', '703791', '682938', '1272464', '1336130', '128088', '1250670', '1369098', '504877', '1356583',
+                '713347', '705272', '1355435', '814768', '1367394', '1320051', '1287454', '1355426', '1287889', '1353111',
+                '727551', '824602', '1300358', '298320', '298320___1', '815541', '429234', '701152', '301649', '1351622', '1340918',
+                '1353149', '1339405', '1285581', '713080', '1251353', '1371030', '278808', '1286750', '1352434', '824198', '592498',
+                '685371', '684361', '1354190', '153010', '1368529', '1355174', '809851', '686038', '1143183', '1301588', '490387',
+                '1354710', '815845', '341889', '711771', '815555', '815555___1', '1333834', '469370', '1341161', '345032',
+                '345032___1', '1316750', '1356425', '1272279', '1183989', '364941', '1290386', '47475', '1340120', '1353711',
+                '490387___1', '813460', '1184052', '1351987', '704783', '752785', '549218', '728241', '1289318', '1339105',
+                '1341422', '1355289', '1370612', '1356091', '1353782', '1334943', '1356654', '1234404', '685761', '1305138',
+                '1354224', '1354224___1', '1288235', '1240756', '115281', '1240750', '1283152', '1270393', '1351623', '1305158',
+                '815623', '1290438', '1335255', '1355045', '1334380', '1335782', '1356993', '1338245', '1355098', '686352',
+                '1318612', '1671251', '1672022', '1357222', '1370670', '1368415', '1368505', '814360', '1372090', '1370776',
+                '1369330', '1333775', '1357940', '1367790', '154493', '684328', '1241117', '1340139', '826131', '93', '1367632',
+                '1130479', '162174', '259241', '207715', '1242115', '1240638', '1241211', '1350713', '491166', '221619', '1318920',
+                '491166___1', '35356', '701504', '714394', '1305171', '1300154', '814979', '814979___1', '1241854', '686199',
+                '213502', '1307025', '1351990', '740604', '293425___1', '1240813', '1172268', '840451', '725263', '254080', '1367995',
+                '42062', '814841', '292524', '1233864', '1339768', '1351095', '1270669', '754080', '1235193', '344134___1', '1240959',
+                '1240590', '1240959___1', '1241741', '771065', '162165', '162772', '162772___1', '746300', '510467', '1356323',
+                '1340461', '1335780', '701622', '824639', '666448', '1300528', '1341297', '455210', '1353133', '1340443', '30209',
+                '1234475', '510002', '1354154', '52408', '713213', '511387', '116801', '1352981', '1371026', '1372343', '1372323',
+                '1352964', '527073', '1326908', '1335634', '1370519', '1335796'])
 
-        self.assertEqual(self.d1.col_headers, [])
+            self.assertEqual(self.d1.col_headers, [])
 
-        self.assertEqual(self.d1.N, 234)
+            self.assertEqual(self.d1.N, 234)
 
-        self.assertEqual(self.d1.p, 42)
+            self.assertEqual(self.d1.p, 42)
 
-        self.d1.fromFile('./tests/test_fromfile1.txt', col_headers=True)
+            self.d1.fromFile('./tests/test_fromfile1.txt', col_headers=True)
 
-        self.assertEqual(self.d1.headers, ['DLCL-0042', 'DLCL-0007', 'DLCL-0031', '"DLCL-0036;OCT"', 'DLCL-0030', 'DLCL-0004',
-            'DLCL-0029', 'DLCL-0008', 'DLCL-0052', 'DLCL-0034', 'DLCL-0051', 'DLCL-0011', 'DLCL-0032', 'DLCL-0006',
-            'DLCL-0049', 'DLCL-0039', 'DLCL-0001', 'DLCL-0018', 'DLCL-0037', 'DLCL-0010', 'DLCL-0015', 'DLCL-0026',
-            'DLCL-0005', 'DLCL-0023', 'DLCL-0027', 'DLCL-0024', 'DLCL-0013', 'DLCL-0002', 'DLCL-0016', 'DLCL-0020',
-            'DLCL-0003', 'DLCL-0014', 'DLCL-0048', 'DLCL-0033', 'DLCL-0025', 'DLCL-0040', 'DLCL-0017', 'DLCL-0028',
-            'DLCL-0012', 'DLCL-0021', 'DLCL-0041', 'DLCL-0009'])
+            self.assertEqual(self.d1.headers, ['DLCL-0042', 'DLCL-0007', 'DLCL-0031', '"DLCL-0036;OCT"', 'DLCL-0030', 'DLCL-0004',
+                'DLCL-0029', 'DLCL-0008', 'DLCL-0052', 'DLCL-0034', 'DLCL-0051', 'DLCL-0011', 'DLCL-0032', 'DLCL-0006',
+                'DLCL-0049', 'DLCL-0039', 'DLCL-0001', 'DLCL-0018', 'DLCL-0037', 'DLCL-0010', 'DLCL-0015', 'DLCL-0026',
+                'DLCL-0005', 'DLCL-0023', 'DLCL-0027', 'DLCL-0024', 'DLCL-0013', 'DLCL-0002', 'DLCL-0016', 'DLCL-0020',
+                'DLCL-0003', 'DLCL-0014', 'DLCL-0048', 'DLCL-0033', 'DLCL-0025', 'DLCL-0040', 'DLCL-0017', 'DLCL-0028',
+                'DLCL-0012', 'DLCL-0021', 'DLCL-0041', 'DLCL-0009'])
 
-        self.assertEqual(self.d1.col_headers, ['DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1',
-            'DLBCL1', 'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1',
-            'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL2', 'DLBCL2',
-            'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL1'])
+            self.assertEqual(self.d1.col_headers, ['DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1',
+                'DLBCL1', 'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1',
+                'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL2', 'DLBCL2',
+                'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL1'])
 
-        self.assertEqual(len(self.d1.headers), len(self.d1.col_headers))
+            self.assertEqual(len(self.d1.headers), len(self.d1.col_headers))
 
-        self.assertEqual(len(self.d1.dataMatrix[0]), len(self.d1.headers))
+            self.assertEqual(len(self.d1.dataMatrix[0]), len(self.d1.headers))
 
-        #self.assertEqual(self.d1.dataMatrix, '')
+            #self.assertEqual(self.d1.dataMatrix, '')
+
+        #RUN AS THREAD BECAUSE FILE IS LOCKED FOR A WHILE
+        Thread.run("testfromfile", inner)
 
     def testfromarray(self):
         a = numpy.array([[0, 0, 1], [1, 1, 0], [0, 1, 1], [1, 1, 1], [0, 0, 0]], dtype='Float64')
@@ -267,34 +274,36 @@ class DataSetTests(BaseTest):
         self.assertEqual(self.d2.col_headers, datClass)
 
     def testtranspose(self):
-        self.d1.fromFile('./tests/test_fromfile1.txt', col_headers=True)
+        def inner(please_stop):
+            Thread.sleep(2)
+            self.d1.fromFile('./tests/test_fromfile1.txt', col_headers=True)
 
-        self.assertEqual(self.d1.col_headers, ['DLBCL2', 'DLBCL2', 'DLBCL2',
-            'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1',
-            'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1',
-            'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL2', 'DLBCL1',
-            'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1',
-            'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL2',
-            'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL1'])
+            self.assertEqual(self.d1.col_headers, ['DLBCL2', 'DLBCL2', 'DLBCL2',
+                'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1',
+                'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1',
+                'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL2', 'DLBCL1',
+                'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1',
+                'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL2',
+                'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL1'])
 
-        self.assertEqual(self.d1.row_headers, [])
+            self.assertEqual(self.d1.row_headers, [])
 
-        self.assertEqual(self.d1.N, 1095)
-        self.assertEqual(self.d1.p, 42)
+            self.assertEqual(self.d1.N, 1095)
+            self.assertEqual(self.d1.p, 42)
 
-        self.d1.transpose()
+            self.d1.transpose()
 
-        self.assertEqual(self.d1.N, 42)
-        self.assertEqual(self.d1.p, 1095)
+            self.assertEqual(self.d1.N, 42)
+            self.assertEqual(self.d1.p, 1095)
 
-        self.assertEqual(self.d1.row_headers, ['DLBCL2', 'DLBCL2', 'DLBCL2',
-            'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1',
-            'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1',
-            'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL2', 'DLBCL1',
-            'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1',
-            'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL2',
-            'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL1'])
-
+            self.assertEqual(self.d1.row_headers, ['DLBCL2', 'DLBCL2', 'DLBCL2',
+                'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1',
+                'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1',
+                'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL2', 'DLBCL1',
+                'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1',
+                'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL2',
+                'DLBCL1', 'DLBCL2', 'DLBCL2', 'DLBCL1'])
+        Thread.run("testtranspose", inner)
 
     def testinternalinit(self):
         # basic case

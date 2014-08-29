@@ -1,4 +1,6 @@
-from mixture import *
+from core.distributions.normal import NormalDistribution
+from core.distributions.product import ProductDistribution
+from core.models.mixture import MixtureModel
 
 pr1 = ProductDistribution([NormalDistribution(-6.0, 0.5),NormalDistribution(-4.0, 0.5),NormalDistribution(-3.0, 0.5)])
 pr2 = ProductDistribution([NormalDistribution(-5.0, 0.5),NormalDistribution(-3.3, 0.5),NormalDistribution(-2.3, 0.5)])

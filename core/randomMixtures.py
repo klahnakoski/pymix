@@ -8,11 +8,11 @@ from pymix import setPartitions
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.normal import NormalDistribution
 from core.distributions.product import ProductDistribution
-from core.mixture import dict_intersection
 from core.models.bayes import BayesMixtureModel
 from core.models.mixture import MixtureModel
 from core.priors.dirichlet import DirichletPrior
 from core.priors.mixture_model import MixtureModelPrior
+from core.pymix_util.maths import dict_intersection
 from core.pymix_util.stats import sym_kl_dist, get_loglikelihood, random_vector
 
 from examples import fullEnumerationExhaustive
@@ -1582,53 +1582,3 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
     #print '\navg. quick reject:',avg_quick_reject / rep
 
     return numpy.array(t_old), numpy.array(t_history), numpy.array(t_bound),  numpy.array(t_historybound)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
