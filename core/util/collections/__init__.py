@@ -1,5 +1,6 @@
 import types
 import math
+import numpy
 from ..collections.multiset import Multiset
 from ..struct import Null
 
@@ -49,8 +50,8 @@ def MAX(*values):
 
 
 def PRODUCT(*values):
-    if isinstance(values, tuple) and len(values) == 1 and isinstance(values[0], (list, set, tuple, Multiset, types.GeneratorType)):
-        values = values[0]
+    if isinstance(values, tuple) and len(values) == 1 and hasattr(values[0], "__iter__"):
+        values = list(values[0])
     output = Null
     for v in values:
         if v == None:

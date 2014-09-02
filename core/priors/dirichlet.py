@@ -1,5 +1,4 @@
 import copy
-from pymix import _C_mixextend
 import numpy
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.multinomial import MultinomialDistribution
@@ -65,7 +64,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
             # use GSL implementation
             #res = pygsl.rng.dirichlet_lnpdf(self.alpha,[phi])[0] XXX
             try:
-                res = _C_mixextend.wrap_gsl_dirichlet_lnpdf(self.alpha, [m.phi])
+                res = mixextend.wrap_gsl_dirichlet_lnpdf(self.alpha, [m.phi])
             except ValueError:
                 print m
                 print self
@@ -75,7 +74,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
         elif isinstance(m, list):
             in_l = [d.phi for d in m]
             # use GSL implementation
-            res = _C_mixextend.wrap_gsl_dirichlet_lnpdf(self.alpha, in_l)
+            res = mixextend.wrap_gsl_dirichlet_lnpdf(self.alpha, in_l)
             return res
         else:
             raise TypeError
@@ -89,7 +88,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
         res = numpy.ones(len(x), dtype='Float64')
         for i, d in enumerate(x):
             post_alpha = self.alpha + d
-            res[i] = numpy.log(_C_mixextend.wrap_gsl_dirichlet_pdf(post_alpha, [m.phi]))
+            res[i] = numpy.array(mixextend.wrap_gsl_dirichlet_lnpdf(post_alpha, [m.phi]))
 
         return res
 
@@ -103,10 +102,10 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
 
         x_sum = sum(x)
 
-        term1 = _C_mixextend.wrap_gsl_sf_lngamma(self.alpha_sum) - _C_mixextend.wrap_gsl_sf_lngamma(self.alpha_sum + x_sum)
+        term1 = mixextend.wrap_gsl_sf_lngamma(self.alpha_sum) - mixextend.wrap_gsl_sf_lngamma(self.alpha_sum + x_sum)
         term2 = 0.0
         for i in range(self.p):
-            term2 += _C_mixextend.wrap_gsl_sf_lngamma(self.alpha[i] + x[i]) - _C_mixextend.wrap_gsl_sf_lngamma(self.alpha[i])
+            term2 += mixextend.wrap_gsl_sf_lngamma(self.alpha[i] + x[i]) - mixextend.wrap_gsl_sf_lngamma(self.alpha[i])
 
         res = term1 + term2
         return res

@@ -43,28 +43,28 @@ SNP = Alphabet([
 
 
 # ----------------------------- Example 1 -----------------------------
-m = MixtureModel(3, [0.25, 0.5, 0.25],
-    [NormalDistribution(-3.0, 0.5),
-        NormalDistribution(1.0, 0.5),
-        NormalDistribution(6.0, 0.5)
-    ])
-
-print "true", m
-
-seq = m.sampleSet(100)
-
-m2 = MixtureModel(3, [0.2, 0.4, 0.4],
-    [NormalDistribution(-3.5, 0.5),
-        NormalDistribution(0.5, 1.5),
-        NormalDistribution(4.0, 0.6)
-    ])
-
-m2.randParams(seq)
-t1 = clock()
-m2.EM(seq, 40, 0.0)
-t2 = clock()
-print "time = ", t2 - t1
-print m2
+# m = MixtureModel(3, [0.25, 0.5, 0.25],
+#     [NormalDistribution(-3.0, 0.5),
+#         NormalDistribution(1.0, 0.5),
+#         NormalDistribution(6.0, 0.5)
+#     ])
+#
+# print "true", m
+#
+# seq = m.sampleSet(100)
+#
+# m2 = MixtureModel(3, [0.2, 0.4, 0.4],
+#     [NormalDistribution(-3.5, 0.5),
+#         NormalDistribution(0.5, 1.5),
+#         NormalDistribution(4.0, 0.6)
+#     ])
+#
+# m2.randParams(seq)
+# t1 = clock()
+# m2.EM(seq, 40, 0.0)
+# t2 = clock()
+# print "time = ", t2 - t1
+# print m2
 
 #  ----------------------------- Example 2 -----------------------------
 e1 = MixtureModel(2, [0.7, 0.3],

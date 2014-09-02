@@ -25,8 +25,8 @@ from pymix import _C_mixextend
 
 import numpy
 import scipy
-from scipy import stats
-from core import assertAlmostEqualValue, assertAlmostEqual
+from scipy import stats, special
+from core import assertAlmostEqual
 
 
 def get_normalized_posterior_matrix(data):
@@ -70,4 +70,27 @@ def wrap_gsl_ran_gaussian_pdf(loc, scale, x):
 
 def gsl_ran_gaussian_pdf(dx, scale):
     output = stats.norm(0.0, scale).pdf(dx)
+    return output
+
+
+# def wrap_gsl_dirichlet_pdf(alpha, x):
+#     return exp(wrap_gsl_dirichlet_lnpdf(alpha, x))
+
+
+def wrap_gsl_dirichlet_lnpdf(alpha, x):
+    if hasattr(x[0], "__iter__"):
+        output = [wrap_gsl_dirichlet_lnpdf(alpha, xi) for xi in x]
+
+        test = _C_mixextend.wrap_gsl_dirichlet_lnpdf(alpha, x)
+        assertAlmostEqual(output, test)
+    else:
+        output = log(special.gamma(sum(alpha))) - numpy.sum(numpy.log(special.gamma(alpha))) + numpy.sum(numpy.log([xi ** (ai - 1.0) for xi, ai in zip(x, alpha)]))
+
+    return output
+
+
+def wrap_gsl_sf_lngamma(alpha):
+    output = log(special.gamma(alpha))
+    test = _C_mixextend.wrap_gsl_sf_lngamma(alpha)
+    assertAlmostEqual(output, test)
     return output
