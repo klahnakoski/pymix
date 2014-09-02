@@ -1605,7 +1605,7 @@ class BayesMixtureModelTests(BaseTest):
 
         self.DNA = Alphabet(['A', 'C', 'G', 'T'])
         random.seed(3586662)
-        mixextend.set_gsl_rng_seed(3586662)
+        # mixextend.set_gsl_rng_seed(3586662)
 
         comps = [
             ProductDistribution([

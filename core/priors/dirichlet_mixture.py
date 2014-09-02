@@ -1,9 +1,7 @@
 import copy
-from pymix import _C_mixextend
 import numpy
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.multinomial import MultinomialDistribution
-from core.pymix_util import mixextend
 from core.pymix_util.errors import InvalidDistributionInput
 from core.priors.prior import PriorDistribution
 from core.pymix_util.candidate_group import CandidateGroup

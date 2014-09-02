@@ -20,10 +20,13 @@
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 ################################################################################
+from math import exp, sqrt, log
 from pymix import _C_mixextend
 
 import numpy
 import scipy
+from scipy import stats
+from core import assertAlmostEqualValue, assertAlmostEqual
 
 
 def get_normalized_posterior_matrix(data):
@@ -36,17 +39,35 @@ def substract_matrix(a, b):
     result = numpy.subtract(a, b)
     return result
 
+
 def add_matrix(a, b):
     result = numpy.add(a, b)
     return result
+
 
 def wrap_gsl_dirichlet_sample(alpha, n):
     result = scipy.random.dirichlet(alpha, n)
     return result
 
-def set_gsl_rng_seed(seed):
-    _C_mixextend.set_gsl_rng_seed(seed)
+
+def get_log_normal_inverse_gamma_prior_density(mu_p, kappa, dof, scale, cmu, csigma):
+    output = [0]*len(cmu)
+    for i in range(len(cmu)):
+        output[i] = log(pow((pow(csigma[i], 2.0) ), (- (dof + 2.0) / 2.0)) * exp(-scale / (2.0 * pow(csigma[i], 2.0))))
+        output[i] += log(gsl_ran_gaussian_pdf(cmu[i] - mu_p, sqrt(pow(csigma[i], 2.0) / kappa)))
+
+    test = _C_mixextend.get_log_normal_inverse_gamma_prior_density(mu_p, kappa, dof, scale, cmu, csigma)
+    assertAlmostEqual(output, test)
+    return output
 
 
+def wrap_gsl_ran_gaussian_pdf(loc, scale, x):
+    output = stats.norm(loc, scale).pdf(x)
+    test = _C_mixextend.wrap_gsl_ran_gaussian_pdf(x, scale)
+    assertAlmostEqual(output, test)
+    return output
 
 
+def gsl_ran_gaussian_pdf(dx, scale):
+    output = stats.norm(0.0, scale).pdf(dx)
+    return output

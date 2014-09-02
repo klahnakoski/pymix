@@ -1,9 +1,9 @@
 import copy
 import math
 import numpy
-from pymix import _C_mixextend
 from core.distributions.normal import NormalDistribution
 from core.priors.prior import PriorDistribution
+from core.pymix_util import mixextend
 from core.pymix_util.candidate_group import CandidateGroup
 from core.pymix_util.dataset import DataSet
 from core.pymix_util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
@@ -57,7 +57,7 @@ class NormalGammaPrior(PriorDistribution):
     def pdf(self, n):
 
         if isinstance(n, NormalDistribution):
-            res = _C_mixextend.get_log_normal_inverse_gamma_prior_density(self.mu_p, self.kappa, self.dof, self.scale, [n.mu], [n.sigma])[0]
+            res = mixextend.get_log_normal_inverse_gamma_prior_density(self.mu_p, self.kappa, self.dof, self.scale, [n.mu], [n.sigma])[0]
             return res
 
         elif isinstance(n, list):
@@ -69,7 +69,7 @@ class NormalGammaPrior(PriorDistribution):
                 d_mu[i] = d.mu
 
             # call to extension function
-            return _C_mixextend.get_log_normal_inverse_gamma_prior_density(self.mu_p, self.kappa, self.dof, self.scale, d_mu, d_sigma)
+            return mixextend.get_log_normal_inverse_gamma_prior_density(self.mu_p, self.kappa, self.dof, self.scale, d_mu, d_sigma)
         else:
             raise TypeError
 

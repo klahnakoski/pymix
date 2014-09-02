@@ -86,7 +86,7 @@ class ProductDistribution(ProbDistribution):
                 if isinstance(self.distList[i], MixtureModel): # XXX only necessary for mixtures of mixtures
                     res += self.distList[i].pdf(data.singleFeatureSubset(i))
                 else:
-                    res += self.distList[i].pdf(data.getInternalFeature(i))
+                    res += self.distList[i].pdf(data.getInternalFeature(i, self.distList[i]))
             return res
         else:
             raise TypeError, 'DataSet object required, got ' + str(type(data))

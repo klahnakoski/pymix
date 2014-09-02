@@ -19,25 +19,25 @@ SNP = Alphabet([
     "N/C", "N/G", "N/T", "N/N"
 ])
 
-p1 = []
-for i in range(25):
-    p1.append(random.random())
-
-g1 = lambda x: x / sum(p1)
-p1 = map(g1, p1)
-
-mult = MultinomialDistribution(5, 25, p1, SNP)
-#r = mult.applyAlphabet(['A/A','C/T','G/G','C/C','A/A'])
-
-mult2 = MultinomialDistribution(5, 4, [0.25] * 4, DNA)
-phi = NormalDistribution(11.0, 4.0)
-phi2 = NormalDistribution(11.0, 6.0)
-
-r = phi.applyAlphabet([11.23, 12.23, 9.7, 12.423])
-
-pd1 = ProductDistribution([mult, mult2, phi, phi2])
-
-r2 = pd1.applyAlphabet(['A/A', 'C/T', 'G/G', 'C/C', 'A/A', 'a', 'c', 'g', 't', 't', 11.0, 12.0])
+# p1 = []
+# for i in range(25):
+#     p1.append(random.random())
+#
+# g1 = lambda x: x / sum(p1)
+# p1 = map(g1, p1)
+#
+# mult = MultinomialDistribution(5, 25, p1, SNP)
+# #r = mult.applyAlphabet(['A/A','C/T','G/G','C/C','A/A'])
+#
+# mult2 = MultinomialDistribution(5, 4, [0.25] * 4, DNA)
+# phi = NormalDistribution(11.0, 4.0)
+# phi2 = NormalDistribution(11.0, 6.0)
+#
+# r = phi.applyAlphabet([11.23, 12.23, 9.7, 12.423])
+#
+# pd1 = ProductDistribution([mult, mult2, phi, phi2])
+#
+# r2 = pd1.applyAlphabet(['A/A', 'C/T', 'G/G', 'C/C', 'A/A', 'a', 'c', 'g', 't', 't', 11.0, 12.0])
 
 
 

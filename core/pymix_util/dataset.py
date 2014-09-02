@@ -519,13 +519,17 @@ class DataSet(object):
             else:
                 self._internalData_views.append(self.internalData[:, prev_index:this_index])
 
-    def getInternalFeature(self, i):
+    def getInternalFeature(self, i, m=None):
         """
         Returns the columns of self.internalData containing the data of the feature with index 'i'
 
         @param i: feature index
+        @param m: mixture model
         @return: numpy containing the data of feature 'i'
         """
+        if self.suff_dataRange is None:
+            self.internalInit(m)
+
         #assert self.suff_dataRange is not None,'DataSet needs to be initialized with .internalInit()'
         if i < 0 or i >= len(self.suff_dataRange):
             raise IndexError, "Invalid index " + str(i)

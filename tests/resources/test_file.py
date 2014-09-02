@@ -122,6 +122,7 @@ from core.distributions.discrete import DiscreteDistribution
 from core.distributions.normal import NormalDistribution
 from core.distributions.product import ProductDistribution
 from core.models.bayes import BayesMixtureModel
+from core.parse import readMixture
 from core.pymix_util.alphabet import Alphabet
 from core.pymix_util.stats import random_vector
 

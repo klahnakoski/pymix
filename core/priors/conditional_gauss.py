@@ -1,7 +1,7 @@
 import math
-from pymix import _C_mixextend
 import numpy
 from core.distributions.conditional_gauss import ConditionalGaussDistribution
+from core.pymix_util import mixextend
 from core.pymix_util.errors import InvalidDistributionInput
 from core.priors.prior import PriorDistribution
 
@@ -48,9 +48,11 @@ class ConditionalGaussPrior(PriorDistribution):
                 for j in range(1, d[i].p):
                     pid = d[i].parents[j]
                     res[i] += (1.0 / self.cov[i, j] ** 2) / (self.nu[i, j] * (self.post_sums[i] / N))
-                    res[i] += numpy.log(_C_mixextend.wrap_gsl_ran_gaussian_pdf(0.0,
+                    res[i] += numpy.log(mixextend.wrap_gsl_ran_gaussian_pdf(
+                        0.0,
                         math.sqrt((self.beta[i, j] * self.cov[i, j] ** 2) / (self.var[i, pid] * (self.post_sums[i] / N) )),
-                        [d[i].w[j]]))
+                        [d[i].w[j]]
+                    ))
         else:
             raise TypeError, 'Invalid input ' + str(type(d))
 

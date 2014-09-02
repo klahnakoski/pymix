@@ -1,5 +1,6 @@
-from mixture import *
 from random import *
+from core.distributions.multinomial import MultinomialDistribution
+from core.models.mixture import MixtureModel
 
 N = 150
 
@@ -28,7 +29,7 @@ multi5 = MultinomialDistribution(80,N,p5)
 mix = MixtureModel(3,[0.5,0.25,0.25],[multi,multi2,multi5])
 print mix
 
-[true,s] = mix.labelled_sample(1000)
+[true, s] = mix.labelled_sample(1000)
 
 p3 = []
 p4 = []
