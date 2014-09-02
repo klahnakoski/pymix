@@ -21,7 +21,6 @@
 #
 ################################################################################
 from math import exp, sqrt, log
-from pymix import _C_mixextend
 
 import numpy
 import scipy
@@ -55,16 +54,11 @@ def get_log_normal_inverse_gamma_prior_density(mu_p, kappa, dof, scale, cmu, csi
     for i in range(len(cmu)):
         output[i] = log(pow((pow(csigma[i], 2.0) ), (- (dof + 2.0) / 2.0)) * exp(-scale / (2.0 * pow(csigma[i], 2.0))))
         output[i] += log(gsl_ran_gaussian_pdf(cmu[i] - mu_p, sqrt(pow(csigma[i], 2.0) / kappa)))
-
-    test = _C_mixextend.get_log_normal_inverse_gamma_prior_density(mu_p, kappa, dof, scale, cmu, csigma)
-    assertAlmostEqual(output, test)
     return output
 
 
 def wrap_gsl_ran_gaussian_pdf(loc, scale, x):
     output = stats.norm(loc, scale).pdf(x)
-    test = _C_mixextend.wrap_gsl_ran_gaussian_pdf(x, scale)
-    assertAlmostEqual(output, test)
     return output
 
 
@@ -80,9 +74,6 @@ def gsl_ran_gaussian_pdf(dx, scale):
 def wrap_gsl_dirichlet_lnpdf(alpha, x):
     if hasattr(x[0], "__iter__"):
         output = [wrap_gsl_dirichlet_lnpdf(alpha, xi) for xi in x]
-
-        test = _C_mixextend.wrap_gsl_dirichlet_lnpdf(alpha, x)
-        assertAlmostEqual(output, test)
     else:
         output = log(special.gamma(sum(alpha))) - numpy.sum(numpy.log(special.gamma(alpha))) + numpy.sum(numpy.log([xi ** (ai - 1.0) for xi, ai in zip(x, alpha)]))
 
@@ -91,6 +82,4 @@ def wrap_gsl_dirichlet_lnpdf(alpha, x):
 
 def wrap_gsl_sf_lngamma(alpha):
     output = log(special.gamma(alpha))
-    test = _C_mixextend.wrap_gsl_sf_lngamma(alpha)
-    assertAlmostEqual(output, test)
     return output
