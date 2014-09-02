@@ -41,7 +41,7 @@ components, this is only feasible for quite small data sets.
 
 import copy
 
-import numpy
+import numpy as np
 
 from core.distributions.discrete import DiscreteDistribution
 from core.models.mixture import MixtureModel
@@ -80,20 +80,20 @@ def updateStructureBayesianFullEnumeration(model, data, objFunction='MAP', silen
 
 
     # building data likelihood factor matrix for the current group structure
-    l = numpy.zeros((model.dist_nr, model.G, data.N), dtype='Float64')
+    l = np.zeros((model.dist_nr, model.G, data.N), dtype='Float64')
     for j in range(model.dist_nr):
         for lead_j in range(model.G):
             l_row = model.components[lead_j][j].pdf(data.getInternalFeature(j))
             l[j, lead_j, :] = l_row
 
     # g is the matrix of log posterior probabilities of the components given the data
-    g = numpy.sum(l, axis=0)
+    g = np.sum(l, axis=0)
     for k in range(model.G):
-        g[k, :] += numpy.log(model.pi[k])
+        g[k, :] += np.log(model.pi[k])
 
     sum_logs = matrix_sum_logs(g)
     g_norm = g - sum_logs
-    tau = numpy.exp(g_norm)
+    tau = np.exp(g_norm)
 
     if not silent:
         print "\ntau="
@@ -120,7 +120,7 @@ def updateStructureBayesianFullEnumeration(model, data, objFunction='MAP', silen
         #        log_prior += model.prior.structPrior * len(model.leaders[j])
         #
         #    # get posterior
-        #    lk = numpy.sum(sum_logs)
+        #    lk = np.sum(sum_logs)
         #    best_post = lk + log_prior
         #    if not silent:
         #        print best_structure,':'
@@ -153,7 +153,7 @@ def updateStructureBayesianFullEnumeration(model, data, objFunction='MAP', silen
 
             stat = el_dist.sufficientStatistics(tau_pool, data_j)
 
-            M = CandidateGroup(el_dist, numpy.sum(tau_pool), pi_pool, stat)
+            M = CandidateGroup(el_dist, np.sum(tau_pool), pi_pool, stat)
 
             l_row = el_dist.pdf(data_j)
             M.l = l_row
@@ -161,7 +161,7 @@ def updateStructureBayesianFullEnumeration(model, data, objFunction='MAP', silen
 
             L[j][(lead,)] = M
 
-    g_wo_j = numpy.zeros((model.G, data.N), dtype='Float64')
+    g_wo_j = np.zeros((model.G, data.N), dtype='Float64')
     best_indices = copy.copy(curr_indices)
     while 1:
 
@@ -193,7 +193,7 @@ def updateStructureBayesianFullEnumeration(model, data, objFunction='MAP', silen
             print nr, ':', curr_indices, '->', [P[jj] for jj in curr_indices]
 
         g_wo_prev = copy.copy(g)
-        g_this_struct = numpy.zeros((model.G, data.N))
+        g_this_struct = np.zeros((model.G, data.N))
         for j in range(model.dist_nr):
             if prev_indices[j] == curr_indices[j]:
                 #print '   -> unchanged',j,curr_indices[j], P[curr_indices[j]]
@@ -216,7 +216,7 @@ def updateStructureBayesianFullEnumeration(model, data, objFunction='MAP', silen
                 else:
                     data_j = data.getInternalFeature(j)
 
-                l_j_1 = numpy.zeros((model.G, data.N ))  # XXX needs only be done once
+                l_j_1 = np.zeros((model.G, data.N ))  # XXX needs only be done once
 
 
                 #print '\n\n***', curr_struct_j
@@ -296,7 +296,7 @@ def updateStructureBayesianFullEnumeration(model, data, objFunction='MAP', silen
 
 
         sum_logs = matrix_sum_logs(g_1)
-        lk_1 = numpy.sum(sum_logs)
+        lk_1 = np.sum(sum_logs)
 
         #print '\n  *** likelihood =', lk_1
 
@@ -411,20 +411,20 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
 
 
     # building data likelihood factor matrix for the current group structure
-    l = numpy.zeros((model.dist_nr, model.G, data.N), dtype='Float64')
+    l = np.zeros((model.dist_nr, model.G, data.N), dtype='Float64')
     for j in range(model.dist_nr):
         for lead_j in range(model.G):
             l_row = model.components[lead_j][j].pdf(data.getInternalFeature(j))
             l[j, lead_j, :] = l_row
 
     # g is the matrix of log posterior probabilities of the components given the data
-    g = numpy.sum(l, axis=0)
+    g = np.sum(l, axis=0)
     for k in range(model.G):
-        g[k, :] += numpy.log(model.pi[k])
+        g[k, :] += np.log(model.pi[k])
 
     sum_logs = matrix_sum_logs(g)
     g_norm = g - sum_logs
-    tau = numpy.exp(g_norm)
+    tau = np.exp(g_norm)
 
     if not silent:
         print "\ntau="
@@ -447,7 +447,7 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
         #    print '1:',log_prior
 
         #    # get posterior
-        #    lk = numpy.sum(sum_logs)
+        #    lk = np.sum(sum_logs)
 
 
         #    if penalty == 'POST':
@@ -464,16 +464,16 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
         #            freeParams += model.components[0][z].freeParams * len(P[curr_indices[z]])
         #
         #        print '*** free params=',freeParams
-        #        print lk, freeParams,numpy.log(data.N)
+        #        print lk, freeParams,np.log(data.N)
         #
-        #        log_prior += lk + (freeParams * numpy.log(data.N))  # BIC
+        #        log_prior += lk + (freeParams * np.log(data.N))  # BIC
         #
         #    elif penalty == 'AIC':
         #        freeParams = model.G-1
         #        for z in range(model.dist_nr):
         #            #print 'Initial:',P[curr_indices[z]],'->',len(P[curr_indices[z]]) , model.components[0][j].freeParams
         #            freeParams += model.components[0][z].freeParams * len(P[curr_indices[z]])
-        #        log_prior += lk + (2 * freeParams *  numpy.log(data.N))  # AIC
+        #        log_prior += lk + (2 * freeParams *  np.log(data.N))  # AIC
         #    else:
         #        raise TypeError
 
@@ -512,7 +512,7 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
 
             stat = el_dist.sufficientStatistics(tau_pool, data_j)
 
-            M = CandidateGroup(el_dist, numpy.sum(tau_pool), pi_pool, stat)
+            M = CandidateGroup(el_dist, np.sum(tau_pool), pi_pool, stat)
 
             l_row = el_dist.pdf(data_j)
             M.l = l_row
@@ -520,7 +520,7 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
 
             L[j][(lead,)] = M
 
-    g_wo_j = numpy.zeros((model.G, data.N), dtype='Float64')
+    g_wo_j = np.zeros((model.G, data.N), dtype='Float64')
     best_indices = copy.copy(curr_indices)
     while 1:
 
@@ -552,7 +552,7 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
             print nr, ':', curr_indices, '->', [P[jj] for jj in curr_indices]
 
         g_wo_prev = copy.copy(g)
-        g_this_struct = numpy.zeros((model.G, data.N))
+        g_this_struct = np.zeros((model.G, data.N))
         for j in range(model.dist_nr):
             if prev_indices[j] == curr_indices[j]:
                 #print '   -> unchanged',j,curr_indices[j], P[curr_indices[j]]
@@ -575,7 +575,7 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
                 else:
                     data_j = data.getInternalFeature(j)
 
-                l_j_1 = numpy.zeros((model.G, data.N ))  # XXX needs only be done once
+                l_j_1 = np.zeros((model.G, data.N ))  # XXX needs only be done once
 
 
                 #print '\n\n***', curr_struct_j
@@ -655,7 +655,7 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
 
 
         sum_logs = matrix_sum_logs(g_1)
-        lk_1 = numpy.sum(sum_logs)
+        lk_1 = np.sum(sum_logs)
 
         #print '\n  *** likelihood =', lk_1
 
@@ -694,9 +694,9 @@ def updateStructureBayesianFullEnumeration_AIC_BIC(model, data, objFunction='MAP
                 freeParams += model.components[0][z].freeParams * len(P[curr_indices[z]])
 
             #print '*** free params=',freeParams
-            #print lk, freeParams,numpy.log(data.N)
+            #print lk, freeParams,np.log(data.N)
 
-            log_prior_1 += (freeParams * numpy.log(data.N))  # BIC
+            log_prior_1 += (freeParams * np.log(data.N))  # BIC
             post_1 = -((-2 * lk_1) + log_prior_1)
             if not silent:
                 print '\n' + penalty + ':', post_1, '=', lk_1, '+', log_prior_1

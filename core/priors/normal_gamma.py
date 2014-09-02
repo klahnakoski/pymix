@@ -1,6 +1,6 @@
 import copy
 import math
-import numpy
+import numpy as np
 from core.distributions.normal import NormalDistribution
 from core.priors.prior import PriorDistribution
 from core.pymix_util import mixextend
@@ -62,8 +62,8 @@ class NormalGammaPrior(PriorDistribution):
 
         elif isinstance(n, list):
             # extract parameters, XXX better way to do this ?
-            d_sigma = numpy.zeros(len(n))
-            d_mu = numpy.zeros(len(n))
+            d_sigma = np.zeros(len(n))
+            d_mu = np.zeros(len(n))
             for i, d in enumerate(n):
                 d_sigma[i] = d.sigma
                 d_mu[i] = d.mu
@@ -85,7 +85,7 @@ class NormalGammaPrior(PriorDistribution):
         # data has to be reshaped for parameter estimation
         if isinstance(data, DataSet):
             x = data.internalData[:, 0]
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data[:, 0]
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
@@ -93,17 +93,17 @@ class NormalGammaPrior(PriorDistribution):
         sh = x.shape
         assert sh == (nr,)
 
-        post_sum = numpy.sum(posterior)  # n_k
+        post_sum = np.sum(posterior)  # n_k
         if post_sum == 0.0:
             print dist
             raise InvalidPosteriorDistribution, "Sum of posterior is zero."
 
         # computing ML estimates for mu and sigma
-        ml_mu = numpy.dot(posterior, x) / post_sum  # ML estimator for mu
+        ml_mu = np.dot(posterior, x) / post_sum  # ML estimator for mu
         new_mu = ( (post_sum * ml_mu) + (self.kappa * self.mu_p) ) / ( post_sum + self.kappa)
 
         n_sig_num_1 = self.scale + ( (self.kappa * post_sum) / ( self.scale + post_sum ) ) * (ml_mu - self.mu_p) ** 2
-        n_sig_num_2 = numpy.dot(posterior, (x - ml_mu) ** 2)
+        n_sig_num_2 = np.dot(posterior, (x - ml_mu) ** 2)
         n_sig_num = n_sig_num_1 + n_sig_num_2
         n_sig_denom = self.dof + post_sum + 3.0
 

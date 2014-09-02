@@ -1,7 +1,7 @@
 import copy
 import sys
 
-import numpy
+import numpy as np
 
 from core.pymix_util.errors import ConvergenceFailureEM, InvalidPosteriorDistribution
 from core.pymix_util.dataset import DataSet

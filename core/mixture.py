@@ -42,7 +42,7 @@ organized in a hierarchical fashion.
 """
 import sys
 import logging
-import numpy
+import numpy as np
 
 from core.pymix_util.stats import get_loglikelihood
 from core.pymix_util import setPartitions
@@ -69,11 +69,11 @@ log.addHandler(hdlr)
 log.setLevel(logging.ERROR)
 
 
-# By default numpy produces a warning whenever we call  numpy.log with an array
+# By default numpy produces a warning whenever we call  np.log with an array
 # containing zero values. Usually this will happen a lot, so we change  numpys error handling
-# to ignore this error. Since  numpy.log returns -inf for zero arguments the computations run
+# to ignore this error. Since  np.log returns -inf for zero arguments the computations run
 # through just fine.
-numpy.seterr(divide="ignore", invalid="raise")
+np.seterr(divide="ignore", invalid="raise")
 
 
 def remove_col(matrix, index):
@@ -173,14 +173,14 @@ def modelSelection(data, models, silent=False, NEC=1):
 
     G_list = [1]
     NEC = [1.0]
-    BIC = [-2 * L_1 - (m_1.freeParams * numpy.log(data.N))]
+    BIC = [-2 * L_1 - (m_1.freeParams * np.log(data.N))]
     AIC = [-2 * L_1 + ( 2 * m_1.freeParams )]
-    #bBIC = [ -2*P_1 - (m_1.freeParams * numpy.log(data.N)) ]  # test: BIC with MAP instead of ML
+    #bBIC = [ -2*P_1 - (m_1.freeParams * np.log(data.N)) ]  # test: BIC with MAP instead of ML
     for i in range(1, len(models)):
         m_i = models[i]
         G_list.append(m_i.G)
         (log_l, L_G) = m_i.EStep(data)
-        l = numpy.exp(log_l)
+        l = np.exp(log_l)
 
         if m_i.G == 1:
             NEC.append(1.0)  # if G=1, then NEC = 1.0 by definition
@@ -196,7 +196,7 @@ def modelSelection(data, models, silent=False, NEC=1):
             NEC_G = E_g / ( L_G - L_1 )
             NEC.append(NEC_G)
 
-        BIC_G = -2 * L_G + (m_i.freeParams * numpy.log(data.N))
+        BIC_G = -2 * L_G + (m_i.freeParams * np.log(data.N))
         BIC.append(BIC_G)
 
         AIC_G = -2 * L_G + ( 2 * m_i.freeParams )
@@ -207,9 +207,9 @@ def modelSelection(data, models, silent=False, NEC=1):
         print "BIC = ", BIC
         print "AIC = ", AIC
 
-    NEC_min = numpy.argmin(numpy.array(NEC, dtype='Float64'))
-    AIC_min = numpy.argmin(numpy.array(AIC, dtype='Float64'))
-    BIC_min = numpy.argmin(numpy.array(BIC, dtype='Float64'))
+    NEC_min = np.argmin(np.array(NEC, dtype='Float64'))
+    AIC_min = np.argmin(np.array(AIC, dtype='Float64'))
+    BIC_min = np.argmin(np.array(BIC, dtype='Float64'))
 
     if not silent:
         print G_list

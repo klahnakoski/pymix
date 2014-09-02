@@ -1,5 +1,5 @@
 import copy
-import numpy
+import numpy as np
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.multinomial import MultinomialDistribution
 from core.pymix_util import mixextend
@@ -23,8 +23,8 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
         #    assert a > 0.0, "Invalid parameter."
 
         self.M = M
-        self.alpha = numpy.array(alpha, dtype='Float64')
-        self.alpha_sum = numpy.sum(alpha) # assumes alphas to remain constant !
+        self.alpha = np.array(alpha, dtype='Float64')
+        self.alpha_sum = np.sum(alpha) # assumes alphas to remain constant !
         self.p = M
         self.suff_p = M
         self.freeParams = M
@@ -40,7 +40,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
 
     def __eq__(self, other):
         if isinstance(other, DirichletPrior):
-            if self.M == other.M and numpy.alltrue(self.alpha == other.alpha):
+            if self.M == other.M and np.alltrue(self.alpha == other.alpha):
                 return True
             else:
                 return False
@@ -85,10 +85,10 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
         The posterior is again Dirichlet.
         """
         assert isinstance(m, MultinomialDistribution)
-        res = numpy.ones(len(x), dtype='Float64')
+        res = np.ones(len(x), dtype='Float64')
         for i, d in enumerate(x):
             post_alpha = self.alpha + d
-            res[i] = numpy.array(mixextend.wrap_gsl_dirichlet_lnpdf(post_alpha, [m.phi]))
+            res[i] = np.array(mixextend.wrap_gsl_dirichlet_lnpdf(post_alpha, [m.phi]))
 
         return res
 
@@ -116,7 +116,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
         # two cases here. The cleaner alternative would be to derive specialized prior
         # distributions but that would be unnecessarily complicated at this point.
         if isinstance(dist, DiscreteDistribution):
-            ind = numpy.where(dist.parFix == 0)[0]
+            ind = np.where(dist.parFix == 0)[0]
             fix_phi = 1.0
             dsum = 0.0
             for i in range(dist.M):
@@ -124,8 +124,8 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
                     fix_phi -= dist.phi[i]
                     continue
                 else:
-                    i_ind = numpy.where(data == i)[0]
-                    est = numpy.sum(posterior[i_ind]) + self.alpha[i] - 1
+                    i_ind = np.where(data == i)[0]
+                    est = np.sum(posterior[i_ind]) + self.alpha[i] - 1
                     dist.phi[i] = est
                     dsum += est
 
@@ -142,14 +142,14 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
                     fix_phi -= dist.phi[i]
                     continue
                 else:
-                    est = numpy.dot(data[:, i], posterior) + self.alpha[i] - 1
+                    est = np.dot(data[:, i], posterior) + self.alpha[i] - 1
                     dist.phi[i] = est
                     dsum += est
 
             if dsum == 0.0:
                 raise InvalidPosteriorDistribution, "Invalid posterior in MStep."
 
-            ind = numpy.where(dist.parFix == 0)[0]
+            ind = np.where(dist.parFix == 0)[0]
             # normalzing parameter estimates
             dist.phi[ind] = (dist.phi[ind] * fix_phi) / dsum
 
@@ -172,7 +172,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
 
         new_dist = copy.copy(group_list[0].dist)  # XXX copy necessary ?
 
-        ind = numpy.where(group_list[0].dist.parFix == 0)[0]
+        ind = np.where(group_list[0].dist.parFix == 0)[0]
         fix_phi = 1.0
         dsum = 0.0
         for i in range(group_list[0].dist.M):
@@ -205,7 +205,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
 
         new_dist = copy.copy(toSplitFrom.dist)  # XXX copy necessary ?
 
-        ind = numpy.where(toSplitFrom.dist.parFix == 0)[0]
+        ind = np.where(toSplitFrom.dist.parFix == 0)[0]
         fix_phi = 1.0
         dsum = 0.0
         for i in range(toSplitFrom.dist.M):

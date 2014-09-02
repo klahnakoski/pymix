@@ -1,6 +1,6 @@
 ## function sumlogs is borrowed from GQLMixture.py
 import math
-import numpy
+import numpy as np
 from core.pymix_util import mixextend
 from core.pymix_util.maths import sum_logs
 
@@ -23,14 +23,14 @@ def kl_dist(d1, d2):
     from core.distributions.product import ProductDistribution
 
     if isinstance(d1, NormalDistribution) and isinstance(d2, NormalDistribution):
-        res = ( (0.5 * numpy.log(d2.sigma ** 2 / d1.sigma ** 2)) - 0.5 + d1.sigma ** 2 / (2 * d2.sigma ** 2)
+        res = ( (0.5 * np.log(d2.sigma ** 2 / d1.sigma ** 2)) - 0.5 + d1.sigma ** 2 / (2 * d2.sigma ** 2)
                 + (abs(d2.mu - d1.mu) ** 2) / (2 * d2.sigma ** 2) )
         return res
     elif isinstance(d1, MultinomialDistribution) and isinstance(d2, MultinomialDistribution):
         assert d1.M == d2.M
         en = 0
         for i in range(d1.M):
-            en += d1.phi[i] * numpy.log(d1.phi[i] / d2.phi[i])
+            en += d1.phi[i] * np.log(d1.phi[i] / d2.phi[i])
         return en
     elif isinstance(d1, ProductDistribution) and isinstance(d2, ProductDistribution):
         assert d1.dist_nr == d2.dist_nr == 1
@@ -189,7 +189,7 @@ def random_vector(nr, normal=1.0):
     @return: list with random entries sampled from a uniform distribution on [0,1] and normalized to 'normal'
     """
 
-    alpha = numpy.array([1.0] * nr)
+    alpha = np.array([1.0] * nr)
 
     p = mixextend.wrap_gsl_dirichlet_sample(alpha, nr)
 
@@ -221,19 +221,19 @@ def entropy(p):
 
 def get_loglikelihood(mix_model, data):  # old implementation XXX
     # matrix of posterior probs: components# * (sequence positions)#
-    l = numpy.zeros((mix_model.G, len(data)), dtype='Float64')
-    col_sum = numpy.zeros(len(data), dtype='Float64')
+    l = np.zeros((mix_model.G, len(data)), dtype='Float64')
+    col_sum = np.zeros(len(data), dtype='Float64')
     for i in range(mix_model.G):
-        l[i] = numpy.log(mix_model.pi[i]) + mix_model.components[i].pdf(data)
+        l[i] = np.log(mix_model.pi[i]) + mix_model.components[i].pdf(data)
     for j in range(len(data)):
         col_sum[j] = sum_logs(l[:, j]) # sum over jth column of l
-    log_p = numpy.sum(col_sum)
+    log_p = np.sum(col_sum)
     return log_p
 
 
 def get_posterior(mix_model, data, logreturn=True):
     # matrix of posterior probs: components# * (sequence positions)#
-    log_l = numpy.zeros((mix_model.G, len(data)), dtype='Float64')
+    log_l = np.zeros((mix_model.G, len(data)), dtype='Float64')
 
     # computing log posterior distribution
     for i in range(mix_model.G):
@@ -247,4 +247,4 @@ def get_posterior(mix_model, data, logreturn=True):
     if logreturn == True:
         return log_l
     else:
-        return numpy.exp(log_l)
+        return np.exp(log_l)

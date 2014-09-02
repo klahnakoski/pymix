@@ -1,6 +1,6 @@
 import math
 import random
-import numpy
+import numpy as np
 from core.distributions.prob import ProbDistribution
 from core.pymix_util.errors import InvalidDistributionInput
 from core.pymix_util.dataset import DataSet
@@ -43,13 +43,13 @@ class ExponentialDistribution(ProbDistribution):
             nr = len(data.internalData)
             assert data.internalData.shape == (nr, 1), 'shape = ' + str(data.internalData.shape)
 
-            x = numpy.transpose(data.internalData)[0]
+            x = np.transpose(data.internalData)[0]
 
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             nr = len(data)
 
             if data.shape == (nr, 1):  # data format needs to be changed
-                x = numpy.transpose(data)[0]
+                x = np.transpose(data)[0]
             elif data.shape == (nr,):
                 x = data
             else:
@@ -67,12 +67,12 @@ class ExponentialDistribution(ProbDistribution):
         # data has to be reshaped for parameter estimation
         if isinstance(data, DataSet):
             x = data.internalData[:, 0]
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data[:, 0]
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
 
-        self.lambd = posterior.sum() / numpy.dot(posterior, x)
+        self.lambd = posterior.sum() / np.dot(posterior, x)
 
 
     def isValid(self, x):

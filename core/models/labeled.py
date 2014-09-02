@@ -1,5 +1,5 @@
 import random
-import numpy
+import numpy as np
 from core.pymix_util.errors import InvalidPosteriorDistribution
 from core.pymix_util.constrained_dataset import ConstrainedDataSet
 from core.pymix_util.dataset import DataSet
@@ -63,13 +63,13 @@ class LabeledMixtureModel(MixtureModel):
         # computing log posterior distribution
         #[log_l,log_p] = MixtureModel.EStep(self,data,mix_posterior,mix_pi,None)
 
-        log_l = numpy.zeros((self.G, data.N), dtype='Float64')
-        log_col_sum = numpy.zeros(data.N, dtype='Float64')  # array of column sums of log_l
-        log_pi = numpy.log(self.pi)  # array of log mixture coefficients
+        log_l = np.zeros((self.G, data.N), dtype='Float64')
+        log_col_sum = np.zeros(data.N, dtype='Float64')  # array of column sums of log_l
+        log_pi = np.log(self.pi)  # array of log mixture coefficients
 
         # compute log of mix_posterior (if present)
         if mix_posterior is not None:
-            log_mix_posterior = numpy.log(mix_posterior)
+            log_mix_posterior = np.log(mix_posterior)
 
         # computing log posterior distribution
         for i in range(self.G):
@@ -81,12 +81,12 @@ class LabeledMixtureModel(MixtureModel):
         for i, cl in enumerate(data.labels): # for each class
             for o in cl: # for each observation in a class
                 v = log_l[i, o]
-                p_vec = numpy.zeros(self.G, dtype='Float64')
+                p_vec = np.zeros(self.G, dtype='Float64')
                 p_vec[:] = float('-inf')
                 p_vec[i] = v
                 log_l[:, o] = p_vec
 
-        log_col_sum = numpy.zeros(data.N, dtype='Float64')  # array of column sums of log_l
+        log_col_sum = np.zeros(data.N, dtype='Float64')  # array of column sums of log_l
         for j in range(data.N):
             log_col_sum[j] = sum_logs(log_l[:, j]) # sum over jth column of log_l
             # if posterior is invalid, check for model validity
@@ -109,7 +109,7 @@ class LabeledMixtureModel(MixtureModel):
                 if mix_posterior is not None:
                     # multiplying in the posterior of upper hierarch mixture
                     log_l[:, j] = log_l[:, j] + log_mix_posterior[j]
-        return log_l, numpy.sum(log_col_sum)
+        return log_l, np.sum(log_col_sum)
 
     def modelInitialization(self, data, rtype=1, missing_value=None):
         """
@@ -136,7 +136,7 @@ class LabeledMixtureModel(MixtureModel):
             self.initStructure()
 
         # generate 'random posteriors'
-        l = numpy.zeros((self.G, len(data)), dtype='Float64')
+        l = np.zeros((self.G, len(data)), dtype='Float64')
         for i in range(len(data)):
             if rtype == 0:
                 for j in range(self.G):
@@ -150,7 +150,7 @@ class LabeledMixtureModel(MixtureModel):
         # peform label assigments (non random!)
         for i, cl in enumerate(data.labels): # for each class
             for o in cl: # for each observation in a class
-                p_vec = numpy.zeros(self.G, dtype='Float64')
+                p_vec = np.zeros(self.G, dtype='Float64')
                 p_vec[i] = 1.0
                 l[:, o] = p_vec
 

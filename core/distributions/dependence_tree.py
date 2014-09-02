@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 from core.distributions.conditional_gauss import ConditionalGaussDistribution
 from core.pymix_util.dataset import DataSet
 
@@ -31,25 +31,25 @@ class DependenceTreeDistribution(ConditionalGaussDistribution):
     def MStep(self, posterior, data, mix_pi=None):
         if isinstance(data, DataSet):
             x = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
 
         post = posterior.sum() # sum of posteriors
-        self.mu = numpy.dot(posterior, x) / post
+        self.mu = np.dot(posterior, x) / post
 
         # centered input values (with new mus)
-        centered = numpy.subtract(x, numpy.repeat([self.mu], len(x), axis=0));
+        centered = np.subtract(x, np.repeat([self.mu], len(x), axis=0));
 
 
         # estimating correlation factor
-        sigma = numpy.dot(numpy.transpose(numpy.dot(numpy.identity(len(posterior)) * posterior, centered)), centered) / post # sigma/covariance matrix
+        sigma = np.dot(np.transpose(np.dot(np.identity(len(posterior)) * posterior, centered)), centered) / post # sigma/covariance matrix
 
-        diagsigma = numpy.diagflat(1.0 / numpy.diagonal(sigma)) # vector with diagonal entries of sigma matrix
-        correlation = numpy.dot(numpy.dot(diagsigma, numpy.multiply(sigma, sigma)), diagsigma) # correlation matrix with entries sigma_xy^2/(sigma^2_x * sigma^2_y)
+        diagsigma = np.diagflat(1.0 / np.diagonal(sigma)) # vector with diagonal entries of sigma matrix
+        correlation = np.dot(np.dot(diagsigma, np.multiply(sigma, sigma)), diagsigma) # correlation matrix with entries sigma_xy^2/(sigma^2_x * sigma^2_y)
 
-        correlation = correlation - numpy.diagflat(numpy.diagonal(correlation)) # making diagonal entries = 0
+        correlation = correlation - np.diagflat(np.diagonal(correlation)) # making diagonal entries = 0
 
         # XXX - check this
         parents = self.maximunSpanningTree(correlation) # return maximun spanning tree from the correlation matrix
@@ -79,9 +79,9 @@ class DependenceTreeDistribution(ConditionalGaussDistribution):
             candidates = weights[verticestree, :]
 
             # look for maximal candidate edges
-            indices = numpy.argmax(candidates, 1) # max neighboors in verticestrrees
-            values = numpy.max(candidates, 1)
-            uaux = numpy.argmax(values)
+            indices = np.argmax(candidates, 1) # max neighboors in verticestrrees
+            values = np.max(candidates, 1)
+            uaux = np.argmax(values)
             u = verticestree[uaux]
             v = indices[uaux]
 
@@ -105,7 +105,7 @@ class DependenceTreeDistribution(ConditionalGaussDistribution):
         queue = []
         # directing the tree from the root
         parent[root] = -1
-        visited = numpy.zeros((self.p, 1))
+        visited = np.zeros((self.p, 1))
         for u in tree[root]:
             queue.append((root, u))
             visited[root] = 1

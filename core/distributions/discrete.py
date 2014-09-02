@@ -1,6 +1,6 @@
 import copy
 import random
-import numpy
+import numpy as np
 from core.distributions.multinomial import MultinomialDistribution
 from core.pymix_util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from core.pymix_util.dataset import DataSet
@@ -35,13 +35,13 @@ class DiscreteDistribution(MultinomialDistribution):
         if isinstance(data, DataSet):
             assert data.p == 1
             x = data.getInternalFeature(0)
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data
         else:
             raise TypeError, "Unknown/Invalid input type."
 
         # switch to log scale for density computation
-        log_phi = numpy.log(self.phi)
+        log_phi = np.log(self.phi)
 
         # computing un-normalized density
         res = log_phi[x[:, 0].astype('Int32')]
@@ -50,12 +50,12 @@ class DiscreteDistribution(MultinomialDistribution):
     def MStep(self, posterior, data, mix_pi=None):
         if isinstance(data, DataSet):
             x = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
 
-        ind = numpy.where(self.parFix == 0)[0]
+        ind = np.where(self.parFix == 0)[0]
         fix_flag = 0
         fix_phi = 1.0
         dsum = 0.0
@@ -66,8 +66,8 @@ class DiscreteDistribution(MultinomialDistribution):
                 fix_flag = 1
                 continue
             else:
-                i_ind = numpy.where(x == i)[0]
-                est = numpy.sum(posterior[i_ind])
+                i_ind = np.where(x == i)[0]
+                est = np.sum(posterior[i_ind])
                 self.phi[i] = est
                 dsum += est
 
@@ -109,10 +109,10 @@ class DiscreteDistribution(MultinomialDistribution):
         return res
 
     def sufficientStatistics(self, posterior, data):
-        stat = numpy.zeros(self.M, dtype='Float64')
+        stat = np.zeros(self.M, dtype='Float64')
         for i in range(self.M):
-            i_ind = numpy.where(data == i)[0]
-            stat[i] = numpy.sum(posterior[i_ind])
+            i_ind = np.where(data == i)[0]
+            stat[i] = np.sum(posterior[i_ind])
         return stat
 
     def formatData(self, x):

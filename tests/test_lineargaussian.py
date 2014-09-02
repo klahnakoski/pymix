@@ -33,15 +33,15 @@ class LinearGaussianDistributionTests(BaseTest):
     def testpdf(self):
         # TODO: FIX ME
         pass
-        # a = numpy.array([[0.5, 1.0], [7.2, 3.4], [12.2, 9.4], [4.6, 3.7], [5.5, 1.5], [4.2, 2.7]], dtype='Float64')
+        # a = np.array([[0.5, 1.0], [7.2, 3.4], [12.2, 9.4], [4.6, 3.7], [5.5, 1.5], [4.2, 2.7]], dtype='Float64')
         # p = self.dist.pdf(a)
         # self.assertEqual(p, [-0.27893853, 16.88946147, 24.28146147, 1.06916147, 13.90356147, 2.00516147])
 
     def testmstep(self):
         # TODO: FIX ME
         pass
-        # a = numpy.array([[0.5, 1.0], [7.2, 3.4], [12.2, 9.4], [4.6, 3.7], [5.5, 1.5], [4.2, 2.7]], dtype='Float64')
-        # post1 = numpy.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
+        # a = np.array([[0.5, 1.0], [7.2, 3.4], [12.2, 9.4], [4.6, 3.7], [5.5, 1.5], [4.2, 2.7]], dtype='Float64')
+        # post1 = np.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
         # self.dist.MStep(post1, a)
         # self.assertEqual(self.dist.beta, [1.53596949, 1.15134484])
         # self.assertEqual(self.dist.sigma[0], 1.55468583309)

@@ -1,6 +1,6 @@
 ## function sumlogs is borrowed from GQLMixture.py
 
-import numpy
+import numpy as np
 
 
 def sumlogs_purepy(a):
@@ -25,24 +25,24 @@ def sumlogs_purepy(a):
             x = x - m
             # Special case to avoid numerical problems
             if x < -1.0e-16: # <=> |x| >  1.0e-16
-                result += numpy.exp(x)
+                result += np.exp(x)
             else: # |x| <  1.0e-16 => exp(x) = 1
                 result += 1.0
 
-    result = numpy.log(result)
+    result = np.log(result)
     result += m
     return result
 
 
 def sum_logs(a):
-    m = numpy.max(a)  # Maximal value must not be unique
-    result = numpy.log(sum(numpy.exp(a - m))) + m
+    m = np.max(a)  # Maximal value must not be unique
+    result = np.log(sum(np.exp(a - m))) + m
     return result
 
 
 def matrix_sum_logs(a):
-    m = numpy.max(a)  # Maximal value must not be unique
-    result = numpy.log(sum(numpy.exp(a - m))) + m
+    m = np.max(a)  # Maximal value must not be unique
+    result = np.log(sum(np.exp(a - m))) + m
     return result
 
 

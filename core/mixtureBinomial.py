@@ -32,7 +32,7 @@
 Mixtures of Bionomials and Related Distributions
 """
 from mixture import *
-import numpy
+import numpy as np
 import copy
 
 class BernoulliDistribution(ProbDistribution):
@@ -56,7 +56,7 @@ class BernoulliDistribution(ProbDistribution):
     def __eq__(self,other):
         res = False
         if isinstance(other,BernoulliDistribution):
-            if (numpy.allclose(other.theta, self.theta)):
+            if (np.allclose(other.theta, self.theta)):
                 res = True
         return res
 
@@ -77,13 +77,13 @@ class BernoulliDistribution(ProbDistribution):
             assert data.internalData is not None, "Internal data not initialized."
             nr = len(data.internalData)
             assert data.internalData.shape == (nr,1), 'shape = '+str(data.internalData.shape)
-            x = numpy.transpose(data.internalData)[0]
+            x = np.transpose(data.internalData)[0]
 
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             nr = len(data)
 
             if data.shape == (nr,1):  # data format needs to be changed
-                x = numpy.transpose(data)[0]
+                x = np.transpose(data)[0]
             elif data.shape == (nr,):
                 x = data
             else:
@@ -93,14 +93,14 @@ class BernoulliDistribution(ProbDistribution):
 
         # computing log likelihood
         # this pdf is a logit representation of a bionomial (with large n???)
-        res = numpy.power(self.theta,x)*numpy.power(1-self.theta,1-x)
-        return numpy.log(res)
+        res = np.power(self.theta,x)*np.power(1-self.theta,1-x)
+        return np.log(res)
 
     def sample(self):
-        return numpy.random.binomial(1,self.theta)
+        return np.random.binomial(1,self.theta)
 
     def sampleSet(self,nr):
-        res = numpy.zeros(nr,dtype='Float64')
+        res = np.zeros(nr,dtype='Float64')
 
         for i in range(nr):
             res[i] = self.sample()
@@ -117,8 +117,8 @@ class BernoulliDistribution(ProbDistribution):
 
         @return: list with dot(posterior, data) and sum(data)
         """
-        nu0 =  numpy.dot(posterior, data)[0],
-        nu = numpy.sum(data)
+        nu0 =  np.dot(posterior, data)[0],
+        nu = np.sum(data)
 
         return [nu,nu0]
 
@@ -127,7 +127,7 @@ class BernoulliDistribution(ProbDistribution):
         # data has to be reshaped for parameter estimation
         if isinstance(data,DataSet):
             x = data.internalData[:,0]
-        elif isinstance(data,numpy.ndarray):
+        elif isinstance(data,np.ndarray):
             x = data[:,0]
 
         else:
@@ -137,13 +137,13 @@ class BernoulliDistribution(ProbDistribution):
         sh = x.shape
         assert sh == (nr,)  # XXX debug
 
-        post_sum = numpy.sum(posterior)
+        post_sum = np.sum(posterior)
 
         # checking for valid posterior: if post_sum is zero, this component is invalid
         # for this data set
         if post_sum != 0.0:
 
-            new_theta =  numpy.dot(posterior, x) / post_sum
+            new_theta =  np.dot(posterior, x) / post_sum
         else:
             raise InvalidPosteriorDistribution, "Sum of posterior is zero: "+str(self)+" has zero likelihood for data set."
 
@@ -205,7 +205,7 @@ class BinomialRegularizedDistribution(ProbDistribution):
     def __eq__(self,other):
         res = False
         if isinstance(other,BinomialRegularizedDistribution):
-            if (numpy.allclose(other.theta, self.theta)) and (numpy.allclose(other.lambd, self.lambd)):
+            if (np.allclose(other.theta, self.theta)) and (np.allclose(other.lambd, self.lambd)):
                 res = True
         return res
 
@@ -226,13 +226,13 @@ class BinomialRegularizedDistribution(ProbDistribution):
             assert data.internalData is not None, "Internal data not initialized."
             nr = len(data.internalData)
             assert data.internalData.shape == (nr,1), 'shape = '+str(data.internalData.shape)
-            x = numpy.transpose(data.internalData)[0]
+            x = np.transpose(data.internalData)[0]
 
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             nr = len(data)
 
             if data.shape == (nr,1):  # data format needs to be changed
-                x = numpy.transpose(data)[0]
+                x = np.transpose(data)[0]
             elif data.shape == (nr,):
                 x = data
             else:
@@ -243,17 +243,17 @@ class BinomialRegularizedDistribution(ProbDistribution):
         # computing log likelihood
         # this pdf is a logit representation of a bionomial (with large n???)
 
-        dem = 1 + numpy.exp(self.theta);
+        dem = 1 + np.exp(self.theta);
         #print self.theta,dem
         try:
-          res = numpy.exp(x*self.theta);
+          res = np.exp(x*self.theta);
         except FloatingPointError:
           print self.theta
           raise FloatingPointError
         #print res
         res = res/dem
-        #print "pdf", self.theta, numpy.log(res)
-        return numpy.log(res)
+        #print "pdf", self.theta, np.log(res)
+        return np.log(res)
 
     def sample(self):
         # XXX - not ready ... use scipy???
@@ -261,7 +261,7 @@ class BinomialRegularizedDistribution(ProbDistribution):
 
 
     def sampleSet(self,nr):
-        res = numpy.zeros(nr,dtype='Float64')
+        res = np.zeros(nr,dtype='Float64')
 
         for i in range(nr):
             res[i] = self.sample()
@@ -278,8 +278,8 @@ class BinomialRegularizedDistribution(ProbDistribution):
 
         @return: list with dot(posterior, data) and sum(data)
         """
-        #nu0 =  numpy.dot(posterior, data)[0],
-        #nu = numpy.sum(data)
+        #nu0 =  np.dot(posterior, data)[0],
+        #nu = np.sum(data)
         #return [nu,nu0]
         return 0
 
@@ -288,7 +288,7 @@ class BinomialRegularizedDistribution(ProbDistribution):
         # data has to be reshaped for parameter estimation
         if isinstance(data,DataSet):
             x = data.internalData[:,0]
-        elif isinstance(data,numpy.ndarray):
+        elif isinstance(data,np.ndarray):
             x = data[:,0]
 
         else:
@@ -298,15 +298,15 @@ class BinomialRegularizedDistribution(ProbDistribution):
         sh = x.shape
         assert sh == (nr,)  # XXX debug
 
-        post_sum = numpy.sum(posterior)
+        post_sum = np.sum(posterior)
 
         # checking for valid posterior: if post_sum is zero, this component is invalid
         # for this data set
         if post_sum != 0.0:
             # computing ML estimates for nu
-            new_nu =   min(max(numpy.dot(posterior, x) / post_sum, 0.000000001),0.9999999999)# eq 15
-            new_nu0 =  min(max(numpy.sum(x) / nr, 0.000000001),0.9999999999) # eq 13 plus pseudo count
-            new_theta0 = numpy.log(new_nu0) - numpy.log(1 - new_nu0); # eq (12)
+            new_nu =   min(max(np.dot(posterior, x) / post_sum, 0.000000001),0.9999999999)# eq 15
+            new_nu0 =  min(max(np.sum(x) / nr, 0.000000001),0.9999999999) # eq 13 plus pseudo count
+            new_theta0 = np.log(new_nu0) - np.log(1 - new_nu0); # eq (12)
             #print self.lambd
             new_lambdl = self.lambd*nr/post_sum;
 
@@ -315,10 +315,10 @@ class BinomialRegularizedDistribution(ProbDistribution):
             #equation (17)
             #print new_nu,new_nu0,new_lambdl
             if (new_nu >= new_nu0 + new_lambdl) :
-              new_theta =  numpy.log(new_nu-new_lambdl) - numpy.log(1-(new_nu-new_lambdl))
+              new_theta =  np.log(new_nu-new_lambdl) - np.log(1-(new_nu-new_lambdl))
               self.flag_selected = 1;
             elif (new_nu <= new_nu0 - new_lambdl):
-              new_theta =  numpy.log(new_nu+new_lambdl) - numpy.log(1-(new_nu-new_lambdl))
+              new_theta =  np.log(new_nu+new_lambdl) - np.log(1-(new_nu-new_lambdl))
               self.flag_selected = 1;
             else:
               new_theta = new_theta0;
@@ -378,7 +378,7 @@ class MixtureModelFeatureSelection(MixtureModel):
 
     def selectedFeatures(self):
         # for all dimensions
-        flags = numpy.zeros(len(self.components[0]))
+        flags = np.zeros(len(self.components[0]))
         for i in range(len(self.components[0])):
           for j in range(self.G):
             flags[i] = flags[i] or self.components[j][i].flag_selected
@@ -392,8 +392,8 @@ class MixtureModelFeatureSelection(MixtureModel):
         for i in range(dim):
           #scoreaux = 0
           scoreaux = [self.components[j][i].selectionScore() for j in range(self.G)]
-          argmax = numpy.argmax(scoreaux)
-          max = numpy.max(scoreaux)
+          argmax = np.argmax(scoreaux)
+          max = np.max(scoreaux)
           scores.append((max,argmax+1,i/features+1,i%features+1))
         scores.sort()
         scores.reverse()
@@ -471,7 +471,7 @@ if __name__ == '__main__':
   real = 10 # no of real dimensions
   # varying feature selection variable (lambda)
   laux=range(0,10)
-  laux=numpy.array(laux)*0.005
+  laux=np.array(laux)*0.005
 
   resall = []
   specall = []

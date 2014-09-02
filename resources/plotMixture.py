@@ -34,7 +34,7 @@ PlotMixture implements visualization functions for mixture models and clustering
 
 import pylab
 from core import mixture
-import numpy
+import numpy as np
 
 
 
@@ -117,11 +117,11 @@ def plotClustering(data, labels, axis=None, title = None, markersize=5):
 
     cind= []
     for u in label_alphabet:
-        cind.append(numpy.where(labels==u)[0])
+        cind.append(np.where(labels==u)[0])
 
 
-    #ind0 = numpy.where(c==0)[0]
-    #ind1 = numpy.where(c==1)[0]
+    #ind0 = np.where(c==0)[0]
+    #ind1 = np.where(c==1)[0]
 
     #marker='o', markerfacecolor='g', markeredgecolor='r'
 
@@ -207,14 +207,14 @@ def plotClusterEval(data, predLabels, trueLabels ,axis=None):
         true_color_dict[l] = color[i]
 
     # compute label equivalencies between true and predicted labels
-    label_equiv = numpy.zeros((nr_labels,nr_labels) )
+    label_equiv = np.zeros((nr_labels,nr_labels) )
     indices_dict = {}
     for i,l1 in enumerate(label_alphabet):  # loop over true labels
        indices_dict[l1] = {}
        for j,l2 in enumerate(label_alphabet):  # loop over predicted labels
-          ind1 = numpy.where(predLabels==l1)[0]
-          ind2 = numpy.where(trueLabels==l2)[0]
-          ind_inter = numpy.array(mixture.list_intersection(ind1,ind2) )
+          ind1 = np.where(predLabels==l1)[0]
+          ind2 = np.where(trueLabels==l2)[0]
+          ind_inter = np.array(mixture.list_intersection(ind1,ind2) )
 
           indices_dict[l1][l2] = ind_inter
           label_equiv[i][j] = len(ind_inter)
@@ -225,7 +225,7 @@ def plotClusterEval(data, predLabels, trueLabels ,axis=None):
 
     label_map = {}  # label map from pred -> true
     for i,l1 in enumerate(label_alphabet):
-        m =  numpy.where( label_equiv[i] == max(label_equiv[i] ) )[0][0]
+        m =  np.where( label_equiv[i] == max(label_equiv[i] ) )[0][0]
         label_map[label_alphabet[m]] =  l1
 
 
@@ -296,12 +296,12 @@ def plotNormalMixtureDensity(mix, axis, title= None, newfigure=False, fill=True,
     #z = pylab.exp(-(X*X + Y*Y)) + 0.6*pylab.exp(-((X+1.8)**2 + Y**2))
     #pylab.contour(x,y,z)
 
-    z = numpy.zeros( (len(y),len(x)),dtype='Float64' )
+    z = np.zeros( (len(y),len(x)),dtype='Float64' )
     for i in range(len(y)):
-        ndat = numpy.zeros((len(x),2),dtype='Float64' )
+        ndat = np.zeros((len(x),2),dtype='Float64' )
         ndat[:,1] = y[i]
         ndat[:,0] = x
-        #print numpy.exp(mix.pdf(dat))
+        #print np.exp(mix.pdf(dat))
 
         dat = mixture.DataSet()
         dat.fromList(ndat)
@@ -309,9 +309,9 @@ def plotNormalMixtureDensity(mix, axis, title= None, newfigure=False, fill=True,
 
         # XXX pdf is log valued, we want the true value XXX
 
-        #print numpy.exp(mix.pdf(dat)).tolist()
+        #print np.exp(mix.pdf(dat)).tolist()
 
-        z[i,:] = numpy.exp(mix.pdf(dat))
+        z[i,:] = np.exp(mix.pdf(dat))
 
 
     #print "z", len(z),'x', len(z[0]) ,'=', len(z) * len(z[0])
@@ -354,7 +354,7 @@ def plotUnivariateNormalMixtureDensity(m, axis, title= None, format= '-b'):
     #print len(y)
 
 
-    y = numpy.exp( m.pdf(dat_x) )
+    y = np.exp( m.pdf(dat_x) )
 
 
     #pylab.figure()
@@ -390,12 +390,12 @@ def plotMixtureEntropy(mix, axis):
     #z = pylab.exp(-(X*X + Y*Y)) + 0.6*pylab.exp(-((X+1.8)**2 + Y**2))
     #pylab.contour(x,y,z)
 
-    z = numpy.zeros( (len(y),len(x)),dtype='Float64' )
+    z = np.zeros( (len(y),len(x)),dtype='Float64' )
     for i in range(len(y)):
-        dat = numpy.zeros((len(x),2),dtype='Float64' )
+        dat = np.zeros((len(x),2),dtype='Float64' )
         dat[:,1] = y[i]
         dat[:,0] = x
-        #print numpy.exp(mix.pdf(dat))
+        #print np.exp(mix.pdf(dat))
 
 
         #print "---------------------------\n",dat
@@ -408,7 +408,7 @@ def plotMixtureEntropy(mix, axis):
         #print l
 
 
-        #print numpy.exp(mix.pdf(dat)).tolist()
+        #print np.exp(mix.pdf(dat)).tolist()
         for j in range(len(x)):
 
             z[i,j] = mixture.entropy(l[:,j])
@@ -420,7 +420,7 @@ def plotMixtureEntropy(mix, axis):
     print "max",z.max()
     #max_val = z.max()
 
-    max_val = numpy.log(mix.G) # maximum entropy for a vector of length mix.G
+    max_val = np.log(mix.G) # maximum entropy for a vector of length mix.G
     print "theor. max", max_val
 
     step = max_val / 10.0
@@ -460,12 +460,12 @@ def plotPosteriorMax(mix, axis):
     color =  ['b','r','g','m','c','y']
     assert mix.G <= len(color)
 
-    z = numpy.zeros( (len(y),len(x)),dtype='Float64' )
+    z = np.zeros( (len(y),len(x)),dtype='Float64' )
     for i in range(len(y)):
-        dat = numpy.zeros((len(x),2),dtype='Float64' )
+        dat = np.zeros((len(x),2),dtype='Float64' )
         dat[:,1] = y[i]
         dat[:,0] = x
-        #print numpy.exp(mix.pdf(dat))
+        #print np.exp(mix.pdf(dat))
 
 
         #print "---------------------------\n",dat
@@ -475,11 +475,11 @@ def plotPosteriorMax(mix, axis):
 
         # XXX pdf is log valued, we want the true value XXX
 
-        #print numpy.exp(mix.pdf(dat)).tolist()
+        #print np.exp(mix.pdf(dat)).tolist()
         for j in range(len(x)):
 
-            z[i,j] = numpy.argmax(l[:,j])
-            #print dat[j,:] ,":",l[:,j],numpy.argmax(l[:,j])
+            z[i,j] = np.argmax(l[:,j])
+            #print dat[j,:] ,":",l[:,j],np.argmax(l[:,j])
 
 
             #print dat[j,:] ,":",l[:,j], "=",z[i,j]
@@ -490,7 +490,7 @@ def plotPosteriorMax(mix, axis):
     print "max",z.max()
     #max_val = z.max()
 
-    max_val = numpy.log(mix.G) # maximum entropy for a vector of length mix.G
+    max_val = np.log(mix.G) # maximum entropy for a vector of length mix.G
     print "theor. max", max_val
 
     step = max_val / 40.0
@@ -514,7 +514,7 @@ def plotPosteriorMax(mix, axis):
     pylab.title('Posterior Maximum Plot')
 
 def plotMixtureStructure(mix,headers,transpose=1):
-    plot = numpy.zeros(( mix.G,mix.dist_nr ) )
+    plot = np.zeros(( mix.G,mix.dist_nr ) )
 
     for i in range(mix.dist_nr):
         #print "-------------\n",headers[i]
@@ -570,13 +570,13 @@ def plotMixtureStructure(mix,headers,transpose=1):
     #print plot
 
     #pylab.subplot(1,2,1)
-    #x = numpy.array([0.0,5.0],dtype='Float64')
-    #y = numpy.array([0.0,5.0],dtype='Float64')
+    #x = np.array([0.0,5.0],dtype='Float64')
+    #y = np.array([0.0,5.0],dtype='Float64')
     #pylab.plot(x,y,'o')
     #pylab.subplot(1,2,2)
 
 
-    z = numpy.array(plot)
+    z = np.array(plot)
     if transpose:
 
         #print z.shape
@@ -595,8 +595,8 @@ def plotMixtureStructure(mix,headers,transpose=1):
         pylab.grid(True,linestyle='-',linewidth=0.5)
 
         # set xticks
-        #pylab.xticks( numpy.arange(len(headers))+0.5,['']*len(headers), size=12)
-        xtickpos = numpy.arange(0.0, mix.G+1,0.5)
+        #pylab.xticks( np.arange(len(headers))+0.5,['']*len(headers), size=12)
+        xtickpos = np.arange(0.0, mix.G+1,0.5)
         temp = zip(range(mix.G), ['']*mix.G)
         xticklabels = []
         for tt in temp:
@@ -616,7 +616,7 @@ def plotMixtureStructure(mix,headers,transpose=1):
 
 
         # set yticks
-        ytickpos = numpy.arange(0.0, len(headers),0.5)
+        ytickpos = np.arange(0.0, len(headers),0.5)
         temp = zip(headers, ['']*len(headers))
 
         yticklabels = []
@@ -638,7 +638,7 @@ def plotMixtureStructure(mix,headers,transpose=1):
 
         #pylab.setp(ygridlines, 'linestyle', 'None')
 
-        #pylab.yticks( numpy.arange(len(headers))+0.5)
+        #pylab.yticks( np.arange(len(headers))+0.5)
 
 
 #        loc, ll = pylab.yticks()
@@ -669,14 +669,14 @@ def plotMixtureStructure(mix,headers,transpose=1):
     else:
         fig = pylab.matshow(z)
         pylab.grid(True,linestyle='-',linewidth=0.5)
-        #pylab.yticks(numpy.arange(mix.G+1) )
-        #pylab.xticks(  numpy.arange(len(plot[0])+1)+0.5,headers,rotation=90,size=12)
+        #pylab.yticks(np.arange(mix.G+1) )
+        #pylab.xticks(  np.arange(len(plot[0])+1)+0.5,headers,rotation=90,size=12)
         #fig.set_size_inches(20,20)
 
         # set xticks
-        #pylab.xticks( numpy.arange(len(headers))+0.5,['']*len(headers), size=12)
+        #pylab.xticks( np.arange(len(headers))+0.5,['']*len(headers), size=12)
 
-        xtickpos = numpy.arange(0.0, len(headers),0.5)
+        xtickpos = np.arange(0.0, len(headers),0.5)
         temp = zip(headers, ['']*len(headers))
 
         xticklabels = []
@@ -697,7 +697,7 @@ def plotMixtureStructure(mix,headers,transpose=1):
 
 
         # set yticks
-        ytickpos = numpy.arange(0.0, mix.G,0.5)
+        ytickpos = np.arange(0.0, mix.G,0.5)
         temp = zip(range(mix.G), ['']*mix.G)
 
         yticklabels = []
@@ -825,13 +825,13 @@ class Simplex2D(object):
         """Constructs the vertices of the simplex."""
         vertices = range(self.dimension)
         if not self.invert:
-            vertices = numpy.pi/2 - 2 * numpy.pi / self.dimension * (numpy.array(vertices) + 1.0/2)
+            vertices = np.pi/2 - 2 * np.pi / self.dimension * (np.array(vertices) + 1.0/2)
         else:
-            vertices = 3*numpy.pi/2 - 2 * numpy.pi / self.dimension * (numpy.array(vertices) + 1.0/2)
-        self.vertices_x = numpy.cos(vertices)
-        self.vertices_y = numpy.sin(vertices)
+            vertices = 3*np.pi/2 - 2 * np.pi / self.dimension * (np.array(vertices) + 1.0/2)
+        self.vertices_x = np.cos(vertices)
+        self.vertices_y = np.sin(vertices)
         # This is a 2-by-n matrix.
-        self.projection_matrix = numpy.array([self.vertices_x, self.vertices_y])
+        self.projection_matrix = np.array([self.vertices_x, self.vertices_y])
         return self.vertices_x, self.vertices_y
 
     def construct_outer_edges(self):
@@ -873,7 +873,7 @@ class Simplex2D(object):
 
             # Where to we place the points?
             # Let's stretch the vector a bit.
-            point = numpy.array([x,y]) * 1.1  # 1.2
+            point = np.array([x,y]) * 1.1  # 1.2
             self.labels.append((point[0], point[1], label))
 
         return self.labels
@@ -891,7 +891,7 @@ class Simplex2D(object):
 
         #print 'proj mat=',self.projection_matrix.tolist()
 
-        point = numpy.dot(self.projection_matrix, values)
+        point = np.dot(self.projection_matrix, values)
         return point
 
 
@@ -920,7 +920,7 @@ def plotDirichletDensity(dirichlet_dist,title='DirichletDensity'):
     dimension = 3 # XXX dimension fixed to 3 for now
 
     # These are the vertex labels, converted to strings.
-    labels = numpy.eye(dimension, dtype=int)
+    labels = np.eye(dimension, dtype=int)
     labels = map(str, map(tuple, labels))
 
     # Let's create the simplex.
@@ -928,8 +928,8 @@ def plotDirichletDensity(dirichlet_dist,title='DirichletDensity'):
 
     # construct grid
     dist = []
-    x = numpy.arange(0.001,1.0,0.01)
-    y = numpy.arange(0.001,1.0,0.01)
+    x = np.arange(0.001,1.0,0.01)
+    y = np.arange(0.001,1.0,0.01)
     for p1 in x:
         d_row = []
         for p2 in y:
@@ -947,8 +947,8 @@ def plotDirichletDensity(dirichlet_dist,title='DirichletDensity'):
         y_row = []
         d_row = []
         for d in drow:
-            if (1.0 - numpy.sum(map(f,d))) < 1e-15 and d[0] > 0 and d[1] > 0 and d[2] > 0.0:
-                d_row.append( numpy.exp( dirichlet_dist.pdf(mixture.DiscreteDistribution(3, d)) ))
+            if (1.0 - np.sum(map(f,d))) < 1e-15 and d[0] > 0 and d[1] > 0 and d[2] > 0.0:
+                d_row.append( np.exp( dirichlet_dist.pdf(mixture.DiscreteDistribution(3, d)) ))
             else:
                 d_row.append( 0.0)
 
@@ -961,9 +961,9 @@ def plotDirichletDensity(dirichlet_dist,title='DirichletDensity'):
         proj_y.append(y_row)
         density.append(d_row)
 
-    proj_x = numpy.array(proj_x)
-    proj_y = numpy.array(proj_y)
-    density = numpy.array(density)
+    proj_x = np.array(proj_x)
+    proj_y = np.array(proj_y)
+    density = np.array(density)
 
 
     # Create the figure
@@ -1000,7 +1000,7 @@ def plotKLDistance(ref_dist, objf='sym' ,title='KL Distance', show=True):
     dimension = 3 # XXX dimension fixed to 3 for now
 
     # These are the vertex labels, converted to strings.
-    labels = numpy.eye(dimension, dtype=int)
+    labels = np.eye(dimension, dtype=int)
     labels = map(str, map(tuple, labels))
 
     # Let's create the simplex.
@@ -1008,8 +1008,8 @@ def plotKLDistance(ref_dist, objf='sym' ,title='KL Distance', show=True):
 
     # construct grid
     dist = []
-    x = numpy.arange(0.001,1.0,0.01)
-    y = numpy.arange(0.001,1.0,0.01)
+    x = np.arange(0.001,1.0,0.01)
+    y = np.arange(0.001,1.0,0.01)
     for p1 in x:
         d_row = []
         for p2 in y:
@@ -1031,10 +1031,10 @@ def plotKLDistance(ref_dist, objf='sym' ,title='KL Distance', show=True):
         y_row = []
         d_row = []
         for d in drow:
-            #print d, 1.0 - numpy.sum(map(f,d))
+            #print d, 1.0 - np.sum(map(f,d))
 
 
-            if (1.0 - numpy.sum(map(f,d))) < 1e-15 and d[0] > 0 and d[1] > 0 and d[2] > 0.0:
+            if (1.0 - np.sum(map(f,d))) < 1e-15 and d[0] > 0 and d[1] > 0 and d[2] > 0.0:
                 #print ref_dist,mixture.DiscreteDistribution(3, d), mixture.sym_kl_dist(  ref_dist, mixture.DiscreteDistribution(3, d))
                 if objf == 'sym':
                     d_row.append( mixture.sym_kl_dist(  ref_dist, mixture.DiscreteDistribution(3, d)))
@@ -1057,9 +1057,9 @@ def plotKLDistance(ref_dist, objf='sym' ,title='KL Distance', show=True):
         proj_y.append(y_row)
         distance.append(d_row)
 
-    proj_x = numpy.array(proj_x)
-    proj_y = numpy.array(proj_y)
-    distance = numpy.array(distance)
+    proj_x = np.array(proj_x)
+    proj_y = np.array(proj_y)
+    distance = np.array(distance)
 
     # Create the figure
     fig = pylab.figure()

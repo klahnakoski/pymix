@@ -1,7 +1,7 @@
 import copy
 import random
 import sys
-import numpy
+import numpy as np
 
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.product import ProductDistribution
@@ -99,7 +99,7 @@ class BayesMixtureModel(MixtureModel):
         if self.struct:
             self.initStructure()
             # generate 'random posteriors'
-        l = numpy.zeros((self.G, len(data)), dtype='Float64')
+        l = np.zeros((self.G, len(data)), dtype='Float64')
         for i in range(len(data)):
             if rtype == 0:
                 for j in range(self.G):
@@ -206,7 +206,7 @@ class BayesMixtureModel(MixtureModel):
         new_groups = []
         change = 0
         # building data likelihood factor matrix for the current group structure
-        l = numpy.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
+        l = np.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
         for j in range(self.dist_nr):
             # extracting current feature from the DataSet
             if isinstance(self.components[0][j], MixtureModel): # XXX
@@ -221,9 +221,9 @@ class BayesMixtureModel(MixtureModel):
                     l[j, v, :] = l_row
 
         # g is the matrix of log posterior probabilities of the components given the data
-        g = numpy.sum(l, axis=0)
+        g = np.sum(l, axis=0)
         for k in range(self.G):
-            g[k, :] += numpy.log(self.pi[k])
+            g[k, :] += np.log(self.pi[k])
 
         sum_logs = matrix_sum_logs(g)
 
@@ -233,7 +233,7 @@ class BayesMixtureModel(MixtureModel):
             print sum_logs
             raise
 
-        tau = numpy.exp(g_norm)
+        tau = np.exp(g_norm)
 
         if not silent:
             print "\ntau="
@@ -258,14 +258,14 @@ class BayesMixtureModel(MixtureModel):
             log_prior += self.prior.structPrior * len(self.leaders[j])
 
         # get posterior
-        lk = numpy.sum(sum_logs)
+        lk = np.sum(sum_logs)
         post = lk + log_prior
         if not silent:
             print "0: ", lk, "+", log_prior, "=", post
             print log_prior_list
 
         changes = 0
-        g_wo_j = numpy.zeros((self.G, data.N), dtype='Float64')
+        g_wo_j = np.zeros((self.G, data.N), dtype='Float64')
 
         # initialising temporary group structure with copies of the current structure
         temp_leaders = copy.deepcopy(self.leaders)
@@ -302,7 +302,7 @@ class BayesMixtureModel(MixtureModel):
                 data_j = data.getInternalFeature(j)
 
             # initialize merge history
-            tau_pool = numpy.zeros(data.N, dtype='Float64')
+            tau_pool = np.zeros(data.N, dtype='Float64')
 
             for lead in self.leaders[j]:
                 #el_dist = copy.copy(self.components[lead][j])
@@ -322,7 +322,7 @@ class BayesMixtureModel(MixtureModel):
                     raise TypeError
 
                 stat = el_dist.sufficientStatistics(tau_pool, data_j)
-                M = CandidateGroup(el_dist, numpy.sum(tau_pool), pi_pool, stat)
+                M = CandidateGroup(el_dist, np.sum(tau_pool), pi_pool, stat)
                 l_row = el_dist.pdf(data_j)
                 cdist_prior = self.prior.compPrior[j].pdf(el_dist)
                 M.l = l_row
@@ -405,7 +405,7 @@ class BayesMixtureModel(MixtureModel):
                         # get updated unnormalized posterior matrix
                         g = mixextend.add_matrix(g_wo_j, l_j_1)
                         sum_logs = matrix_sum_logs(g)
-                        lk_1 = numpy.sum(sum_logs)
+                        lk_1 = np.sum(sum_logs)
 
                         # computing posterior as model selection criterion
                         log_prior_1 = pi_prior
@@ -516,7 +516,7 @@ class BayesMixtureModel(MixtureModel):
         new_groups = []
         change = 0
         # building data likelihood factor matrix for the current group structure
-        l = numpy.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
+        l = np.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
         for j in range(self.dist_nr):
             for lead_j in self.leaders[j]:
                 l_row = self.components[lead_j][j].pdf(data.getInternalFeature(j))
@@ -525,13 +525,13 @@ class BayesMixtureModel(MixtureModel):
                     l[j, v, :] = l_row
 
         # g is the matrix of log posterior probabilities of the components given the data
-        g = numpy.sum(l, axis=0)
+        g = np.sum(l, axis=0)
         for k in range(self.G):
-            g[k, :] += numpy.log(self.pi[k])
+            g[k, :] += np.log(self.pi[k])
 
         sum_logs = matrix_sum_logs(g)
         g_norm = g - sum_logs
-        tau = numpy.exp(g_norm)
+        tau = np.exp(g_norm)
 
         if not silent:
             print "\ntau="
@@ -556,14 +556,14 @@ class BayesMixtureModel(MixtureModel):
             log_prior += self.prior.structPrior * len(self.leaders[j])
 
         # get posterior
-        lk = numpy.sum(sum_logs)
+        lk = np.sum(sum_logs)
         best_post = lk + log_prior
         if not silent:
             print "0: ", lk, "+", log_prior, "=", best_post
             print log_prior_list
 
         changes = 0
-        g_wo_j = numpy.zeros((self.G, data.N), dtype='Float64')
+        g_wo_j = np.zeros((self.G, data.N), dtype='Float64')
 
         # initialising temporary group structure with copies of the current structure
         #temp_leaders = copy.deepcopy(self.leaders)
@@ -615,7 +615,7 @@ class BayesMixtureModel(MixtureModel):
                     raise TypeError
 
                 stat = el_dist.sufficientStatistics(tau_pool, data_j)
-                M = CandidateGroup(el_dist, numpy.sum(tau_pool), pi_pool, stat)
+                M = CandidateGroup(el_dist, np.sum(tau_pool), pi_pool, stat)
 
                 l_row = el_dist.pdf(data_j)
                 cdist_prior = self.prior.compPrior[j].pdf(el_dist)
@@ -635,7 +635,7 @@ class BayesMixtureModel(MixtureModel):
             best_post = float('-inf')
 
             while 1:
-                curr_part = setPartitions.decode_partition(numpy.arange(self.G), kappa, max_kappa)
+                curr_part = setPartitions.decode_partition(np.arange(self.G), kappa, max_kappa)
                 if not silent:
                     print "\n-------------------"
                     #print 'History:', L.keys()
@@ -651,7 +651,7 @@ class BayesMixtureModel(MixtureModel):
 
                 # computing change in likelihood matrix for this step
                 #l_j_1 = copy.copy(l[j])
-                l_j_1 = numpy.zeros((self.G, data.N ))  # XXX needs only be done once
+                l_j_1 = np.zeros((self.G, data.N ))  # XXX needs only be done once
 
                 for group in curr_part:
                     if L.has_key(group):
@@ -684,7 +684,7 @@ class BayesMixtureModel(MixtureModel):
                 # get updated unnormalized posterior matrix
                 g = g_wo_j + l_j_1
                 sum_logs = matrix_sum_logs(g)
-                lk_1 = numpy.sum(sum_logs)
+                lk_1 = np.sum(sum_logs)
 
                 # computing posterior as model selection criterion
                 log_prior_1 = pi_prior
@@ -772,7 +772,7 @@ class BayesMixtureModel(MixtureModel):
         new_groups = []
         change = 0
         # building data likelihood factor matrix for the current group structure
-        l = numpy.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
+        l = np.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
         for j in range(self.dist_nr):
             for lead_j in self.leaders[j]:
                 l_row = self.components[lead_j][j].pdf(data.getInternalFeature(j))
@@ -781,13 +781,13 @@ class BayesMixtureModel(MixtureModel):
                     l[j, v, :] = l_row
 
         # g is the matrix of log posterior probabilities of the components given the data
-        g = numpy.sum(l, axis=0)
+        g = np.sum(l, axis=0)
         for k in range(self.G):
-            g[k, :] += numpy.log(self.pi[k])
+            g[k, :] += np.log(self.pi[k])
 
         sum_logs = matrix_sum_logs(g)
         g_norm = g - sum_logs
-        tau = numpy.exp(g_norm)
+        tau = np.exp(g_norm)
 
         if not silent:
             print "\ntau="
@@ -806,7 +806,7 @@ class BayesMixtureModel(MixtureModel):
                 log_prior_list[j] += self.prior.compPrior[j].pdf(self.components[r][j])
 
         changes = 0
-        g_wo_j = numpy.zeros((self.G, data.N), dtype='Float64')
+        g_wo_j = np.zeros((self.G, data.N), dtype='Float64')
 
         # initialising starting group structure
         temp_leaders = copy.copy(self.leaders)
@@ -842,7 +842,7 @@ class BayesMixtureModel(MixtureModel):
                 data_j = data.getInternalFeature(j)
 
             # initial model structure
-            tau_pool = numpy.ones(data.N, dtype='Float64')
+            tau_pool = np.ones(data.N, dtype='Float64')
             pi_pool = 1.0
             el_dist = copy.copy(self.components[0][j])
 
@@ -857,7 +857,7 @@ class BayesMixtureModel(MixtureModel):
                 self.components[i][j] = el_dist
 
             stat = el_dist.sufficientStatistics(tau_pool, data_j)
-            M = CandidateGroup(el_dist, numpy.sum(tau_pool), pi_pool, stat)
+            M = CandidateGroup(el_dist, np.sum(tau_pool), pi_pool, stat)
 
             l_row = el_dist.pdf(data_j)
             cdist_prior = self.prior.compPrior[j].pdf(el_dist)
@@ -873,11 +873,11 @@ class BayesMixtureModel(MixtureModel):
             l[j] = temp.repeat(self.G, axis=0)
 
             # get likelihood
-            lk = numpy.sum(sum_logs)
+            lk = np.sum(sum_logs)
 
             log_prior = pi_prior
             log_prior_list[j] = self.G * self.prior.compPrior[j].pdf(el_dist)
-            log_prior += numpy.sum(log_prior_list)
+            log_prior += np.sum(log_prior_list)
 
             # prior over number of components
             log_prior += self.prior.nrCompPrior * self.G
@@ -956,7 +956,7 @@ class BayesMixtureModel(MixtureModel):
 
                         # add candidategroup
                         stat = split_dist.sufficientStatistics(tau[mc1_grp, :], data_j)
-                        M = CandidateGroup(split_dist, numpy.sum(tau[mc1_grp, :]), self.pi[mc1_grp], stat)
+                        M = CandidateGroup(split_dist, np.sum(tau[mc1_grp, :]), self.pi[mc1_grp], stat)
                         L[hist_ind_split] = M
 
                         split_dist_prior = self.prior.compPrior[j].pdf(split_dist)
@@ -1002,7 +1002,7 @@ class BayesMixtureModel(MixtureModel):
                             l_j_1[v, :] = l_row
 
                         sum_logs = matrix_sum_logs(g)
-                        lk_1 = numpy.sum(sum_logs)
+                        lk_1 = np.sum(sum_logs)
 
                         # computing posterior as model selection criterion
                         log_prior_1 = pi_prior
@@ -1133,7 +1133,7 @@ class BayesMixtureModel(MixtureModel):
             print 'others:', others
 
         # building data likelihood factor matrix for the current group structure
-        l = numpy.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
+        l = np.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
         for j in range(self.dist_nr):
             if isinstance(self.components[0][j], MixtureModel):
                 data_j = data.singleFeatureSubset(j)
@@ -1146,19 +1146,19 @@ class BayesMixtureModel(MixtureModel):
                     l[j, v, :] = l_row
 
         # g is the matrix of log posterior probabilities of the components given the data
-        g = numpy.sum(l, axis=0)
+        g = np.sum(l, axis=0)
 
         for k in range(self.G):
-            g[k, :] += numpy.log(self.pi[k])
+            g[k, :] += np.log(self.pi[k])
 
-        sum_logs = numpy.zeros(data.N, dtype='Float64')
-        g_norm = numpy.zeros((self.G, data.N), dtype='Float64')
+        sum_logs = np.zeros(data.N, dtype='Float64')
+        g_norm = np.zeros((self.G, data.N), dtype='Float64')
         for n in range(data.N):
             sum_logs[n] = stats.sum_logs(g[:, n])
             # normalizing log posterior
             g_norm[:, n] = g[:, n] - sum_logs[n]
 
-        tau = numpy.exp(g_norm)
+        tau = np.exp(g_norm)
         model = copy.copy(self)
         score = []
         for j in range(model.dist_nr):
@@ -1237,7 +1237,7 @@ class BayesMixtureModel(MixtureModel):
 
         @return: log-likelihood of winning model
         """
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             raise TypeError, "DataSet object required."
         elif isinstance(data, DataSet):
             if data.internalData is None:
@@ -1291,7 +1291,7 @@ class BayesMixtureModel(MixtureModel):
             print "\nBest model likelihood over ", nr_runs, "random initializations ( " + str(nr_runs - len(logp_list)) + " runs failed):"
             if len(logp_list) > 0:
                 print "Model likelihoods:", logp_list
-                print "Average logp: ", sum(logp_list) / len(logp_list), " SD:", numpy.array(logp_list).std()
+                print "Average logp: ", sum(logp_list) / len(logp_list), " SD:", np.array(logp_list).std()
                 print "Best logp:", best_logp
 
         self.components = best_model.components  # assign best parameter set to model 'self'
@@ -1318,7 +1318,7 @@ class BayesMixtureModel(MixtureModel):
 
         @return: log-likelihood of winning model
         """
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             raise TypeError, "DataSet object required."
         elif isinstance(data, DataSet):
             if data.internalData is None:
@@ -1373,10 +1373,10 @@ class BayesMixtureModel(MixtureModel):
         if not silent:
             print "\nBest model likelihood over ", nr_runs, " repeats ( " + str(nr_runs - len(model_logp)) + " runs failed):"
             print "Model likelihoods:", model_logp
-            print "Average logp: ", sum(model_logp) / len(model_logp), " SD:", numpy.array(model_logp).std()
+            print "Average logp: ", sum(model_logp) / len(model_logp), " SD:", np.array(model_logp).std()
             print "Best logp:", best_model_logp
 
-        final_logp = numpy.array(model_logp, dtype='Float64')
+        final_logp = np.array(model_logp, dtype='Float64')
         # assign best parameter set to model 'self'
         self.components = best_model.components
         self.pi = best_model.pi
@@ -1399,7 +1399,7 @@ class BayesMixtureModel(MixtureModel):
 
         @return: log-likelihood of winning model
         """
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             raise TypeError, "DataSet object required."
         elif isinstance(data, DataSet):
             if data.internalData is None:
@@ -1491,7 +1491,7 @@ class BayesMixtureModel(MixtureModel):
         if not silent:
             print 'Structural EM (', nr_repeats, ' runs over', nr_runs, 'random inits each):'
             print 'logp:', logp_list
-            print "Average logp: ", sum(logp_list) / len(logp_list), " SD:", numpy.array(logp_list).std()
+            print "Average logp: ", sum(logp_list) / len(logp_list), " SD:", np.array(logp_list).std()
             print "Best logp:", best_logp
         return best_logp
 

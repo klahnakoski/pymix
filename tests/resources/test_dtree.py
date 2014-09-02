@@ -1,5 +1,5 @@
 from core import mixture
-import numpy
+import numpy as np
 import random
 
 
@@ -69,7 +69,7 @@ def testLymphData():
   	    models.append(mixture.ProductDistribution([mixture.DependenceTreeDistribution(d,aux1,aux2,aux3)]))
 
         pi = [1.0]*k
-	pi = numpy.array(pi)/k
+	pi = np.array(pi)/k
 
 
         train = mixture.MixtureModel(k,pi,models)

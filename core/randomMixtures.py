@@ -3,7 +3,7 @@ import copy
 import time
 import gc
 
-import numpy
+import numpy as np
 
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.normal import NormalDistribution
@@ -49,15 +49,15 @@ def get_random_pi(G,min_val):
     inval = True
     while inval:
 
-        p = numpy.zeros(G)
+        p = np.zeros(G)
 
         for i in range(G):
             p[i] = random.random()
 
 
-        p = p / numpy.sum(p)
+        p = p / np.sum(p)
 
-        if numpy.alltrue(p > min_val):
+        if np.alltrue(p > min_val):
             inval = False
             #print p
 
@@ -655,10 +655,10 @@ def matchModelStructures(gen, m):
     for j in range(gen.dist_nr):
         #print 'feature:',j
         for i1 in range(m.G):
-            kldists = numpy.zeros(m.G)
+            kldists = np.zeros(m.G)
             for i2 in range(m.G):
                 kldists[i2] = sym_kl_dist(m.components[i1][j], gen.components[i2][j])
-            cg = numpy.where( kldists == kldists.min() )[0]
+            cg = np.where( kldists == kldists.min() )[0]
 
             gen_csi[j][tuple(cg)].append(i1)
 
@@ -679,10 +679,10 @@ def matchModelStructures(gen, m):
     for j in range(gen.dist_nr):
         cmaps.append({})
         for i1 in range(m.G):
-            kldists = numpy.zeros(m.G)
+            kldists = np.zeros(m.G)
             for i2 in range(m.G):
                 kldists[i2] = sym_kl_dist(m.components[i1][j], gen.components[i2][j])
-            cg = numpy.where( kldists == kldists.min() )[0]
+            cg = np.where( kldists == kldists.min() )[0]
             cmaps[j][i1]=cg
 
     #print cmaps
@@ -739,7 +739,7 @@ def mixtureKLdistance(m1,m2):
     d = 0.0
 
     for k1 in range(m1.G):
-        dd = numpy.zeros(m2.G)
+        dd = np.zeros(m2.G)
         for k2 in range(m2.G):
             dd[k2] = product_distribution_sym_kl_dist(m1.components[k1], m2.components[k2])
         #d += m1.pi[k1] * dd.min()
@@ -748,10 +748,10 @@ def mixtureKLdistance(m1,m2):
 
 
 def mixtureMaxKLdistance(m1,m2):
-    d = numpy.zeros(m1.G)
+    d = np.zeros(m1.G)
 
     for k1 in range(m1.G):
-        dd = numpy.zeros(m2.G)
+        dd = np.zeros(m2.G)
         for k2 in range(m2.G):
             dd[k2] = product_distribution_sym_kl_dist(m1.components[k1], m2.components[k2])
         d[k1] = dd.min()
@@ -830,7 +830,7 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 
     if skipAfterRNGcalls == True:
         print '*** Skipping !'
-        return numpy.zeros(4)
+        return np.zeros(4)
 
 
 
@@ -843,7 +843,7 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
             print '\nfeature:',j
 
             for i1 in range(m.G):
-                kldists = numpy.zeros(m.G)
+                kldists = np.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = sym_kl_dist(m.components[i1][j], gen.components[i2][j])
                 print i1,'->', kldists.argmin(), map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
@@ -851,13 +851,13 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 
 #        for i1 in range(m.G):
 #            print
-#            cdists = numpy.zeros(m.G)
+#            cdists = np.zeros(m.G)
 #            for i2 in range(m.G):
 #                cdists[i2] = product_distribution_sym_kl_dist(m.components[i1], gen.components[i2])
 #                #print i1,i2,product_distribution_sym_kl_dist(m.components[i1], gen.components[i2])
 #
-#            print i1,'maps to', numpy.argmin(cdists), cdists.tolist()
-#            amin = numpy.argmin(cdists)
+#            print i1,'maps to', np.argmin(cdists), cdists.tolist()
+#            amin = np.argmin(cdists)
 #            if not amin == i1:     # minimal KL distance should occur at equal indices in gen and m
 #                bad = 1
 #                cmap[i1] = amin
@@ -898,7 +898,7 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 #
 #
 #            #print cdists
-#            print i1,'maps to', numpy.argmin(cdists)
+#            print i1,'maps to', np.argmin(cdists)
 #
 #            print 'Failed matching.'
 #
@@ -1036,7 +1036,7 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
         raise ValueError
 
 
-    return numpy.array([ logp_top, logp_full_fixed, logp_full, logp_bottom ])
+    return np.array([ logp_top, logp_full_fixed, logp_full, logp_bottom ])
 
 
 #    for i in range(m.G):
@@ -1121,7 +1121,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
     if skipAfterRNGcalls == True:
         print '*** Skipping !'
-        return numpy.zeros(4)
+        return np.zeros(4)
 
 
     m1 = copy.copy(m)
@@ -1270,7 +1270,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
         for j in range(gen.dist_nr):
             print 'feature:',j
             for i1 in range(m.G):
-                kldists = numpy.zeros(m.G)
+                kldists = np.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = sym_kl_dist(gen.components[i1][j], gen.components[i2][j])
                 print map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
@@ -1280,7 +1280,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
         for j in range(gen.dist_nr):
             print 'feature:',j
             for i1 in range(m.G):
-                kldists = numpy.zeros(m.G)
+                kldists = np.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = sym_kl_dist(m.components[i1][j], m.components[i2][j])
                 print map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
@@ -1291,7 +1291,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
         for j in range(gen.dist_nr):
             print 'feature:',j
             for i1 in range(m.G):
-                kldists = numpy.zeros(m.G)
+                kldists = np.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = sym_kl_dist(m.components[i1][j], gen.components[i2][j])
                 print i1,'->', kldists.argmin(), map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
@@ -1348,7 +1348,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
         for j in range(gen.dist_nr):
             print 'feature:',j
             for i1 in range(m.G):
-                kldists = numpy.zeros(m.G)
+                kldists = np.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = sym_kl_dist(gen.components[i1][j], gen.components[i2][j])
                 print i1,':', map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
@@ -1358,7 +1358,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
         for j in range(gen.dist_nr):
             print 'feature:',j
             for i1 in range(m.G):
-                kldists = numpy.zeros(m.G)
+                kldists = np.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = sym_kl_dist(m.components[i1][j], m.components[i2][j])
                 print i1,':', map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
@@ -1370,7 +1370,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
             print 'feature:',j
 
             for i1 in range(m.G):
-                kldists = numpy.zeros(m.G)
+                kldists = np.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = sym_kl_dist(m.components[i1][j], gen.components[i2][j])
                 print i1,'->', kldists.argmin(), map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
@@ -1420,7 +1420,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
 
 
-    return numpy.array([ logp_top, logp_full_fixed, logp_full, logp_bottom ])
+    return np.array([ logp_top, logp_full_fixed, logp_full, logp_bottom ])
 
 
 #    for i in range(m.G):
@@ -1446,7 +1446,7 @@ def evaluateStructureLearning(rep, N, G, p, KL_lower, KL_upper, dtypes='discgaus
 #    if seed:
 #        random.seed(seed)
 
-    dists = numpy.zeros(3)
+    dists = np.zeros(3)
     for r in range(rep):
 
         gen = getRandomCSIMixture(G, p, KL_lower, KL_upper, dtypes=dtypes)
@@ -1473,7 +1473,7 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
     delta = 0.5
 
 
-    dists = numpy.zeros(3)
+    dists = np.zeros(3)
 
     t_history = []
     t_old = []
@@ -1569,7 +1569,7 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
 #            #print m1,'\n\n'
 #            #print m2,'\n\n'
 #            #print m3
-#            #if not (numpy.all(m1.pi == m2.pi == m3.pi)):
+#            #if not (np.all(m1.pi == m2.pi == m3.pi)):
 #            #    print m1.pi, m2.pi, m3.pi
 #
 #            for j in range(m1.dist_nr):
@@ -1582,4 +1582,4 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
 
     #print '\navg. quick reject:',avg_quick_reject / rep
 
-    return numpy.array(t_old), numpy.array(t_history), numpy.array(t_bound),  numpy.array(t_historybound)
+    return np.array(t_old), np.array(t_history), np.array(t_bound),  np.array(t_historybound)

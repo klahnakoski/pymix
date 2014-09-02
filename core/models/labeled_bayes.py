@@ -2,7 +2,7 @@ import copy
 import random
 import sys
 
-import numpy
+import numpy as np
 
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.product import ProductDistribution
@@ -82,7 +82,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
             self.initStructure()
 
         # generate 'random posteriors'
-        l = numpy.zeros((self.G, len(data)), dtype='Float64')
+        l = np.zeros((self.G, len(data)), dtype='Float64')
         for i in range(len(data)):
             if rtype == 0:
                 for j in range(self.G):
@@ -97,7 +97,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
         # peform label assigments (non random!)
         for i, cl in enumerate(data.labels): # for each class
             for o in cl: # for each observation in a class
-                p_vec = numpy.zeros(self.G, dtype='Float64')
+                p_vec = np.zeros(self.G, dtype='Float64')
                 p_vec[i] = 1.0
                 l[:, o] = p_vec
 
@@ -180,7 +180,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
         """
         assert self.G >= len(data.labels), 'Insufficent number of components for given labeling.'
 
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             raise TypeError, "DataSet object required."
         elif isinstance(data, DataSet):
             if data.internalData is None:
@@ -205,16 +205,16 @@ class labeledBayesMixtureModel(BayesMixtureModel):
 
         # for lower hierarchy mixture we need the log of mix_posterior
         if mix_posterior is not None:
-            log_mix_posterior = numpy.log(mix_posterior)
+            log_mix_posterior = np.log(mix_posterior)
         else:
             log_mix_posterior = None
 
         while 1:
             log_p = 0.0
             # matrix of log posterior probs: components# * (sequence positions)
-            log_l = numpy.zeros((self.G, data.N), dtype='Float64')
-            #log_col_sum = numpy.zeros(data.N,dtype='Float64')  # array of column sums of log_l
-            log_pi = numpy.log(self.pi)  # array of log mixture coefficients
+            log_l = np.zeros((self.G, data.N), dtype='Float64')
+            #log_col_sum = np.zeros(data.N,dtype='Float64')  # array of column sums of log_l
+            log_pi = np.log(self.pi)  # array of log mixture coefficients
 
             # computing log posterior distribution
             for i in range(self.G):
@@ -226,7 +226,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
             for i, cl in enumerate(data.labels): # for each class
                 for o in cl: # for each observation in a class
                     v = log_l[i, o]
-                    p_vec = numpy.zeros(self.G, dtype='Float64')
+                    p_vec = np.zeros(self.G, dtype='Float64')
                     p_vec[:] = float('-inf')
                     p_vec[i] = v
                     log_l[:, o] = p_vec
@@ -285,7 +285,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
 
 
             # compute posterior likelihood matrix from log posterior
-            l = numpy.exp(log_l)
+            l = np.exp(log_l)
 
             # deterministic annealing, shifting posterior toward uniform distribution.
             if tilt and step + 1 <= self.nr_tilt_steps and mix_posterior is None:
@@ -379,7 +379,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
         new_groups = []
         change = 0
         # building data likelihood factor matrix for the current group structure
-        l = numpy.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
+        l = np.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
         for j in range(self.dist_nr):
             # extracting current feature from the DataSet
             if isinstance(self.components[0][j], MixtureModel): # XXX
@@ -403,14 +403,14 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                     l[:, ng, o] = float('-inf')
 
         # g is the matrix of log posterior probabilities of the components given the data
-        g = numpy.sum(l, axis=0)
+        g = np.sum(l, axis=0)
         for k in range(self.G):
-            g[k, :] += numpy.log(self.pi[k])
+            g[k, :] += np.log(self.pi[k])
 
         sum_logs = matrix_sum_logs(g)
         g_norm = g - sum_logs
 
-        tau = numpy.exp(g_norm)
+        tau = np.exp(g_norm)
         if not silent:
             print "\ntau="
             for tt in tau:
@@ -434,14 +434,14 @@ class labeledBayesMixtureModel(BayesMixtureModel):
             log_prior += self.prior.structPrior * len(self.leaders[j])
 
         # get posterior
-        lk = numpy.sum(sum_logs)
+        lk = np.sum(sum_logs)
         post = lk + log_prior
         if not silent:
             print "0: ", lk, "+", log_prior, "=", post
             print log_prior_list
 
         changes = 0
-        g_wo_j = numpy.zeros((self.G, data.N), dtype='Float64')
+        g_wo_j = np.zeros((self.G, data.N), dtype='Float64')
 
         # initialising temporary group structure with copies of the current structure
         temp_leaders = copy.deepcopy(self.leaders)
@@ -473,7 +473,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
             else:
                 data_j = data.getInternalFeature(j)
 
-            tau_pool = numpy.zeros(data.N, dtype='Float64')
+            tau_pool = np.zeros(data.N, dtype='Float64')
             for lead in self.leaders[j]:
                 el_dist = copy.copy(self.components[lead][j])
 
@@ -484,7 +484,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                     pi_pool += self.pi[z]
 
                 stat = el_dist.sufficientStatistics(tau_pool, data_j)
-                M = CandidateGroup(el_dist, numpy.sum(tau_pool), pi_pool, stat)
+                M = CandidateGroup(el_dist, np.sum(tau_pool), pi_pool, stat)
                 L[(lead,) + tuple(self.groups[j][lead])] = M
 
             while not term:
@@ -566,7 +566,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                         g = g_wo_j + l_j_1
 
                         sum_logs = matrix_sum_logs(g)
-                        lk_1 = numpy.sum(sum_logs)
+                        lk_1 = np.sum(sum_logs)
 
                         # computing posterior as model selection criterion
                         log_prior_1 = pi_prior

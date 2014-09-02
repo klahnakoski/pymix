@@ -1,5 +1,5 @@
 import copy
-import numpy
+import numpy as np
 import random
 import sys
 from core.distributions.product import ProductDistribution
@@ -93,7 +93,7 @@ class ConstrainedMixtureModel(MixtureModel):
             self.initStructure()
 
         # generate 'random posteriors'
-        l = numpy.zeros((self.G, len(data)), dtype='Float64')
+        l = np.zeros((self.G, len(data)), dtype='Float64')
         for i in range(len(data)):
             if rtype == 0:
                 for j in range(self.G):
@@ -238,10 +238,10 @@ class ConstrainedMixtureModel(MixtureModel):
         positive_constraints = data.pairwisepositive
         negative_constraints = data.pairwisenegative
 
-        log_l = numpy.zeros((self.G, data.N), dtype='Float64')
-        log_col_sum_nopen = numpy.zeros(data.N, dtype='Float64')  # array of column sums of log_l without penalty
-        log_col_sum = numpy.zeros(data.N, dtype='Float64')  # array of column sums of log_l
-        log_pi = numpy.log(self.pi)  # array of log mixture coefficient
+        log_l = np.zeros((self.G, data.N), dtype='Float64')
+        log_col_sum_nopen = np.zeros(data.N, dtype='Float64')  # array of column sums of log_l without penalty
+        log_col_sum = np.zeros(data.N, dtype='Float64')  # array of column sums of log_l
+        log_pi = np.log(self.pi)  # array of log mixture coefficient
 
         # computing log posterior distribution
         for i in range(self.G):
@@ -254,14 +254,14 @@ class ConstrainedMixtureModel(MixtureModel):
 
         random.shuffle(indices)
 
-        pen = numpy.zeros(self.G, dtype='Float64')
-        penn = numpy.zeros(self.G, dtype='Float64')
+        pen = np.zeros(self.G, dtype='Float64')
+        penn = np.zeros(self.G, dtype='Float64')
 
         for x, i in enumerate(indices):
 
         #          print '\n----- sample'+str(i)
         #          print 'log_l=',log_l[:,i]
-        #          print 'norm l', numpy.exp( log_l[:,i] - sumlogs(log_l[:,i]) )
+        #          print 'norm l', np.exp( log_l[:,i] - sumlogs(log_l[:,i]) )
 
             # Leaves -Inf values unchanged
             pen[:] = 0.0
@@ -273,14 +273,14 @@ class ConstrainedMixtureModel(MixtureModel):
                 # calculating penalities
                 # in a Gibbs sampling manner (using either previous or current posteriors
                 if y > x: # if posterior not yet calculated, use of previous one posterior
-                    coc = numpy.multiply(previous_posterior[:, j], 1.0) # posterior of y
+                    coc = np.multiply(previous_posterior[:, j], 1.0) # posterior of y
 
                     if prior_type == 1 or prior_type == 3:
                         if positive_constraints[i][j] > 0.0:
                             if norm:
-                                pen += numpy.divide(numpy.multiply(1 - coc, positive_constraints[i][j]), ((1 - self.pi)))
+                                pen += np.divide(np.multiply(1 - coc, positive_constraints[i][j]), ((1 - self.pi)))
                             else:
-                                pen += numpy.multiply(1 - coc, positive_constraints[i][j])
+                                pen += np.multiply(1 - coc, positive_constraints[i][j])
 
                             #                      print '   +  1 - coc',j, 1 - coc
                             #                      print '   +',pen
@@ -288,23 +288,23 @@ class ConstrainedMixtureModel(MixtureModel):
                     if prior_type == 2 or prior_type == 3:
                         if negative_constraints[i][j] > 0.0:
                             if norm:
-                                penn += numpy.divide(numpy.multiply(coc, negative_constraints[i][j]), self.pi)
+                                penn += np.divide(np.multiply(coc, negative_constraints[i][j]), self.pi)
                             else:
-                                penn += numpy.multiply(coc, negative_constraints[i][j])
+                                penn += np.multiply(coc, negative_constraints[i][j])
 
                             #                      print '   - coc',j, coc
                             #                      print '   -',penn
 
 
                 elif y < x:
-                    coc = numpy.multiply(numpy.exp(log_l[:, j]), 1)
+                    coc = np.multiply(np.exp(log_l[:, j]), 1)
 
                     if prior_type == 1 or prior_type == 3:
                         if positive_constraints[i][j] > 0.0:
                             if norm:
-                                pen += numpy.divide(numpy.multiply(1 - coc, positive_constraints[i][j]), ((1 - self.pi)))
+                                pen += np.divide(np.multiply(1 - coc, positive_constraints[i][j]), ((1 - self.pi)))
                             else:
-                                pen += numpy.multiply(1 - coc, positive_constraints[i][j])
+                                pen += np.multiply(1 - coc, positive_constraints[i][j])
 
                             #                      print '   + coc',j, coc
                             #                      print '   +',pen
@@ -312,23 +312,23 @@ class ConstrainedMixtureModel(MixtureModel):
                     if prior_type == 2 or prior_type == 3:
                         if negative_constraints[i][j] > 0.0:
                             if norm:
-                                penn += numpy.divide(numpy.multiply(coc, negative_constraints[i][j]), self.pi)
+                                penn += np.divide(np.multiply(coc, negative_constraints[i][j]), self.pi)
                             else:
-                                penn += numpy.multiply(coc, negative_constraints[i][j])
+                                penn += np.multiply(coc, negative_constraints[i][j])
 
                             #                        print '   - coc',j, coc
                             #                        print '   -',penn
 
                             #print '\n-------', i
                             #print log_l[:,i]
-                            #          print - numpy.multiply(pen,prior_pos)
-                            #          print - numpy.multiply(penn,prior_neg)
+                            #          print - np.multiply(pen,prior_pos)
+                            #          print - np.multiply(penn,prior_neg)
 
-            log_l[:, i] += (-numpy.multiply(pen, prior_pos) - numpy.multiply(penn, prior_neg))
+            log_l[:, i] += (-np.multiply(pen, prior_pos) - np.multiply(penn, prior_neg))
             # l[k,i] = log( (a_k * * P[seq i| model k]) + P[W+|y] * P[W-|y] )
 
             #          print '-> log_l=',log_l[:,i]
-            #          print '-> norm l=',numpy.exp( log_l[:,i] - sumlogs(log_l[:,i]) )
+            #          print '-> norm l=',np.exp( log_l[:,i] - sumlogs(log_l[:,i]) )
 
             #print '->',log_l[:,i]
 
@@ -352,12 +352,12 @@ class ConstrainedMixtureModel(MixtureModel):
 
                 # adjusting posterior for lower hierarchy mixtures
                 if mix_posterior is not None:
-                    log_mix_posterior = numpy.zeros(len(mix_posterior), dtype='Float64')
+                    log_mix_posterior = np.zeros(len(mix_posterior), dtype='Float64')
                     for k in range(len(mix_posterior)):
                         if mix_posterior[k] == 0.0:
                             log_mix_posterior[k] = float('-inf')
                         else:
-                            log_mix_posterior[k] = numpy.log(mix_posterior[k])
+                            log_mix_posterior[k] = np.log(mix_posterior[k])
 
                     # multiplying in the posterior of upper hierarch mixture
                     log_l[:, i] = log_l[:, i] + log_mix_posterior[i]
@@ -366,26 +366,26 @@ class ConstrainedMixtureModel(MixtureModel):
         penalty = 0.0
         for x, i in enumerate(indices):
             for y, j in enumerate(indices):
-                coc = numpy.multiply(numpy.exp(log_l[:, j]), 1)
+                coc = np.multiply(np.exp(log_l[:, j]), 1)
                 if prior_type == 1 or prior_type == 3:
                     if positive_constraints[i][j] > 0.0:
                         if norm:
-                            penalty += numpy.sum(numpy.divide(numpy.multiply(1 - coc, positive_constraints[i][j]), ((1 - self.pi))))
+                            penalty += np.sum(np.divide(np.multiply(1 - coc, positive_constraints[i][j]), ((1 - self.pi))))
                         else:
-                            penalty += numpy.sum(numpy.multiply(1 - coc, positive_constraints[i][j]))
+                            penalty += np.sum(np.multiply(1 - coc, positive_constraints[i][j]))
                 if prior_type == 2 or prior_type == 3:
                     if negative_constraints[i][j] > 0.0:
                         if norm:
-                            penalty += numpy.sum(numpy.divide(numpy.multiply(coc, negative_constraints[i][j]), self.pi))
+                            penalty += np.sum(np.divide(np.multiply(coc, negative_constraints[i][j]), self.pi))
                         else:
-                            penalty += numpy.sum(numpy.multiply(coc, negative_constraints[i][j]))
+                            penalty += np.sum(np.multiply(coc, negative_constraints[i][j]))
 
         # HACK - I am updating at each iteration the previous posterior,
         #since this parameter is not part of of regular EStep
-        EStepParam.previous_posterior = numpy.exp(log_l)
+        EStepParam.previous_posterior = np.exp(log_l)
         # computing data log likelihood as criteria of convergence
-        log_p = numpy.sum(log_col_sum) + penalty
-        return log_l, numpy.sum(log_col_sum) + penalty
+        log_p = np.sum(log_col_sum) + penalty
+        return log_l, np.sum(log_col_sum) + penalty
 
 
     def randMaxEM(self, data, nr_runs, nr_steps, delta, prior_positive,
@@ -403,7 +403,7 @@ class ConstrainedMixtureModel(MixtureModel):
 
         @return: log-likelihood of winning model
         """
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             raise TypeError, "DataSet object required."
         elif isinstance(data, DataSet):
             if data.internalData is None:
@@ -451,7 +451,7 @@ class ConstrainedMixtureModel(MixtureModel):
         if not silent:
             print "\nBest model likelihood over ", nr_runs, "random initializations:"
             print "Model likelihoods:", logp_list
-            print "Average logp: ", sum(logp_list) / float(nr_runs), " SD:", numpy.array(logp_list).std()
+            print "Average logp: ", sum(logp_list) / float(nr_runs), " SD:", np.array(logp_list).std()
             print "Best logp:", best_logp
 
         # check whether at least one run was sucessfully completed

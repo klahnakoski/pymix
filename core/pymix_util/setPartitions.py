@@ -40,19 +40,19 @@
 """
 import random
 
-import numpy
+import numpy as np
 
 def init_first(l):
-    kap = numpy.zeros(l)
-    maxkap = numpy.zeros(l)
+    kap = np.zeros(l)
+    maxkap = np.zeros(l)
 
 
     return kap, maxkap
 
 
 def init_last(l):
-    kap = numpy.arange(l)
-    maxkap = numpy.arange(l)
+    kap = np.arange(l)
+    maxkap = np.arange(l)
 
 
     return kap, maxkap
@@ -68,7 +68,7 @@ def next_partition(kappa, M):
             #print i,'!'
 
             kappa[i] += 1
-            M[i] = numpy.max([M[i],kappa[i]])  # XXX slow
+            M[i] = np.max([M[i],kappa[i]])  # XXX slow
             for j in range(i+1,len(kappa)):
                 kappa[j] = kappa[0]
                 M[j] = M[i]
@@ -100,7 +100,7 @@ def decode_partition(set, kappa, M):
 
     part = []
     for i in range(int(nr_part+1)):
-        i_ind = numpy.where(kappa == i)[0]
+        i_ind = np.where(kappa == i)[0]
         #print i, i_ind
 
         part.append( tuple(set[i_ind]) )
@@ -129,7 +129,7 @@ def generate_all_partitions(G,order='forward'):
     """
 
     if order == 'forward':
-        set = numpy.arange(G+1)
+        set = np.arange(G+1)
         P = []
 
         ind = 0
@@ -156,7 +156,7 @@ def generate_all_partitions(G,order='forward'):
 
 
     elif order == 'reverse':
-        set = numpy.arange(G+1)
+        set = np.arange(G+1)
 
         P = []
 
@@ -203,9 +203,9 @@ def get_partitions_w_cardinality(G,R):
 
 def get_random_partition(G):
     #nr = random.randint(1,G+1)  # number of subgroups
-    set = numpy.arange(G+1)
-    kap = numpy.zeros(G)
-    M = numpy.zeros(G)
+    set = np.arange(G+1)
+    kap = np.zeros(G)
+    M = np.zeros(G)
 
     for i in range(G):
         kap[i] = random.randint(0,G)

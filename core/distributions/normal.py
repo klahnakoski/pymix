@@ -2,7 +2,7 @@ import copy
 import random
 import math
 from scipy import stats
-import numpy
+import numpy as np
 from .prob import ProbDistribution
 from ..pymix_util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from ..pymix_util.dataset import DataSet
@@ -33,7 +33,7 @@ class NormalDistribution(ProbDistribution):
     def __eq__(self, other):
         res = False
         if isinstance(other, NormalDistribution):
-            if numpy.allclose(other.mu, self.mu) and numpy.allclose(other.sigma, self.sigma):
+            if np.allclose(other.mu, self.mu) and np.allclose(other.sigma, self.sigma):
                 res = True
         return res
 
@@ -54,13 +54,13 @@ class NormalDistribution(ProbDistribution):
             nr = len(data.internalData)
             assert data.internalData.shape == (nr, 1), 'shape = ' + str(data.internalData.shape)
 
-            x = numpy.transpose(data.internalData)[0]
+            x = np.transpose(data.internalData)[0]
 
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             nr = len(data)
 
             if data.shape == (nr, 1):  # data format needs to be changed
-                x = numpy.transpose(data)[0]
+                x = np.transpose(data)[0]
             elif data.shape == (nr,):
                 x = data
             else:
@@ -70,14 +70,14 @@ class NormalDistribution(ProbDistribution):
 
         # computing log likelihood
         res = stats.norm.pdf(x, loc=self.mu, scale=self.sigma)
-        return numpy.log(res)
+        return np.log(res)
 
     def sample(self):
         return random.normalvariate(self.mu, self.sigma)
 
 
     def sampleSet(self, nr):
-        res = numpy.zeros(nr, dtype='Float64')
+        res = np.zeros(nr, dtype='Float64')
 
         for i in range(nr):
             res[i] = self.sample()
@@ -95,14 +95,14 @@ class NormalDistribution(ProbDistribution):
 
         @return: list with dot(posterior, data) and dot(posterior, data**2)
         """
-        return numpy.array([numpy.dot(posterior, data)[0], numpy.dot(posterior, data ** 2)[0]], dtype='Float64')
+        return np.array([np.dot(posterior, data)[0], np.dot(posterior, data ** 2)[0]], dtype='Float64')
 
 
     def MStep(self, posterior, data, mix_pi=None):
         # data has to be reshaped for parameter estimation
         if isinstance(data, DataSet):
             x = data.internalData[:, 0]
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data[:, 0]
 
         else:
@@ -112,14 +112,14 @@ class NormalDistribution(ProbDistribution):
         sh = x.shape
         assert sh == (nr,)  # XXX debug
 
-        post_sum = numpy.sum(posterior)
+        post_sum = np.sum(posterior)
 
         # checking for valid posterior: if post_sum is zero, this component is invalid
         # for this data set
         if post_sum != 0.0:
             # computing ML estimates for mu and sigma
-            new_mu = numpy.dot(posterior, x) / post_sum
-            new_sigma = math.sqrt(numpy.dot(posterior, (x - new_mu) ** 2) / post_sum)
+            new_mu = np.dot(posterior, x) / post_sum
+            new_sigma = math.sqrt(np.dot(posterior, (x - new_mu) ** 2) / post_sum)
         else:
             raise InvalidPosteriorDistribution, "Sum of posterior is zero: " + str(self) + " has zero likelihood for data set."
 

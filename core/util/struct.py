@@ -50,7 +50,7 @@ class Struct(dict):
        object.getattribute() is called with str() even when using
        <code>from __future__ import unicode_literals</code>
 
-    More on missing values: http://www.numpy.org/NA-overview.html
+    More on missing values: http://www.np.org/NA-overview.html
     it only considers the legitimate-field-with-missing-value (Statistical Null)
     and does not look at field-does-not-exist-in-this-context (Database Null)
 

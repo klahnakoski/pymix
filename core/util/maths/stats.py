@@ -27,7 +27,7 @@ ABS_EPSILON = sys.float_info.min*2  # *2 FOR SAFETY
 
 if DEBUG_STRANGMAN:
     try:
-        import numpy
+        import numpy as np
         from scipy import stats
         import scipy
     except Exception, e:
@@ -45,8 +45,8 @@ def chisquare(f_obs, f_exp):
 
     if DEBUG_STRANGMAN:
         sp_result = scipy.stats.chisquare(
-            numpy.array(f_obs),
-            f_exp=numpy.array(f_exp)
+            np.array(f_obs),
+            f_exp=np.array(f_exp)
         )
         if not closeEnough(sp_result[0], py_result[0]) and closeEnough(sp_result[1], py_result[1]):
             Log.error("problem with stats lib")

@@ -35,7 +35,7 @@ Unittests for the Pymix package.
 import unittest
 import copy
 import random
-import numpy
+import numpy as np
 
 from core import BaseTest
 from core.distributions.discrete import DiscreteDistribution
@@ -66,7 +66,7 @@ from core.pymix_util.dataset import DataSet
 
 # XXX
 # XXX     def sufficientStatistics(self, posterior, data):
-#           -> add unitests and check numpy.dot(., .)[0]
+#           -> add unitests and check np.dot(., .)[0]
 
 
 
@@ -208,7 +208,7 @@ class DataSetTests(BaseTest):
         Thread.run("testfromfile", inner)
 
     def testfromarray(self):
-        a = numpy.array([[0, 0, 1], [1, 1, 0], [0, 1, 1], [1, 1, 1], [0, 0, 0]], dtype='Float64')
+        a = np.array([[0, 0, 1], [1, 1, 0], [0, 1, 1], [1, 1, 1], [0, 0, 0]], dtype='Float64')
 
         sID = ['s1', 's2', 's3', 's4', 's5']
         cH = ['f1', 'f2', 'f3']
@@ -220,7 +220,7 @@ class DataSetTests(BaseTest):
         self.assertEqual(self.d1.sampleIDs, sID)
         self.assertEqual(self.d1.headers, cH)
 
-        dat = numpy.array([[0.25, 0.70, -0.22, -0.80, -0.10, -0.23, -0.37, -0.74, 0.33, 0.15],
+        dat = np.array([[0.25, 0.70, -0.22, -0.80, -0.10, -0.23, -0.37, -0.74, 0.33, 0.15],
             [0.31, 1.12, -0.25, 1.24, 1.06, 0.49, 0.46, -0.82, 0.68, 1.03],
             [-0.4, -0.35, 0.11, 0.39, 0.9, 0.0, 0.1, 0.6, -0.67, -0.52],
             [0.48, 1.39, 0.62, -0.06, -0.5, 0.06, -0.86, -0.77, -0.82, 0.76]], dtype='Float64')
@@ -654,21 +654,21 @@ class NormalDistributionTests(BaseTest):
 
 
     def testpdf(self):
-        a = numpy.array([[0.5], [1.0], [3.2], [-2.3], [7.8]], dtype='Float64')
+        a = np.array([[0.5], [1.0], [3.2], [-2.3], [7.8]], dtype='Float64')
         p = self.dist.pdf(a)
 
         self.assertEqual(p, [-1.04393853, -1.41893853, -6.03893853, -3.56393853, -31.33893853])
 
 
     def testmstep(self):
-        a = numpy.array([[0.5], [1.0], [3.2], [-2.3], [7.8]], dtype='Float64')
-        post1 = numpy.array([0.5, 0.5, 0.5, 0.5, 0.5])   # dummy posterior
+        a = np.array([[0.5], [1.0], [3.2], [-2.3], [7.8]], dtype='Float64')
+        post1 = np.array([0.5, 0.5, 0.5, 0.5, 0.5])   # dummy posterior
 
         self.dist.MStep(post1, a)
         self.assertEqual(self.dist.mu, 2.04)
         self.assertEqual(self.dist.sigma, 3.37081592497)
 
-        post2 = numpy.array([0.1, 0.1, 0.8, 0.1, 0.8])   # dummy posterior
+        post2 = np.array([0.1, 0.1, 0.8, 0.1, 0.8])   # dummy posterior
         self.dist.MStep(post2, a)
         self.assertEqual(self.dist.mu, 4.58947368421)
         self.assertEqual(self.dist.sigma, 3.03469321034)
@@ -728,7 +728,7 @@ class MultiNormalDistributionTests(BaseTest):
 
 
     def testmstep(self):
-        post = numpy.ones(10, dtype='Float64')
+        post = np.ones(10, dtype='Float64')
         self.dist.MStep(post, self.data)
 
         self.assertEqual([round(m, 14) for m in self.dist.mu], [-0.35102902303187, 0.41163352335608999, 1.16925349374317])
@@ -897,7 +897,7 @@ class DiscreteDistributionTests(BaseTest):
         self.DNA = Alphabet(['A', 'C', 'G', 'T'])
 
         self.d = DiscreteDistribution(4, [0.2, 0.3, 0.4, 0.1], self.DNA)
-        self.dat = numpy.array(([[0], [1], [0], [2], [3]]))
+        self.dat = np.array(([[0], [1], [0], [2], [3]]))
 
     def testeq(self):
         d2 = DiscreteDistribution(4, [0.2, 0.3, 0.4, 0.1], self.DNA)
@@ -915,7 +915,7 @@ class DiscreteDistributionTests(BaseTest):
         self.assertEqual(self.d.pdf(self.dat), [-1.60943791, -1.2039728, -1.60943791, -0.91629073, -2.30258509])
 
     def testmstep(self):
-        post = numpy.array([0.4, 0.2, 0.1, 0.8, 0.9])
+        post = np.array([0.4, 0.2, 0.1, 0.8, 0.9])
         self.d.MStep(post, self.dat)
         self.assertEqual(self.d.phi, [0.20833333, 0.08333333, 0.33333333, 0.375])
 
@@ -1020,8 +1020,8 @@ class DirichletPriorTests(BaseTest):
 
         # input is DiscreteDistribution
         dist = DiscreteDistribution(4, [0.4, 0.1, 0.1, 0.4], alphabet=self.DNA)
-        dat1 = numpy.array([0, 0, 1, 2, 3, 3])
-        post1 = numpy.ones(6, dtype='Float64')
+        dat1 = np.array([0, 0, 1, 2, 3, 3])
+        post1 = np.ones(6, dtype='Float64')
 
         self.d1.mapMStep(dist, post1, dat1)
         self.assertEqual(dist.phi.tolist(), [0.33333333333333331, 0.16666666666666666, 0.16666666666666666, 0.33333333333333331])
@@ -1034,8 +1034,8 @@ class DirichletPriorTests(BaseTest):
 
         # input is MultinomialDistribution
         dist = MultinomialDistribution(3, 4, [0.4, 0.1, 0.1, 0.4], alphabet=self.DNA)
-        dat1 = numpy.array([[3, 0, 0, 0], [1, 1, 0, 1], [0, 2, 0, 1], [0, 1, 1, 1], [1, 0, 0, 2], [0, 0, 0, 3]])
-        post1 = numpy.ones(6, dtype='Float64')
+        dat1 = np.array([[3, 0, 0, 0], [1, 1, 0, 1], [0, 2, 0, 1], [0, 1, 1, 1], [1, 0, 0, 2], [0, 0, 0, 3]])
+        post1 = np.ones(6, dtype='Float64')
 
         self.d1.mapMStep(dist, post1, dat1)
         self.assertEqual(dist.phi.tolist(), [0.27777777777777779, 0.22222222222222221, 0.055555555555555552, 0.44444444444444442])
@@ -1072,15 +1072,15 @@ class DirichletPriorTests(BaseTest):
     def testcopy(self):
         cp = copy.copy(self.d1)
         self.assertEqual(cp, self.d1)
-        self.d1.alpha = numpy.zeros(4)
-        self.assertEqual(str(cp.alpha), str(numpy.ones(4)))
+        self.d1.alpha = np.zeros(4)
+        self.assertEqual(str(cp.alpha), str(np.ones(4)))
 
 
     def testmapmstepmerge(self):
-        post1 = numpy.array([0.3, 0.2, 0.5, 0.12, 0.5], dtype='Float64')
-        post2 = numpy.array([0.4, 0.1, 0.1, 0.7, 0.3], dtype='Float64')
+        post1 = np.array([0.3, 0.2, 0.5, 0.12, 0.5], dtype='Float64')
+        post2 = np.array([0.4, 0.1, 0.1, 0.7, 0.3], dtype='Float64')
 
-        data = numpy.array([0, 1, 2, 3, 0])
+        data = np.array([0, 1, 2, 3, 0])
 
         d = DiscreteDistribution(4, [0.25] * 4)
 
@@ -1089,12 +1089,12 @@ class DirichletPriorTests(BaseTest):
         self.assertEqual(d, {"M": 4, "phi": [0.38314176, 0.1532567, 0.21072797, 0.25287356]})
         d2 = DiscreteDistribution(4, [0.25] * 4)
 
-        req_stat1 = numpy.zeros(d2.M, dtype='Float64')
-        req_stat2 = numpy.zeros(d2.M, dtype='Float64')
+        req_stat1 = np.zeros(d2.M, dtype='Float64')
+        req_stat2 = np.zeros(d2.M, dtype='Float64')
         for i in range(d2.M):
-            i_ind = numpy.where(data == i)[0]
-            req_stat1[i] = numpy.sum(post1[i_ind])
-            req_stat2[i] = numpy.sum(post2[i_ind])
+            i_ind = np.where(data == i)[0]
+            req_stat1[i] = np.sum(post1[i_ind])
+            req_stat2[i] = np.sum(post2[i_ind])
 
         dum1 = DiscreteDistribution(4, [0.25] * 4)
         dum2 = DiscreteDistribution(4, [0.1, 0.2, 0.3, 0.4])
@@ -1169,10 +1169,10 @@ class NormalGammaPriorTests(BaseTest):
         self.assertRaises(ValueError, self.ng.pdf, [n1, n2, n3, n4])
 
     def testmapmstepmerge(self):
-        post1 = numpy.array([0.3, 0.2, 0.5, 0.12, 0.5], dtype='Float64')
-        post2 = numpy.array([0.4, 0.1, 0.1, 0.7, 0.3], dtype='Float64')
+        post1 = np.array([0.3, 0.2, 0.5, 0.12, 0.5], dtype='Float64')
+        post2 = np.array([0.4, 0.1, 0.1, 0.7, 0.3], dtype='Float64')
 
-        data = numpy.array([[1.2], [2.0], [1.1], [3.1], [0.4]])
+        data = np.array([[1.2], [2.0], [1.1], [3.1], [0.4]])
 
         d = NormalDistribution(0.0, 1.0)
 
@@ -1251,16 +1251,16 @@ class DirichletMixturePriorTests(BaseTest):
 
         # input is DiscreteDistribution
         dist = DiscreteDistribution(4, [0.4, 0.1, 0.1, 0.4], alphabet=self.DNA)
-        dat1 = numpy.array([0, 0, 1, 2, 3, 3])
-        post1 = numpy.ones(6, dtype='Float64')
+        dat1 = np.array([0, 0, 1, 2, 3, 3])
+        post1 = np.ones(6, dtype='Float64')
 
         self.dmixPrior.mapMStep(dist, post1, dat1)
         _testLists(self, dist.phi.tolist(), [0.31686594399861573, 0.18188034910242759, 0.15894585209433559, 0.342307854804621], 14)
 
         # input is MultinomialDistribution
         dist = MultinomialDistribution(3, 4, [0.4, 0.1, 0.1, 0.4], alphabet=self.DNA)
-        dat1 = numpy.array([[3, 0, 0, 0], [1, 1, 0, 1], [0, 2, 0, 1], [0, 1, 1, 1], [1, 0, 0, 2], [0, 0, 0, 3]])
-        post1 = numpy.ones(6, dtype='Float64')
+        dat1 = np.array([[3, 0, 0, 0], [1, 1, 0, 1], [0, 2, 0, 1], [0, 1, 1, 1], [1, 0, 0, 2], [0, 0, 0, 3]])
+        post1 = np.ones(6, dtype='Float64')
 
         self.dmixPrior.mapMStep(dist, post1, dat1)
         _testLists(self, dist.phi.tolist(), [0.28374853426045621, 0.2143354801453049, 0.083217212994288553, 0.41869877259995031], 14)
@@ -1297,8 +1297,8 @@ class DirichletMixturePriorTests(BaseTest):
         # Therefore adding 1 to each alpha yields the same parameter estimates
         d1 = DirichletPrior(4, [2.3, 2.6, 2.1, 5.0])
 
-        dat1 = numpy.array([0, 0, 1, 1, 2, 0, 3, 2, 2, 3])
-        post1 = numpy.ones(10, dtype='Float64')
+        dat1 = np.array([0, 0, 1, 1, 2, 0, 3, 2, 2, 3])
+        post1 = np.ones(10, dtype='Float64')
         temp1 = DiscreteDistribution(4, [0.2, 0.2, 0.2, 0.4], alphabet=self.DNA)
         temp2 = DiscreteDistribution(4, [0.2, 0.2, 0.2, 0.4], alphabet=self.DNA)
 
@@ -1308,8 +1308,8 @@ class DirichletMixturePriorTests(BaseTest):
         self.assertEqual(str(temp1.phi), str(temp2.phi))
 
 
-    #        dat2 = numpy.array( [[3,0,0,0], [1,0,0,2], [0,2,0,1], [1,1,0,1], [1,0,0,2], [0,0,0,3], [0,0,0,3], [1,0,0,2], [1,1,0,1], [1,0,0,2]])
-    #        post2 = numpy.ones(10,dtype='Float64')
+    #        dat2 = np.array( [[3,0,0,0], [1,0,0,2], [0,2,0,1], [1,1,0,1], [1,0,0,2], [0,0,0,3], [0,0,0,3], [1,0,0,2], [1,1,0,1], [1,0,0,2]])
+    #        post2 = np.ones(10,dtype='Float64')
     #        temp1 = MultinomialDistribution(3,4, [1.0,0.0,0.0,0.0], alphabet = self.DNA)
     #        temp2 = MultinomialDistribution(3,4, [0.0,0.0,0.0,1.0], alphabet = self.DNA)
 
@@ -1326,10 +1326,10 @@ class DirichletMixturePriorTests(BaseTest):
 
 
     def testmapmstepmerge(self):
-        post1 = numpy.array([0.3, 0.2, 0.5, 0.12, 0.5], dtype='Float64')
-        post2 = numpy.array([0.4, 0.1, 0.1, 0.7, 0.3], dtype='Float64')
+        post1 = np.array([0.3, 0.2, 0.5, 0.12, 0.5], dtype='Float64')
+        post2 = np.array([0.4, 0.1, 0.1, 0.7, 0.3], dtype='Float64')
 
-        data = numpy.array([0, 1, 2, 3, 0])
+        data = np.array([0, 1, 2, 3, 0])
 
         d = DiscreteDistribution(4, [0.25] * 4)
 
@@ -1338,12 +1338,12 @@ class DirichletMixturePriorTests(BaseTest):
         self.assertEqual(d, {"M": 4, "phi": [0.36649153, 0.16247853, 0.16440497, 0.30662497]})
         d2 = DiscreteDistribution(4, [0.25] * 4)
 
-        req_stat1 = numpy.zeros(d2.M, dtype='Float64')
-        req_stat2 = numpy.zeros(d2.M, dtype='Float64')
+        req_stat1 = np.zeros(d2.M, dtype='Float64')
+        req_stat2 = np.zeros(d2.M, dtype='Float64')
         for i in range(d2.M):
-            i_ind = numpy.where(data == i)[0]
-            req_stat1[i] = numpy.sum(post1[i_ind])
-            req_stat2[i] = numpy.sum(post2[i_ind])
+            i_ind = np.where(data == i)[0]
+            req_stat1[i] = np.sum(post1[i_ind])
+            req_stat2[i] = np.sum(post2[i_ind])
 
         dum1 = DiscreteDistribution(4, [0.25] * 4)
         dum2 = DiscreteDistribution(4, [0.1, 0.2, 0.3, 0.4])
@@ -1436,7 +1436,7 @@ class MixtureModelPriorTests(BaseTest):
 
         self.prior.compPrior.priorList[0].alpha = [0.0]
 
-        self.assertEqual(str(cp.compPrior.priorList[0].alpha), str(numpy.array([1.0, 2.0, 2.0, 1.0])))
+        self.assertEqual(str(cp.compPrior.priorList[0].alpha), str(np.array([1.0, 2.0, 2.0, 1.0])))
 
     def testisvalid(self):
         c = ProductDistribution([DiscreteDistribution(4, [0.25] * 4),
@@ -1549,7 +1549,7 @@ class MixtureModelPartialLearningTests(BaseTest):
         dat = ConstrainedDataSet()
         dat.fromList(l)
 
-        pos_constr = numpy.zeros((13, 13), dtype='Float64')
+        pos_constr = np.zeros((13, 13), dtype='Float64')
         pos_constr[0, 2] = 1.0
         pos_constr[2, 0] = 1.0
         #        pos_constr[0,6] = 1.0
@@ -1557,7 +1557,7 @@ class MixtureModelPartialLearningTests(BaseTest):
         #        pos_constr[2,6] = 1.0
         #        pos_constr[6,2] = 1.0
 
-        neg_constr = numpy.zeros((13, 13), dtype='Float64')
+        neg_constr = np.zeros((13, 13), dtype='Float64')
         #        neg_constr[0,2] = 1.0
         #        neg_constr[2,0] = 1.0
         neg_constr[0, 6] = 1.0
@@ -1576,11 +1576,11 @@ class MixtureModelPartialLearningTests(BaseTest):
         random.seed(1)
         p = train.modelInitialization(dat, 100, 100, 3, rtype=1)
 
-        #posterior = numpy.zeros((2,13),dtype='Float64')
+        #posterior = np.zeros((2,13),dtype='Float64')
 
         [log_l, log_p] = train.EM(dat, 100, 0.1, 100, 100, p, 3, silent=1)
 
-        c = train.classify(dat, 100, 100, numpy.exp(log_l), 3, silent=1)
+        c = train.classify(dat, 100, 100, np.exp(log_l), 3, silent=1)
         self.assertEqual(c, [0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1])
         self.assertEqual(train.pi, [0.46997507, 0.53002493])
         self.assertEqual(train.components[0][0], {"mu": 2.79334411699, "sigma": 1.27604735923})
@@ -1741,8 +1741,8 @@ class BayesMixtureModelTests(BaseTest):
 
         self.assertEqual(self.m == m2, False)
 
-        m2.prior.nrCompPrior = numpy.log(0.1)
-        m2.prior.structPrior = numpy.log(0.1)
+        m2.prior.nrCompPrior = np.log(0.1)
+        m2.prior.structPrior = np.log(0.1)
 
         self.assertEqual(self.m == m2, True)
 
@@ -1913,7 +1913,7 @@ class MixtureModelTests(BaseTest):
 
         self.assertEqual(self.m == m2, False)
 
-        m2.pi = numpy.array([0.4, 0.6], dtype='Float64')
+        m2.pi = np.array([0.4, 0.6], dtype='Float64')
         self.assertEqual(self.m == m2, False)
 
         m2.components[0][0].mu = 2.5
@@ -2494,12 +2494,12 @@ class MixtureModelTests(BaseTest):
         self.assertEqual(g.groups, [{0: [1]}, {0: [], 1: []}, {0: [1]}])
 
     def testidentifiable(self):
-        self.m.pi = numpy.array([0.9, 0.1], dtype='Float64')
+        self.m.pi = np.array([0.9, 0.1], dtype='Float64')
         self.m.identifiable()
         self.assertEqual(self.m.pi, [0.1, 0.9])
         self.assertEqual(self.m.components[1][0].mu, 2.5)
 
-        self.m.pi = numpy.array([0.9, 0.1], dtype='Float64')
+        self.m.pi = np.array([0.9, 0.1], dtype='Float64')
         self.m.identifiable()
         self.assertEqual(self.m.pi, [0.1, 0.9])
         self.assertEqual(self.m.components[0][0].mu, 2.5)
@@ -2821,9 +2821,9 @@ class ModelSelectionTests(BaseTest):
             self.assertAlmostEqual(BIC[i], tBIC[i], places=15)
             self.assertAlmostEqual(AIC[i], tAIC[i], places=15)
 
-        self.assertEqual(mlist[numpy.argmin(NEC)].G, 2)
-        self.assertEqual(mlist[numpy.argmin(BIC)].G, 2)
-        self.assertEqual(mlist[numpy.argmin(AIC)].G, 2)
+        self.assertEqual(mlist[np.argmin(NEC)].G, 2)
+        self.assertEqual(mlist[np.argmin(BIC)].G, 2)
+        self.assertEqual(mlist[np.argmin(AIC)].G, 2)
 
 ## Run ALL tests (comment out to deactivate)
 if __name__ == '__main__':

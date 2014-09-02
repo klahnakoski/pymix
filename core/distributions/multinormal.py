@@ -1,6 +1,6 @@
 import math
 import random
-import numpy
+import numpy as np
 from numpy import linalg as la
 from core.distributions.prob import ProbDistribution
 from core.pymix_util.errors import InvalidDistributionInput
@@ -25,8 +25,8 @@ class MultiNormalDistribution(ProbDistribution):
         assert len(mu) == len(sigma) == len(sigma[0]) == p, str(len(mu)) + ' == ' + str(len(sigma)) + ' == ' + str(len(sigma[0])) + ' == ' + str(p)
         self.p = p
         self.suff_p = p
-        self.mu = numpy.array(mu, dtype='Float64')
-        self.sigma = numpy.array(sigma, dtype='Float64')
+        self.mu = np.array(mu, dtype='Float64')
+        self.sigma = np.array(sigma, dtype='Float64')
         self.freeParams = p + p ** 2
 
 
@@ -42,14 +42,14 @@ class MultiNormalDistribution(ProbDistribution):
             return False
         if self.p != other.p:
             return False
-        if not numpy.allclose(self.mu, other.mu) or not numpy.allclose(self.sigma, other.sigma):
+        if not np.allclose(self.mu, other.mu) or not np.allclose(self.sigma, other.sigma):
             return False
         return True
 
     def pdf(self, data):
         if isinstance(data, DataSet):
             x = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data
         else:
             raise TypeError, "Unknown/Invalid input type."
@@ -61,27 +61,27 @@ class MultiNormalDistribution(ProbDistribution):
         ff = math.pow(2 * math.pi, -self.p / 2.0) * math.pow(dd, -0.5);
 
         # centered input values
-        centered = numpy.subtract(x, numpy.repeat([self.mu], len(x), axis=0))
+        centered = np.subtract(x, np.repeat([self.mu], len(x), axis=0))
 
-        res = ff * numpy.exp(-0.5 * numpy.sum(numpy.multiply(centered, numpy.dot(centered, inverse)), 1))
+        res = ff * np.exp(-0.5 * np.sum(np.multiply(centered, np.dot(centered, inverse)), 1))
 
-        return numpy.log(res)
+        return np.log(res)
 
     def MStep(self, posterior, data, mix_pi=None):
 
         if isinstance(data, DataSet):
             x = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
 
         post = posterior.sum() # sum of posteriors
-        self.mu = numpy.dot(posterior, x) / post
+        self.mu = np.dot(posterior, x) / post
 
         # centered input values (with new mus)
-        centered = numpy.subtract(x, numpy.repeat([self.mu], len(x), axis=0));
-        self.sigma = numpy.dot(numpy.transpose(numpy.dot(numpy.identity(len(posterior)) * posterior, centered)), centered) / post
+        centered = np.subtract(x, np.repeat([self.mu], len(x), axis=0));
+        self.sigma = np.dot(np.transpose(np.dot(np.identity(len(posterior)) * posterior, centered)), centered) / post
 
 
     def sample(self, A=None):
@@ -94,16 +94,16 @@ class MultiNormalDistribution(ProbDistribution):
         if A == None:
             A = la.cholesky(self.sigma)
 
-        z = numpy.zeros(self.p, dtype='Float64')
+        z = np.zeros(self.p, dtype='Float64')
         for i in range(self.p):
             z[i] = random.normalvariate(0.0, 1.0)  # sample p iid N(0,1) RVs
 
-        X = numpy.dot(A, z) + self.mu
+        X = np.dot(A, z) + self.mu
         return X.tolist()  # return value of sample must be Python list
 
     def sampleSet(self, nr):
         A = la.cholesky(self.sigma)
-        res = numpy.zeros((nr, self.p), dtype='Float64')
+        res = np.zeros((nr, self.p), dtype='Float64')
         for i in range(nr):
             res[i, :] = self.sample(A=A)
         return res

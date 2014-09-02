@@ -1,5 +1,5 @@
 import copy
-import numpy
+import numpy as np
 from core.distributions.prob import ProbDistribution
 from core.pymix_util.errors import InvalidDistributionInput
 from core.pymix_util.dataset import DataSet
@@ -81,7 +81,7 @@ class ProductDistribution(ProbDistribution):
         from core.models.mixture import MixtureModel
         assert self.suff_dataRange and self.suff_p, "Attributes for sufficient statistics not initialized."
         if isinstance(data, DataSet):
-            res = numpy.zeros(data.N, dtype='Float64')
+            res = np.zeros(data.N, dtype='Float64')
             for i in range(self.dist_nr):
                 if isinstance(self.distList[i], MixtureModel): # XXX only necessary for mixtures of mixtures
                     res += self.distList[i].pdf(data.singleFeatureSubset(i))

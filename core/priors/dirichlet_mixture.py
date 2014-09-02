@@ -1,5 +1,5 @@
 import copy
-import numpy
+import numpy as np
 from core.distributions.discrete import DiscreteDistribution
 from core.distributions.multinomial import MultinomialDistribution
 from core.pymix_util.errors import InvalidDistributionInput
@@ -26,8 +26,8 @@ class DirichletMixturePrior(PriorDistribution):
 
         self.G = G
         self.M = M
-        self.pi = numpy.array(pi, dtype='Float64')
-        self.log_pi = numpy.log(self.pi)  # assumes pi is not changed from the outside (XXX accesor functions ?)
+        self.pi = np.array(pi, dtype='Float64')
+        self.log_pi = np.log(self.pi)  # assumes pi is not changed from the outside (XXX accesor functions ?)
         self.dComp = dComp
         self.constant_hyperparams = 1  # hyperparameters are constant
 
@@ -43,7 +43,7 @@ class DirichletMixturePrior(PriorDistribution):
             return False
         if self.G != other.G or self.M != other.M:
             return False
-        if not numpy.alltrue(other.pi == self.pi):
+        if not np.alltrue(other.pi == self.pi):
             return False
         for i, d1 in enumerate(self.dComp):
             if not d1 == other.dComp[i]:
@@ -57,14 +57,14 @@ class DirichletMixturePrior(PriorDistribution):
 
     def pdf(self, m):
         if isinstance(m, MultinomialDistribution):  # XXX debug
-            logp_list = numpy.zeros(self.G, dtype='Float64')
+            logp_list = np.zeros(self.G, dtype='Float64')
             for i in range(self.G):
                 logp_list[i] = self.log_pi[i] + self.dComp[i].pdf(m)
             res = sum_logs(logp_list)
             return res
 
         elif type(m) == list:
-            logp_mat = numpy.zeros((self.G, len(m)))
+            logp_mat = np.zeros((self.G, len(m)))
             for i in range(self.G):
                 logp_mat[i, :] = self.dComp[i].pdf(m)
 
@@ -78,20 +78,20 @@ class DirichletMixturePrior(PriorDistribution):
 
 
     def marginal(self, dist, posterior, data):
-        suff_stat = numpy.zeros(self.M, dtype='Float64')
+        suff_stat = np.zeros(self.M, dtype='Float64')
         if isinstance(dist, DiscreteDistribution):
             for i in range(self.M):
-                i_ind = numpy.where(data == i)[0]
-                suff_stat[i] = numpy.sum(posterior[i_ind])
+                i_ind = np.where(data == i)[0]
+                suff_stat[i] = np.sum(posterior[i_ind])
         elif isinstance(dist, MultinomialDistribution):
             for i in range(self.M):
-                suff_stat[i] = numpy.dot(data[:, i], posterior)
+                suff_stat[i] = np.dot(data[:, i], posterior)
         else:
             raise TypeError, 'Invalid input ' + str(dist.__class__)
 
         res = 0.0
         for i in range(self.G):
-            res += self.dComp[i].marginal(suff_stat) + numpy.log(self.pi[i])
+            res += self.dComp[i].marginal(suff_stat) + np.log(self.pi[i])
         return res
 
 
@@ -103,23 +103,23 @@ class DirichletMixturePrior(PriorDistribution):
 
         @return: numpy of length self.G containing the posterior of component membership
         """
-        prior_post = numpy.array([dirich.pdf(dist) + self.log_pi[i] for i, dirich in enumerate(self.dComp)], dtype='Float64')
+        prior_post = np.array([dirich.pdf(dist) + self.log_pi[i] for i, dirich in enumerate(self.dComp)], dtype='Float64')
         log_sum = sum_logs(prior_post)
         prior_post -= log_sum
 
-        prior_post = numpy.exp(prior_post)
+        prior_post = np.exp(prior_post)
         return prior_post
 
     def mapMStep(self, dist, posterior, data, mix_pi=None, dist_ind=None):
-        suff_stat = numpy.zeros(self.M, dtype='Float64')
+        suff_stat = np.zeros(self.M, dtype='Float64')
         if isinstance(dist, DiscreteDistribution):
             for i in range(self.M):
-                i_ind = numpy.where(data == i)[0]
-                suff_stat[i] = numpy.sum(posterior[i_ind])
+                i_ind = np.where(data == i)[0]
+                suff_stat[i] = np.sum(posterior[i_ind])
 
         elif isinstance(dist, MultinomialDistribution):
             for i in range(self.M):
-                suff_stat[i] = numpy.dot(data[:, i], posterior)
+                suff_stat[i] = np.dot(data[:, i], posterior)
         else:
             raise TypeError, 'Invalid input ' + str(dist.__class__)
 
@@ -135,17 +135,17 @@ class DirichletMixturePrior(PriorDistribution):
                 fix_flag = 1
                 fix_phi -= dist.phi[i]
             else: # updating phi[i]
-                e = numpy.zeros(self.G, dtype='Float64')
+                e = np.zeros(self.G, dtype='Float64')
                 for k in range(self.G):
                     e[k] = (suff_stat[i] + self.dComp[k].alpha[i] ) / ( sum(suff_stat) + self.dComp[k].alpha_sum  )
 
-                est = numpy.dot(prior_post, e)
+                est = np.dot(prior_post, e)
                 dist.phi[i] = est
                 dsum += est
 
         # re-normalizing parameter estimates if necessary
         if fix_flag:
-            ind = numpy.where(dist.parFix == 0)[0]
+            ind = np.where(dist.parFix == 0)[0]
             dist.phi[ind] = (dist.phi[ind] * fix_phi) / dsum
 
     def mapMStepMerge(self, group_list):
@@ -176,11 +176,11 @@ class DirichletMixturePrior(PriorDistribution):
                 fix_flag = 1
                 fix_phi -= new_dist.phi[i]
             else: # updating phi[i]
-                e = numpy.zeros(self.G, dtype='Float64')
+                e = np.zeros(self.G, dtype='Float64')
                 for k in range(self.G):
                     e[k] = (pool_req_stat[i] + self.dComp[k].alpha[i]) / ( pool_post_sum + self.dComp[k].alpha_sum  )
 
-                est = numpy.dot(prior_post, e)
+                est = np.dot(prior_post, e)
                 new_dist.phi[i] = est
                 dsum += est
 
@@ -188,7 +188,7 @@ class DirichletMixturePrior(PriorDistribution):
 
         # re-normalizing parameter estimates if necessary
         if fix_flag:
-            ind = numpy.where(new_dist.parFix == 0)[0]
+            ind = np.where(new_dist.parFix == 0)[0]
             new_dist.phi[ind] = (new_dist.phi[ind] * fix_phi) / dsum
 
         return CandidateGroup(new_dist, pool_post_sum, pool_pi_sum, pool_req_stat)

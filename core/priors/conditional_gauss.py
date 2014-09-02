@@ -1,5 +1,5 @@
 import math
-import numpy
+import numpy as np
 from core.distributions.conditional_gauss import ConditionalGaussDistribution
 from core.pymix_util import mixextend
 from core.pymix_util.errors import InvalidDistributionInput
@@ -25,14 +25,14 @@ class ConditionalGaussPrior(PriorDistribution):
         self.p = p   # number of features in the ConditionalGaussDistribution the prior is applied to
 
         # no initial value needed, is updated as part of EM in updateHyperparameters
-        self.beta = numpy.zeros((self.nr_comps, self.p))
-        self.nu = numpy.zeros((self.nr_comps, self.p))
+        self.beta = np.zeros((self.nr_comps, self.p))
+        self.nu = np.zeros((self.nr_comps, self.p))
 
         # XXX initialization of sufficient statistics, necessary for hyperparameter updates
-        self.post_sums = numpy.zeros(self.nr_comps)
-        self.var = numpy.zeros((self.nr_comps, self.p))
-        self.cov = numpy.zeros((self.nr_comps, self.p))
-        self.mu = numpy.zeros((self.nr_comps, self.p))
+        self.post_sums = np.zeros(self.nr_comps)
+        self.var = np.zeros((self.nr_comps, self.p))
+        self.cov = np.zeros((self.nr_comps, self.p))
+        self.mu = np.zeros((self.nr_comps, self.p))
 
 
     def __str__(self):
@@ -41,14 +41,14 @@ class ConditionalGaussPrior(PriorDistribution):
 
     def pdf(self, d):
         if type(d) == list:
-            N = numpy.sum(self.post_sums)
+            N = np.sum(self.post_sums)
 
-            res = numpy.zeros(len(d))
+            res = np.zeros(len(d))
             for i in range(len(d)):
                 for j in range(1, d[i].p):
                     pid = d[i].parents[j]
                     res[i] += (1.0 / self.cov[i, j] ** 2) / (self.nu[i, j] * (self.post_sums[i] / N))
-                    res[i] += numpy.log(mixextend.wrap_gsl_ran_gaussian_pdf(
+                    res[i] += np.log(mixextend.wrap_gsl_ran_gaussian_pdf(
                         0.0,
                         math.sqrt((self.beta[i, j] * self.cov[i, j] ** 2) / (self.var[i, pid] * (self.post_sums[i] / N) )),
                         [d[i].w[j]]
@@ -69,7 +69,7 @@ class ConditionalGaussPrior(PriorDistribution):
     def mapMStep(self, dist, posterior, data, mix_pi=None, dist_ind=None):
         assert not dist_ind == None # XXX debug
 
-        post_sum = numpy.sum(posterior)
+        post_sum = np.sum(posterior)
         self.post_sums[dist_ind] = post_sum
 
         # checking for valid posterior: if post_sum is zero, this component is invalid
@@ -79,13 +79,13 @@ class ConditionalGaussPrior(PriorDistribution):
             # reestimate mu
             for j in range(dist.p):
                 # computing ML estimates for w and sigma
-                self.mu[dist_ind, j] = numpy.dot(posterior, data[:, j]) / post_sum
-                #self.var[dist_ind,j] = numpy.dot(posterior, (data[:,j] - dist.mu[j])**2 ) / post_sum
-                self.var[dist_ind, j] = numpy.dot(posterior, (data[:, j] - self.mu[dist_ind, j]) ** 2) / post_sum
+                self.mu[dist_ind, j] = np.dot(posterior, data[:, j]) / post_sum
+                #self.var[dist_ind,j] = np.dot(posterior, (data[:,j] - dist.mu[j])**2 ) / post_sum
+                self.var[dist_ind, j] = np.dot(posterior, (data[:, j] - self.mu[dist_ind, j]) ** 2) / post_sum
 
                 if j > 0:  # w[0] = 0.0 is fixed
                     pid = dist.parents[j]
-                    self.cov[dist_ind, j] = numpy.dot(posterior, (data[:, j] - self.mu[dist_ind, j]) * (data[:, pid] - self.mu[dist_ind, pid])) / post_sum
+                    self.cov[dist_ind, j] = np.dot(posterior, (data[:, j] - self.mu[dist_ind, j]) * (data[:, pid] - self.mu[dist_ind, pid])) / post_sum
 
                     # update hyperparameters beta
                     self.beta[dist_ind, j] = post_sum / ( (( self.var[dist_ind, j] * self.var[dist_ind, pid]) / self.cov[dist_ind, j] ** 2) - 1 )
@@ -115,14 +115,14 @@ class ConditionalGaussPrior(PriorDistribution):
 
         # update component-specific hyperparameters
         for i in range(self.nr_comps):
-            self.post_sums[i] = numpy.sum(posterior[i, :])
+            self.post_sums[i] = np.sum(posterior[i, :])
             for j in range(0, self.p):
-                #  var_j = numpy.dot(posterior, (data[:,j] - dist.mu[j])**2 ) / post_sum
-                self.var[i, j] = numpy.dot(posterior[i, :], (data[:, j] - dists[i].mu[j]) ** 2) / self.post_sums[i]
+                #  var_j = np.dot(posterior, (data[:,j] - dist.mu[j])**2 ) / post_sum
+                self.var[i, j] = np.dot(posterior[i, :], (data[:, j] - dists[i].mu[j]) ** 2) / self.post_sums[i]
 
                 if j > 0: # feature 0 is root by convention
                     pid_i_j = dists[i].parents[j]
-                    self.cov[i, j] = numpy.dot(posterior[i, :], (data[:, j] - dists[i].mu[j]) * (data[:, pid_i_j] - dists[i].mu[pid_i_j])) / self.post_sums[i]
+                    self.cov[i, j] = np.dot(posterior[i, :], (data[:, j] - dists[i].mu[j]) * (data[:, pid_i_j] - dists[i].mu[pid_i_j])) / self.post_sums[i]
                     self.beta[i, j] = self.post_sums[i] / ( (( self.var[i, j] * self.var[i, pid_i_j]) / self.cov[i, j] ** 2) - 1 )
                     self.nu[i, j] = - self.post_sums[i] / (2 * dists[i].sigma[j] ** 2)
 

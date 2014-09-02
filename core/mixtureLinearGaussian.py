@@ -1,8 +1,8 @@
 import random
 
-from numpy.linalg import linalg as la
-from numpy.oldnumeric.functions import argmax
-import numpy
+from np.linalg import linalg as la
+from np.oldnumeric.functions import argmax
+import numpy as np
 import scipy.stats
 from core.distributions.prob import ProbDistribution
 
@@ -34,8 +34,8 @@ class LinearGaussianDistribution(ProbDistribution):
         assert len(beta) == p, len(sigma) == 1
         self.p = p
         self.suff_p = p
-        self.beta = numpy.array(beta, dtype='Float64')        # create a array (numpy) for variable beta
-        self.sigma = numpy.array(sigma, dtype='Float64')    # create a array (numpy) for variable sigma
+        self.beta = np.array(beta, dtype='Float64')        # create a array (numpy) for variable beta
+        self.sigma = np.array(sigma, dtype='Float64')    # create a array (numpy) for variable sigma
         self.freeParams = p + 1
         self.predicted = []
         self.noise = noise
@@ -52,14 +52,14 @@ class LinearGaussianDistribution(ProbDistribution):
             return False
         if self.p != other.p:
             return False
-        if not numpy.allclose(self.beta, other.beta) or not numpy.allclose(self.sigma, other.sigma):
+        if not np.allclose(self.beta, other.beta) or not np.allclose(self.sigma, other.sigma):
             return False
         return True
 
     def pdf(self, data):
         if isinstance(data, DataSet):
             dt = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             dt = data
         else:
             raise TypeError, "Unknown/Invalid input type."
@@ -67,17 +67,17 @@ class LinearGaussianDistribution(ProbDistribution):
         # First column of data set of the matrix
         y = dt[:, 0]
         # Matrix column of 1's concatenated with rest of columns of data set of the matrix
-        #x = numpy.concatenate((numpy.array([numpy.ones(len(dt))]).T, dt[:,1:]), axis=1)
+        #x = np.concatenate((np.array([np.ones(len(dt))]).T, dt[:,1:]), axis=1)
         x = dt[:, 1:]
 
         ## Calculating the expoent (y - x*beta)^2 / (sigma)^2
-        #exp = numpy.divide(numpy.power(numpy.subtract(y, numpy.dot(x, self.beta)),2), self.sigma[0] ** 2)
+        #exp = np.divide(np.power(np.subtract(y, np.dot(x, self.beta)),2), self.sigma[0] ** 2)
         ## Calculating the factor 1/sqrt(2*pi)*sigma)
-        #fat = 1 / (((2 * numpy.pi)**2) * self.sigma[0])
+        #fat = 1 / (((2 * np.pi)**2) * self.sigma[0])
         ## Probability result
-        #res = numpy.log(fat) - exp
+        #res = np.log(fat) - exp
 
-        xbt = self.beta[0] + numpy.dot(x, self.beta[1:])
+        xbt = self.beta[0] + np.dot(x, self.beta[1:])
         # computing log likelihood
 
 
@@ -86,14 +86,14 @@ class LinearGaussianDistribution(ProbDistribution):
             print self.noise
             res = (1 - self.noise) * res + self.noise * scipy.stats.norm.pdf(y, 0, 5)
         outliers = res < float(1e-307)
-        #print 'min', res[outliers], numpy.nonzero(outliers) #, self.beta[0]+numpy.dot(x[numpy.argmin(res)],self.beta[1:])
+        #print 'min', res[outliers], np.nonzero(outliers) #, self.beta[0]+np.dot(x[np.argmin(res)],self.beta[1:])
         res[outliers] = float(1e-307)
-        return numpy.log(res)
+        return np.log(res)
 
     def MStep(self, posterior, data, mix_pi=None):
         if isinstance(data, DataSet):
             dt = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             dt = data
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
@@ -102,50 +102,50 @@ class LinearGaussianDistribution(ProbDistribution):
         # First column of data set of the matrix
         y = dt[:, 0]
         # Matrix column of 1's concatenated with rest of columns of data set of the matrix
-        #x = numpy.concatenate((numpy.array([numpy.ones(len(dt))]).T, dt[:,1:]), axis=1)
+        #x = np.concatenate((np.array([np.ones(len(dt))]).T, dt[:,1:]), axis=1)
         x = dt[:, 1:]
 
         # Beta estimation
-        xaux = numpy.array(numpy.multiply(x, numpy.matrix(posterior).T))
-        yaux = numpy.array(numpy.multiply(y, numpy.matrix(posterior).T))
+        xaux = np.array(np.multiply(x, np.matrix(posterior).T))
+        yaux = np.array(np.multiply(y, np.matrix(posterior).T))
 
-        mean = numpy.mean(yaux)
+        mean = np.mean(yaux)
 
-        beta_numerator = numpy.dot(xaux.T, y)
-        beta_denominator = numpy.dot(xaux.T, x)
+        beta_numerator = np.dot(xaux.T, y)
+        beta_denominator = np.dot(xaux.T, x)
 
         try:
-            betashort = numpy.dot(numpy.linalg.inv(beta_denominator), beta_numerator)
-            self.beta = numpy.concatenate(([mean], betashort), axis=1)
+            betashort = np.dot(np.linalg.inv(beta_denominator), beta_numerator)
+            self.beta = np.concatenate(([mean], betashort), axis=1)
         except la.LinAlgError:
             raise EmptyComponent, "Empty Component: Singular Matrix"
 
         # Sigma estimation
-        self.predicted = mean + numpy.dot(x, betashort)
-        y_x_betat = numpy.subtract(y, self.predicted)
-        self.predicted = numpy.multiply(self.predicted, posterior)
+        self.predicted = mean + np.dot(x, betashort)
+        y_x_betat = np.subtract(y, self.predicted)
+        self.predicted = np.multiply(self.predicted, posterior)
 
-        sigma_numerator = numpy.dot(numpy.multiply(y_x_betat, posterior), y_x_betat)
+        sigma_numerator = np.dot(np.multiply(y_x_betat, posterior), y_x_betat)
         sigma_denominator = posterior.sum()
 
-        self.sigma[0] = max(0.0001, numpy.sqrt(sigma_numerator / sigma_denominator))
+        self.sigma[0] = max(0.0001, np.sqrt(sigma_numerator / sigma_denominator))
         self.currentPosterior = posterior
 
     def predict(self, data, posterior=[]):
         if isinstance(data, DataSet):
             dt = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             dt = data
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
 
         # Matrix column of 1's concatenated with rest of columns of data set of the matrix
-        x = numpy.concatenate((numpy.array([numpy.ones(len(dt))]).T, dt[:, 1:]), axis=1)
+        x = np.concatenate((np.array([np.ones(len(dt))]).T, dt[:, 1:]), axis=1)
         #x = dt[:,1:]
         if len(posterior) > 0:
-            return numpy.multiply(posterior, numpy.dot(x, self.beta.T))
+            return np.multiply(posterior, np.dot(x, self.beta.T))
         else:
-            return numpy.dot(x, self.beta.T)
+            return np.dot(x, self.beta.T)
 
 
     def sample(self):
@@ -154,7 +154,7 @@ class LinearGaussianDistribution(ProbDistribution):
         """
         s = [None] * self.p
 
-        beta_zero = numpy.array([self.beta[0]]).T
+        beta_zero = np.array([self.beta[0]]).T
         beta_lin = self.beta[1:]
 
         s[0] = 1
@@ -170,7 +170,7 @@ class LinearGaussianDistribution(ProbDistribution):
         return s
 
     def sampleSet(self, nr):
-        s = numpy.zeros((nr, self.p))
+        s = np.zeros((nr, self.p))
         for i in range(nr):
             x = self.sample()
             s[i, :] = x
@@ -202,10 +202,10 @@ class LinearGaussianPriorDistribution(PriorDistribution):
     def pdf(self, models):
         prior = 0
         for i, m in enumerate(models):
-            #prior = prior + (len(m.beta)/2)*numpy.log(self.alpha[i]/(2*numpy.pi)) - numpy.dot(m.beta,m.beta.T)*self.alpha[i]/2
+            #prior = prior + (len(m.beta)/2)*np.log(self.alpha[i]/(2*np.pi)) - np.dot(m.beta,m.beta.T)*self.alpha[i]/2
             for j in range(len(m.beta)):
-                prior = prior + numpy.log(scipy.stats.norm.pdf(m.beta, 0, 1 / numpy.sqrt(self.alpha[i]))[0])
-        if numpy.isnan(prior):
+                prior = prior + np.log(scipy.stats.norm.pdf(m.beta, 0, 1 / np.sqrt(self.alpha[i]))[0])
+        if np.isnan(prior):
             print "prior is nan"
             for m in models:
                 print
@@ -252,7 +252,7 @@ class LinearGaussianPriorDistribution(PriorDistribution):
 
         if isinstance(data, DataSet):
             dt = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             dt = data
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
@@ -260,49 +260,49 @@ class LinearGaussianPriorDistribution(PriorDistribution):
         # First column of data set of the matrix
         y = dt[:, 0]
         # Matrix column of 1's concatenated with rest of columns of data set of the matrix
-        #x = numpy.concatenate((numpy.array([numpy.ones(len(dt))]).T, dt[:,1:]), axis=1)
+        #x = np.concatenate((np.array([np.ones(len(dt))]).T, dt[:,1:]), axis=1)
         x = dt[:, 1:]
 
-        yaux = numpy.array(numpy.multiply(y, numpy.matrix(posterior).T))
-        mean = numpy.mean(yaux)
+        yaux = np.array(np.multiply(y, np.matrix(posterior).T))
+        mean = np.mean(yaux)
 
         #eigen values of X^t.X/sigma^2
-        xaux = numpy.array(numpy.multiply(x, numpy.matrix(posterior).T))
-        XXs = numpy.dot(xaux.T, x) / numpy.power(dist.sigma[0], 2)
+        xaux = np.array(np.multiply(x, np.matrix(posterior).T))
+        XXs = np.dot(xaux.T, x) / np.power(dist.sigma[0], 2)
 
         if (self.fixed == 0):
             lambdas = la.eigvals(XXs)
             # estimate gamma
-            self.gamma = numpy.sum(numpy.divide(lambdas, lambdas + self.alpha[dist_ind]))
+            self.gamma = np.sum(np.divide(lambdas, lambdas + self.alpha[dist_ind]))
 
         # Beta estimation
-        beta_numerator = numpy.dot(xaux.T, y) / numpy.power(dist.sigma[0], 2)
-        beta_denominator = self.alpha[dist_ind] * numpy.identity(len(x[0])) + XXs
+        beta_numerator = np.dot(xaux.T, y) / np.power(dist.sigma[0], 2)
+        beta_denominator = self.alpha[dist_ind] * np.identity(len(x[0])) + XXs
         try:
-            betashort = numpy.dot(numpy.linalg.inv(beta_denominator), beta_numerator)
-            dist.beta = numpy.concatenate(([mean], betashort), axis=1)
+            betashort = np.dot(np.linalg.inv(beta_denominator), beta_numerator)
+            dist.beta = np.concatenate(([mean], betashort), axis=1)
         except la.LinAlgError:
             raise EmptyComponent, "Empty Component: Singular Matrix"
 
         # Sigma estimation
-        dist.predicted = mean + numpy.dot(x, betashort)
-        y_x_betat = numpy.subtract(y, dist.predicted)
-        dist.predicted = numpy.multiply(dist.predicted, posterior)
+        dist.predicted = mean + np.dot(x, betashort)
+        y_x_betat = np.subtract(y, dist.predicted)
+        dist.predicted = np.multiply(dist.predicted, posterior)
 
-        sigma_numerator = numpy.dot(numpy.multiply(y_x_betat, posterior), y_x_betat)
+        sigma_numerator = np.dot(np.multiply(y_x_betat, posterior), y_x_betat)
         if (self.fixed == 0):
             sigma_denominator = posterior.sum() - self.gamma
         else:
             sigma_denominator = posterior.sum() - 1
 
         try:
-            dist.sigma[0] = numpy.sqrt(sigma_numerator / sigma_denominator)
+            dist.sigma[0] = np.sqrt(sigma_numerator / sigma_denominator)
         except FloatingPointError:
             dist.sigma[0] = 0.0001
 
         # alpha
         if (self.fixed == 0):
-            self.alpha[dist_ind] = self.gamma / numpy.dot(dist.beta, dist.beta.T)
+            self.alpha[dist_ind] = self.gamma / np.dot(dist.beta, dist.beta.T)
 
         dist.currentPosterior = posterior
 
@@ -321,7 +321,7 @@ def evaluateRegression(mix, data, type=2, train=[], sparse=[]):
 
     if isinstance(data, DataSet):
         dt = data.internalData
-    elif isinstance(data, numpy.ndarray):
+    elif hasattr(data, "__iter__"):
         dt = data
     else:
         raise TypeError, "Unknown/Invalid input to MStep."
@@ -329,33 +329,33 @@ def evaluateRegression(mix, data, type=2, train=[], sparse=[]):
     # First column of data set of the matrix
     y = dt[:, 0]
 
-    predy = numpy.zeros((1, len(y)))[0]
+    predy = np.zeros((1, len(y)))[0]
 
     for c in mix.components:
         c.noise = 0.01
 
     [log_l, log_p] = mix.EStep(data)
-    p = numpy.exp(log_l)
-    pmax = numpy.zeros((len(p), len(p[0])))
+    p = np.exp(log_l)
+    pmax = np.zeros((len(p), len(p[0])))
     for i in range(len(p[0])):
-        pmax[numpy.argmax(p[:, i]), i] = 1
-        pmult = numpy.multiply(pmax, p)
+        pmax[np.argmax(p[:, i]), i] = 1
+        pmult = np.multiply(pmax, p)
 
     if type in [2, 3]:
         [log_l, log_p] = mix.EStep(train)
-        ptrain = numpy.exp(log_l)
+        ptrain = np.exp(log_l)
         pmaxtrain = []
         for i in range(len(ptrain[0])):
-            pmaxtrain.append(numpy.argmax(ptrain[:, i]))
-        d1 = numpy.array(data.dataMatrix)
-        d2 = numpy.array(train.dataMatrix)
+            pmaxtrain.append(np.argmax(ptrain[:, i]))
+        d1 = np.array(data.dataMatrix)
+        d2 = np.array(train.dataMatrix)
         if len(sparse) == 0:
             dist = scipy.spatial.distance.cdist(d1[:, 1:], d2[:, 1:], 'euclidean')
         else:
             # if sparse version was used than only relevant variables should be compared
-            dist = numpy.zeros(len(d1), len(d2))
+            dist = np.zeros(len(d1), len(d2))
             for l in range(len(train)):
-                dist[:, l] = scipy.spatial.distance.cdist(d1[:, sparse[pmaxtrain[l]]], d2[:, sparse[pmaxtrain[l]]], 'euclidean') / numpy.sqrt(len(sparse[pmaxtrain[l]]))
+                dist[:, l] = scipy.spatial.distance.cdist(d1[:, sparse[pmaxtrain[l]]], d2[:, sparse[pmaxtrain[l]]], 'euclidean') / np.sqrt(len(sparse[pmaxtrain[l]]))
         labels = knn(d1[:, 1:], d2[:, 1:], pmaxtrain, 1)
         for i in range(len(p[0])):
             pmax[:, i] = 0
@@ -366,9 +366,9 @@ def evaluateRegression(mix, data, type=2, train=[], sparse=[]):
             stdsy = []
             # estimate means and std
             for l, m in enumerate(mix.components):
-                yprime = numpy.multiply(d2[:, 0], ptrain[:, l])
+                yprime = np.multiply(d2[:, 0], ptrain[:, l])
                 meansy.append(sum(yprime) / sum(ptrain[:, l]))
-                stdsy.append(numpy.multiply(yprime, d2[:, 0]) / sum(ptrain[:, l]) - meansy[l])
+                stdsy.append(np.multiply(yprime, d2[:, 0]) / sum(ptrain[:, l]) - meansy[l])
 
     means = []
     stds = []
@@ -389,14 +389,14 @@ def evaluateRegression(mix, data, type=2, train=[], sparse=[]):
             posteriorpred.append(scipy.stats.norm.pdf(aux, meansy[i], stdsy[i]))
 
     if type == 3:
-        predyaux = numpy.array(predyaux).T
-        posteriorpred = numpy.array(posteriorpred).T
+        predyaux = np.array(predyaux).T
+        posteriorpred = np.array(posteriorpred).T
         for i, d in enumerate(data):
             predy = predyaux[i, argmax(posteriorpred[i, :])]
 
     # estimate pearson
     [r, p] = scipy.stats.pearsonr(y, predy)
-    errorv = numpy.power(y - predy, 2)
+    errorv = np.power(y - predy, 2)
     error = sum(errorv) / len(y)
 
     for i, m in enumerate(mix.components):
@@ -407,17 +407,17 @@ def evaluateRegression(mix, data, type=2, train=[], sparse=[]):
 
 
 def knn(train, test, labels, k):
-    labels = numpy.array(labels)
+    labels = np.array(labels)
     if max(labels) > 0:
         dist = scipy.spatial.distance.cdist(train, test, 'euclidean')
         testlabel = []
         for i in range(len(train)):
-            indices = numpy.argsort(dist[i, :])
+            indices = np.argsort(dist[i, :])
             values = labels[indices[:k]]
-            hist = numpy.zeros((max(values) + 1))
+            hist = np.zeros((max(values) + 1))
             for j in values:
                 hist[j] = hist[j] + 1
-            testlabel.append(numpy.argmax(hist))
+            testlabel.append(np.argmax(hist))
     else:
         testlabel = len(train) * [0]
     return testlabel

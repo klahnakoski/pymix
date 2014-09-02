@@ -1,5 +1,5 @@
 import copy
-import numpy
+import numpy as np
 from core.distributions.discrete import DiscreteDistribution
 from core.pymix_util.errors import InvalidDistributionInput
 
@@ -32,8 +32,8 @@ class MixtureModelPrior(PriorDistribution):
 
         self.compPrior = ProductDistributionPrior(compPrior)
         self.dist_nr = len(compPrior)
-        self.structPrior = numpy.log(structPrior)
-        self.nrCompPrior = numpy.log(nrCompPrior)
+        self.structPrior = np.log(structPrior)
+        self.nrCompPrior = np.log(nrCompPrior)
 
         self.constant_hyperparams = 1
         self.hp_update_indices = []
@@ -107,7 +107,7 @@ class MixtureModelPrior(PriorDistribution):
 
                 if not isinstance(mix.components[0].distList[j], MixtureModel):
                     d_j = [mix.components[i].distList[j] for i in range(mix.G)]
-                    res += numpy.sum(self.compPrior[j].pdf(d_j))
+                    res += np.sum(self.compPrior[j].pdf(d_j))
                 else:
                     for i in range(mix.G):
                         res += self.compPrior[j].pdf(mix.components[i][j])
@@ -124,7 +124,7 @@ class MixtureModelPrior(PriorDistribution):
             for j in range(mix.components[0].dist_nr):
                 res += self.structPrior * mix.G
 
-        if numpy.isnan(res):
+        if np.isnan(res):
         # uncomment code below for detailed information where the nan value came from (DEBUG)
         #            print '--------------------------------'
         #            print 'MixtureModelPrior.pdf ',res
@@ -172,7 +172,7 @@ class MixtureModelPrior(PriorDistribution):
 
     def flatStr(self, offset):
         offset += 1
-        s = "\t" * offset + ";MixPrior;" + str(self.dist_nr) + ";" + str(numpy.exp(self.structPrior)) + ";" + str(numpy.exp(self.nrCompPrior)) + "\n"
+        s = "\t" * offset + ";MixPrior;" + str(self.dist_nr) + ";" + str(np.exp(self.structPrior)) + ";" + str(np.exp(self.nrCompPrior)) + "\n"
 
         s += self.piPrior.flatStr(offset)
         for d in self.compPrior:
@@ -203,7 +203,7 @@ class MixtureModelPrior(PriorDistribution):
         Heuristic for setting the structure prior hyper-parameter 'self.structPrior', depending
         on the size of a data set 'N' and parameter 'delta'.
         """
-        self.structPrior = - numpy.log(1 + delta) * N
+        self.structPrior = - np.log(1 + delta) * N
 
 
     def mapMStepMerge(self, group_list):

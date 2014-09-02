@@ -22,25 +22,25 @@
 ################################################################################
 from math import exp, sqrt, log
 
-import numpy
+import numpy as np
 import scipy
 from scipy import stats, special
 from core import assertAlmostEqual
 
 
 def get_normalized_posterior_matrix(data):
-    logsum = numpy.log(numpy.sum(numpy.exp(data), axis=0))
+    logsum = np.log(np.sum(np.exp(data), axis=0))
     result = data - logsum
-    return result, numpy.sum(logsum)
+    return result, np.sum(logsum)
 
 
 def substract_matrix(a, b):
-    result = numpy.subtract(a, b)
+    result = np.subtract(a, b)
     return result
 
 
 def add_matrix(a, b):
-    result = numpy.add(a, b)
+    result = np.add(a, b)
     return result
 
 
@@ -75,7 +75,7 @@ def wrap_gsl_dirichlet_lnpdf(alpha, x):
     if hasattr(x[0], "__iter__"):
         output = [wrap_gsl_dirichlet_lnpdf(alpha, xi) for xi in x]
     else:
-        output = log(special.gamma(sum(alpha))) - numpy.sum(numpy.log(special.gamma(alpha))) + numpy.sum(numpy.log([xi ** (ai - 1.0) for xi, ai in zip(x, alpha)]))
+        output = log(special.gamma(sum(alpha))) - np.sum(np.log(special.gamma(alpha))) + np.sum(np.log([xi ** (ai - 1.0) for xi, ai in zip(x, alpha)]))
 
     return output
 

@@ -1,6 +1,6 @@
 import copy
 import random
-import numpy
+import numpy as np
 from core import assertAlmostEqual
 from core.distributions.prob import ProbDistribution
 from core.pymix_util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
@@ -39,15 +39,15 @@ class MultinomialDistribution(ProbDistribution):
             self.alphabet = IntegerRange(0, self.M)
 
         if parFix == None:
-            self.parFix = numpy.array([0] * self.M)
+            self.parFix = np.array([0] * self.M)
         else:
             assert len(parFix) == self.M, "Invalid length of parFix vector."
-            self.parFix = numpy.array(parFix)
+            self.parFix = np.array(parFix)
 
         # number of free parameters is M-1 minus the number of fixed entries in phi
         self.freeParams = M - 1 - sum(self.parFix)
 
-        self.phi = numpy.array(phi, dtype='Float64')
+        self.phi = np.array(phi, dtype='Float64')
 
         # minimal value for any component of self.phi, enforced in MStep
         self.min_phi = ( 1.0 / self.M ) * 0.001
@@ -55,7 +55,7 @@ class MultinomialDistribution(ProbDistribution):
     def __eq__(self, other):
         res = False
         if isinstance(other, MultinomialDistribution):
-            if other.p == self.p and other.M == self.M and numpy.allclose(other.phi, self.phi):
+            if other.p == self.p and other.M == self.M and np.allclose(other.phi, self.phi):
                 res = True
         return res
 
@@ -76,21 +76,21 @@ class MultinomialDistribution(ProbDistribution):
         # therefore it is less efficient than the implementation below
         if isinstance(data, DataSet):
             x = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data
         else:
             raise TypeError, "Unknown/Invalid input type."
 
         # switch to log scale for density computation
-        log_phi = numpy.log(self.phi)
+        log_phi = np.log(self.phi)
 
         # computing un-normalized density
-        res = numpy.zeros(len(x), dtype='Float64')
+        res = np.zeros(len(x), dtype='Float64')
         for j in range(len(x)):
             for i in range(self.M):
                 res[j] += (log_phi[i] * x[j, i])
 
-        res2 = numpy.sum(x * log_phi, axis=1)
+        res2 = np.sum(x * log_phi, axis=1)
         assertAlmostEqual(res, res2)
 
         return res
@@ -119,12 +119,12 @@ class MultinomialDistribution(ProbDistribution):
     def MStep(self, posterior, data, mix_pi=None):
         if isinstance(data, DataSet):
             x = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
 
-        ind = numpy.where(self.parFix == 0)[0]
+        ind = np.where(self.parFix == 0)[0]
         fix_flag = 0
         fix_phi = 1.0
         dsum = 0.0
@@ -136,7 +136,7 @@ class MultinomialDistribution(ProbDistribution):
                 fix_flag = 1
                 continue
             else:
-                est = numpy.dot(x[:, i], posterior)
+                est = np.dot(x[:, i], posterior)
                 self.phi[i] = est
                 dsum += est
 
@@ -162,7 +162,7 @@ class MultinomialDistribution(ProbDistribution):
             raise InvalidDistributionInput, "\n\tInvalid data: " + str(x) + " in MultinomialDistribution(" + str(self.alphabet.listOfCharacters) + ")."
 
     def formatData(self, x):
-        count = [0] * self.M #  numpy.zeros(self.M)
+        count = [0] * self.M #  np.zeros(self.M)
 
         # special case of p = 1
         if len(x) == 1:

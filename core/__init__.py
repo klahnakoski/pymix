@@ -22,7 +22,6 @@
 ################################################################################
 
 import unittest
-from numpy import ndarray
 from .util.env.logs import Log
 from .util.maths import Math
 from .util.structs.wraps import wrap
@@ -43,7 +42,7 @@ def assertAlmostEqual(first, second, places=None, msg=None, delta=None):
         for k, v2 in second.items():
             v1 = first["value." + unicode(k)]
             assertAlmostEqual(v1, v2)
-    elif isinstance(first, (list, ndarray)) and isinstance(second, (list, ndarray)):
+    elif hasattr(first, "__iter__") and hasattr(second, "__iter__"):
         for a, b in zip(first, second):
             assertAlmostEqual(a, b, places=places, msg=msg, delta=delta)
     else:

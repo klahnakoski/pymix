@@ -33,7 +33,7 @@
 Mixtures of HMMs (requires the GHMM package)
 """
 import copy
-import numpy
+import numpy as np
 
 import ghmm
 from .distributions.prob import ProbDistribution
@@ -160,7 +160,7 @@ class SequenceDataSet(ConstrainedDataSet):
 
             templist.append(dat)
 
-        sequence = numpy.array(templist)
+        sequence = np.array(templist)
 
         self.internalData = sequence
 
@@ -228,7 +228,7 @@ class SequenceDataSet(ConstrainedDataSet):
             return self.internalData[:]
 
         elif (this_index - prev_index) == 1:   # multiple features, feature 'i' has single dimension
-            return numpy.take(self.internalData, (this_index - 1,), axis=1)
+            return np.take(self.internalData, (this_index - 1,), axis=1)
         else:
             return self.internalData[:, prev_index:this_index]  # multiple features, feature 'i' has multiple dimensions
 
@@ -300,7 +300,7 @@ class HMM(ProbDistribution):
 
         #print "pdf "+str(self.hmm.cmodel.name) +":"
         #print self.hmm.loglikelihoods(data)
-        return numpy.array(self.hmm.loglikelihoods(data), dtype='Float64')
+        return np.array(self.hmm.loglikelihoods(data), dtype='Float64')
 
 
     def MStep(self, posterior, data, mix_pi=None):

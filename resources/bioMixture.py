@@ -35,7 +35,7 @@ e.g. searching for transcription factor binding sites using mixtures of PWMs (po
 """
 
 from core import mixture
-import numpy
+import numpy as np
 import re
 
 
@@ -362,11 +362,11 @@ def scanSequence(mix, bg, seq,scoring='mix'):
     score = []
     for i in range(dnr-1,len(seq),1):
         # shift query sequence by one position
-        s[0] = numpy.concatenate( [s[0][1:],numpy.array([seq[i]])],0)
+        s[0] = np.concatenate( [s[0][1:],np.array([seq[i]])],0)
 
         if scoring == 'compmax':
             # score as maximum over components
-            c_m_l = numpy.zeros(mix.G,dtype='Float64')
+            c_m_l = np.zeros(mix.G,dtype='Float64')
             for i in range(mix.G):
                 c_m_l[i] = mix.components[i].pdf(s)[0]
             m_l = c_m_l.max()

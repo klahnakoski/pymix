@@ -3,7 +3,7 @@ import math
 import random
 import sys
 
-import numpy
+import numpy as np
 
 from ..pymix_util import mixextend
 from ..distributions.prob import ProbDistribution
@@ -61,7 +61,7 @@ class MixtureModel(ProbDistribution):
         self.freeParams += G - 1  # free parameters of the mixture coefficients
 
         self.G = G  # Number of components
-        self.pi = numpy.array(pi, dtype='Float64')  # vector of mixture weights
+        self.pi = np.array(pi, dtype='Float64')  # vector of mixture weights
 
         # XXX  check numpy capabilities for arrays of objects
         self.components = components   # list of distribution objects
@@ -98,7 +98,7 @@ class MixtureModel(ProbDistribution):
     def __eq__(self, other):
         res = False
         if isinstance(other, MixtureModel):
-            if numpy.allclose(other.pi, self.pi) and other.G == self.G:
+            if np.allclose(other.pi, self.pi) and other.G == self.G:
                 res = True
                 for i in range(self.G):
                     if not (other.components[i] == self.components[i]):
@@ -211,7 +211,7 @@ class MixtureModel(ProbDistribution):
         if self.struct:
             self.initStructure()
 
-        l = numpy.zeros((self.G, len(data)), dtype='Float64')
+        l = np.zeros((self.G, len(data)), dtype='Float64')
         for i in range(len(data)):
             if rtype == 0:
                 for j in range(self.G):
@@ -273,15 +273,15 @@ class MixtureModel(ProbDistribution):
 
 
     def pdf(self, x):
-        logp_list = numpy.zeros((self.G, len(x)), dtype='Float64')
+        logp_list = np.zeros((self.G, len(x)), dtype='Float64')
         for i in range(self.G):
             if self.pi[i] == 0.0:
                 log_pi = float('-inf')
             else:
-                log_pi = numpy.log(self.pi[i])
+                log_pi = np.log(self.pi[i])
             logp_list[i] = log_pi + self.components[i].pdf(x)
 
-        p = numpy.zeros(len(x), dtype='Float64')
+        p = np.zeros(len(x), dtype='Float64')
         for j in range(len(x)):
             p[j] = sum_logs(logp_list[:, j])
         return p
@@ -375,7 +375,7 @@ class MixtureModel(ProbDistribution):
             label.append(k)
             ls.append(self.components[k].sample())
 
-        return [numpy.array(label), ls]
+        return [np.array(label), ls]
 
     def EM(self, data, max_iter, delta, silent=False, mix_pi=None, mix_posterior=None, tilt=0, EStep=None, EStepParam=None):
         """
@@ -396,7 +396,7 @@ class MixtureModel(ProbDistribution):
 
         @return: tuple of posterior matrix and log-likelihood from the last iteration
         """
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             raise TypeError, "DataSet object required."
         elif isinstance(data, DataSet):
             if data.internalData is None:
@@ -439,7 +439,7 @@ class MixtureModel(ProbDistribution):
                 print "WARNING: EM divergent."
                 raise ConvergenceFailureEM, "Convergence failed."
 
-            if numpy.isnan(log_p):
+            if np.isnan(log_p):
                 print "WARNING: One sample was not assigned."
                 raise ConvergenceFailureEM, "Non assigned element."
 
@@ -461,7 +461,7 @@ class MixtureModel(ProbDistribution):
             log_p_old = log_p
 
             # compute posterior likelihood matrix from log posterior
-            l = numpy.exp(log_l)
+            l = np.exp(log_l)
 
             # deterministic annealing, shifting posterior toward uniform distribution.
             if tilt and step + 1 <= self.nr_tilt_steps and mix_posterior is None:
@@ -515,7 +515,7 @@ class MixtureModel(ProbDistribution):
                             prev = datRange[j - 1]
 
                         # compute group posterior
-                        g_post = numpy.array(l[k, :].tolist(), dtype='Float64')
+                        g_post = np.array(l[k, :].tolist(), dtype='Float64')
 
                         for memb in self.groups[j][k]:
                             g_post += l[memb, :]
@@ -558,13 +558,13 @@ class MixtureModel(ProbDistribution):
         @return: tuple of log likelihood matrices and sum of log-likelihood of components
 
         """
-        log_l = numpy.zeros((self.G, data.N), dtype='Float64')
-        log_col_sum = numpy.zeros(data.N, dtype='Float64')  # array of column sums of log_l
-        log_pi = numpy.log(self.pi)  # array of log mixture coefficients
+        log_l = np.zeros((self.G, data.N), dtype='Float64')
+        log_col_sum = np.zeros(data.N, dtype='Float64')  # array of column sums of log_l
+        log_pi = np.log(self.pi)  # array of log mixture coefficients
 
         # compute log of mix_posterior (if present)
         if mix_posterior is not None:
-            log_mix_posterior = numpy.log(mix_posterior)
+            log_mix_posterior = np.log(mix_posterior)
 
         # computing log posterior distribution
         for i in range(self.G):
@@ -601,7 +601,7 @@ class MixtureModel(ProbDistribution):
                     log_l[:, j] = log_l[:, j] + log_mix_posterior[j]
 
         # computing data log likelihood as criteria of convergence
-        log_p = numpy.sum(log_col_sum)
+        log_p = np.sum(log_col_sum)
 
         return log_l, log_p
 
@@ -620,13 +620,13 @@ class MixtureModel(ProbDistribution):
         @return: tuple of log likelihood matrices and sum of log-likelihood of components
 
         """
-        log_l = numpy.zeros((self.G, data.N), dtype='Float64')
-        log_col_sum = numpy.zeros(data.N, dtype='Float64')  # array of column sums of log_l
-        log_pi = numpy.log(self.pi)  # array of log mixture coefficients
+        log_l = np.zeros((self.G, data.N), dtype='Float64')
+        log_col_sum = np.zeros(data.N, dtype='Float64')  # array of column sums of log_l
+        log_pi = np.log(self.pi)  # array of log mixture coefficients
 
         # compute log of mix_posterior (if present)
         if mix_posterior is not None:
-            log_mix_posterior = numpy.log(mix_posterior)
+            log_mix_posterior = np.log(mix_posterior)
         else:
             log_mix_posterior = None
 
@@ -639,7 +639,7 @@ class MixtureModel(ProbDistribution):
             log_l[i] = log_pi[i] + pdf
 
         # log_l is normalized in-place
-        #print sum(numpy.exp(log_l)==float('-inf'))
+        #print sum(np.exp(log_l)==float('-inf'))
         (log_l, log_p) = mixextend.get_normalized_posterior_matrix(log_l)
 
         if log_p == float('-inf'):
@@ -666,7 +666,7 @@ class MixtureModel(ProbDistribution):
 
         @return: log-likelihood of winning model
         """
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             raise TypeError, "DataSet object required."
         elif isinstance(data, DataSet):
             if data.internalData is None:
@@ -713,7 +713,7 @@ class MixtureModel(ProbDistribution):
         if not silent:
             print "\nBest model likelihood over ", nr_runs, "random initializations:"
             print "Model likelihoods:", logp_list
-            print "Average logp: ", sum(logp_list) / float(nr_runs), " SD:", numpy.array(logp_list).std()
+            print "Average logp: ", sum(logp_list) / float(nr_runs), " SD:", np.array(logp_list).std()
             print "Best logp:", best_logp
 
         # check whether at least one run was sucessfully completed
@@ -742,7 +742,7 @@ class MixtureModel(ProbDistribution):
 
         @return: log-likelihood of winning model
         """
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             raise TypeError, "DataSet object required."
         elif isinstance(data, DataSet):
             if data.internalData is None:
@@ -813,7 +813,7 @@ class MixtureModel(ProbDistribution):
         @return: tuple of posterior matrix and log-likelihood from the last iteration
         """
 
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             raise TypeError, "DataSet object required."
         elif isinstance(data, DataSet):
             if data.internalData is None:
@@ -838,16 +838,16 @@ class MixtureModel(ProbDistribution):
 
         # for lower hierarchy mixture we need the log of mix_posterior
         if mix_posterior is not None:
-            log_mix_posterior = numpy.log(mix_posterior)
+            log_mix_posterior = np.log(mix_posterior)
         else:
             log_mix_posterior = None
 
         while 1:
             log_p = 0.0
             # matrix of log posterior probs: components# * (sequence positions)
-            log_l = numpy.zeros((self.G, data.N), dtype='Float64')
-            #log_col_sum = numpy.zeros(data.N,dtype='Float64')  # array of column sums of log_l
-            log_pi = numpy.log(self.pi)  # array of log mixture coefficients
+            log_l = np.zeros((self.G, data.N), dtype='Float64')
+            #log_col_sum = np.zeros(data.N,dtype='Float64')  # array of column sums of log_l
+            log_pi = np.log(self.pi)  # array of log mixture coefficients
 
             # computing log posterior distribution
             for i in range(self.G):
@@ -863,7 +863,7 @@ class MixtureModel(ProbDistribution):
                 log_l = log_l + log_mix_posterior
 
             # compute posterior likelihood matrix from log posterior
-            l = numpy.exp(log_l)
+            l = np.exp(log_l)
 
             # update prior hyper parametes in an empirical Bayes fashion, if appropriate
             if prior.constant_hyperparams == 0:
@@ -1024,14 +1024,14 @@ class MixtureModel(ProbDistribution):
             print "classify loglikelihood: " + str(log_l) + ".\n"
 
         # cluster assingments initialised with -1
-        z = numpy.ones(data.N, dtype='Int32') * -1
+        z = np.ones(data.N, dtype='Int32') * -1
 
-        entropy_list = numpy.zeros(data.N, dtype='Float64')
+        entropy_list = np.zeros(data.N, dtype='Float64')
         max_entropy = math.log(self.G, 2)
 
         # compute posterior entropies
         for i in range(data.N):
-            exp_l = numpy.exp(l[:, i])
+            exp_l = np.exp(l[:, i])
             if self.G == 1:
                 entropy_list[i] = entropy(exp_l)
             else:
@@ -1046,7 +1046,7 @@ class MixtureModel(ProbDistribution):
             # apply entropy cutoff
             if entropy_list[i] < entropy_cutoff:
                 # cluster assignment by maximum likelihood over the component membership posterior
-                z[i] = numpy.argmax(l[:, i])
+                z[i] = np.argmax(l[:, i])
 
         if not silent:
             # printing out the clusters
@@ -1116,7 +1116,7 @@ class MixtureModel(ProbDistribution):
             compFix_order.append(self.compFix[i])
 
         # assigning ordered parameters
-        self.pi = numpy.array(pi_order, dtype='Float64')
+        self.pi = np.array(pi_order, dtype='Float64')
         self.components = components_order
         self.compFix = compFix_order
 
@@ -1183,7 +1183,7 @@ class MixtureModel(ProbDistribution):
 
         @param data: DataSet object
         """
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             sequence = data
             seqLen = len(sequence)
 
@@ -1193,7 +1193,7 @@ class MixtureModel(ProbDistribution):
         print "-------- getClusterEntropy ------------"
         post_entropy = []
         log_l = self.getPosterior(sequence)
-        l = numpy.exp(log_l)
+        l = np.exp(log_l)
         for i in range(data.N):
             post_entropy.append(entropy(l[:, i]))
 
@@ -1218,7 +1218,7 @@ class MixtureModel(ProbDistribution):
         @param z: class labels
         @param en_cut: entropy threshold
         """
-        if isinstance(data, numpy.ndarray):
+        if hasattr(data, "__iter__"):
             sequence = data
             seqLen = len(sequence)
         elif isinstance(data, DataSet):
@@ -1226,7 +1226,7 @@ class MixtureModel(ProbDistribution):
             for i in range(data.N):
                 [t, dat] = self.components[0].formatData(data.dataMatrix[i])
                 templist.append(dat)
-            sequence = numpy.array(templist)
+            sequence = np.array(templist)
             labels = data.sampleIDs
             seqLen = len(sequence)
 
@@ -1236,28 +1236,28 @@ class MixtureModel(ProbDistribution):
         print "pi = ", self.pi
         max_en = entropy([1.0 / self.G] * self.G)
         for c in range(self.G):
-            temp = numpy.where(z == c)
+            temp = np.where(z == c)
             c_index = temp[0]
             print "\n---------------------------------------------------"
             print "Cluster = ", c, ": ", c_index
             for j in c_index:
-                t = self.pdf(numpy.array([sequence[j]]))[0]
-                print "\nj = ", j, ", id =", data.sampleIDs[j], ", log_l = ", t, " -> ", numpy.exp(t)
-                print "posterior = ", numpy.exp(l[:, j]).tolist(), "\n"
+                t = self.pdf(np.array([sequence[j]]))[0]
+                print "\nj = ", j, ", id =", data.sampleIDs[j], ", log_l = ", t, " -> ", np.exp(t)
+                print "posterior = ", np.exp(l[:, j]).tolist(), "\n"
                 tb = []
                 for g in range(self.G):
                     ll = self.components[g].posteriorTraceback(data.internalData[j])
                     tb.append(ll)
-                tb_arr = numpy.array(tb, dtype='Float64')
+                tb_arr = np.array(tb, dtype='Float64')
                 for i in range(len(tb[0])):
                     s = sum_logs(tb_arr[:, i])
                     tb_arr[:, i] = tb_arr[:, i] - s
-                exp_arr = numpy.exp(tb_arr)
+                exp_arr = np.exp(tb_arr)
                 exp_tb = exp_arr.tolist()
-                max_comp = numpy.zeros(len(tb[0]))
-                en_percent = numpy.zeros(len(tb[0]), dtype='Float64')
+                max_comp = np.zeros(len(tb[0]))
+                en_percent = np.zeros(len(tb[0]), dtype='Float64')
                 for i in range(len(tb[0])):
-                    max_comp[i] = numpy.argmax(tb_arr[:, i])
+                    max_comp[i] = np.argmax(tb_arr[:, i])
                     en_percent[i] = entropy(exp_arr[:, i]) / max_en
                 print "     ",
                 for q in range(len(tb[0])):
@@ -1321,7 +1321,7 @@ class MixtureModel(ProbDistribution):
         change = 0
 
         # building posterior factor matrix for the current group structure
-        l = numpy.zeros((self.G, data.N, self.dist_nr ), dtype='Float64')
+        l = np.zeros((self.G, data.N, self.dist_nr ), dtype='Float64')
         for j in range(self.dist_nr):
             if j == 0:
                 prev = 0
@@ -1336,10 +1336,10 @@ class MixtureModel(ProbDistribution):
                 for v in self.groups[j][lead_j]:
                     l[v, :, j] = l_row
 
-        g = numpy.sum(l, 2)
+        g = np.sum(l, 2)
         for k in range(self.G):
-            g[k, :] += numpy.log(self.pi[k])
-        sum_logs = numpy.zeros(data.N, dtype='Float64')
+            g[k, :] += np.log(self.pi[k])
+        sum_logs = np.zeros(data.N, dtype='Float64')
         for n in range(data.N):
             sum_logs[n] = sum_logs(g[:, n])
         lk = sum(sum_logs)
@@ -1370,7 +1370,7 @@ class MixtureModel(ProbDistribution):
                     print self.components[merge_cand1][j]
                     print self.components[merge_cand2][j]
 
-                full_BIC_0 = -2 * lk + (full_fp_0 * numpy.log(data.N))
+                full_BIC_0 = -2 * lk + (full_fp_0 * np.log(data.N))
                 # compute merged distribution of candidates with minimal KL distance
                 candidate_dist = copy.copy(self.components[merge_cand1][j])
                 merge_list = [self.components[merge_cand2][j]]
@@ -1421,15 +1421,15 @@ class MixtureModel(ProbDistribution):
                 l_1[merge_cand1, :, j] = l_row
                 for v in new_groups[j][merge_cand1]:
                     l_1[v, :, j] = l_row
-                g = numpy.sum(l_1, 2)
+                g = np.sum(l_1, 2)
                 for k in range(self.G):
-                    g[k, :] += numpy.log(self.pi[k])
+                    g[k, :] += np.log(self.pi[k])
 
-                sum_logs = numpy.zeros(data.N, dtype='Float64')
+                sum_logs = np.zeros(data.N, dtype='Float64')
                 for n in range(data.N):
                     sum_logs[n] = sum_logs(g[:, n])
                 lk_1 = sum(sum_logs)
-                full_BIC_1 = -2 * lk_1 + (full_fp_1 * numpy.log(data.N))
+                full_BIC_1 = -2 * lk_1 + (full_fp_1 * np.log(data.N))
                 AIC_0 = -2 * lk + ( 2 * full_fp_0 )
                 AIC_1 = -2 * lk_1 + ( 2 * full_fp_1 )
 
@@ -1613,7 +1613,7 @@ class MixtureModel(ProbDistribution):
                                 self.groups[g_j][g][gm] -= 1
 
             self.G = self.G - len(l)  # update number of components
-            self.pi = numpy.array(new_pi, dtype='Float64')  # set new pi in model
+            self.pi = np.array(new_pi, dtype='Float64')  # set new pi in model
             self.compFix = new_compFix
 
         self.updateFreeParams()
@@ -1632,7 +1632,7 @@ class MixtureModel(ProbDistribution):
         tmp = self.pi.tolist() # update pi
         tmp.pop(ind)
         tmp = map(lambda x: x / sum(tmp), tmp) # renormalize pi
-        self.pi = numpy.array(tmp, dtype='Float64')  # set new pi in model
+        self.pi = np.array(tmp, dtype='Float64')  # set new pi in model
         self.components.pop(ind)  # remove component
         if self.compFix:
             self.compFix.pop(ind)
@@ -1771,7 +1771,7 @@ class MixtureModel(ProbDistribution):
                 continue
 
             np = sub_post[i] + posterior
-            inds = numpy.where(np != float('-inf'))
+            inds = np.where(np != float('-inf'))
             suff_stat.append(self.components[i][0].sufficientStatistics(np[inds], dat[inds]))
 
         return suff_stat

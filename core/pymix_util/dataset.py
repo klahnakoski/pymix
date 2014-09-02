@@ -1,6 +1,6 @@
 import copy
 import re
-import numpy
+import numpy as np
 import sys
 from core.pymix_util.errors import InvalidDistributionInput
 from core.parse import numerize
@@ -95,15 +95,15 @@ class DataSet(object):
 
 
     def center(self, columns=None):
-        dataAux = numpy.array(self.dataMatrix)
+        dataAux = np.array(self.dataMatrix)
         if columns == None:
             columns = range(self.p)
         for c in columns:
-            dataAux[:, c] = dataAux[:, c] - numpy.mean(dataAux[:, c])
+            dataAux[:, c] = dataAux[:, c] - np.mean(dataAux[:, c])
         self.dataMatrix = dataAux.tolist()
 
     def ceil(self, value, columns=None):
-        dataAux = numpy.array(self.dataMatrix)
+        dataAux = np.array(self.dataMatrix)
         for i, line in enumerate(dataAux):
             for j, e in enumerate(line):
                 dataAux[i, j] = min(e, value)
@@ -111,7 +111,7 @@ class DataSet(object):
 
 
     def bottom(self, value, columns=None):
-        dataAux = numpy.array(self.dataMatrix)
+        dataAux = np.array(self.dataMatrix)
         for i, line in enumerate(dataAux):
             for j, e in enumerate(line):
                 dataAux[i, j] = max(e, value)
@@ -119,7 +119,7 @@ class DataSet(object):
 
     def transpose(self):
         if self.dataMatrix:
-            dataAux = numpy.array(self.dataMatrix)
+            dataAux = np.array(self.dataMatrix)
             dataAux = dataAux.transpose()
             self.dataMatrix = dataAux.tolist()
 
@@ -136,23 +136,23 @@ class DataSet(object):
 
     def logTransform(self, columns=None, base=2):
         dataAux = self.dataMatrix
-        #numpy.array(self.dataMatrix,dtype='Float64')
+        #np.array(self.dataMatrix,dtype='Float64')
         if columns == None:
             columns = range(self.p)
         for d in dataAux:
             for c in columns:
                 try:
                     if base == 2:
-                        d[c] = str(numpy.log(float(d[c]) + 0.0000001))
+                        d[c] = str(np.log(float(d[c]) + 0.0000001))
                     else:
-                        d[c] = str(numpy.log10(float(d[c]) + 0.000001))
+                        d[c] = str(np.log10(float(d[c]) + 0.000001))
                 except ValueError:
                     pass
         self.dataMatrix = dataAux
 
 
     def foldChange(self, fold):
-        dataAux = numpy.array(self.dataMatrix, dtype='Float64')
+        dataAux = np.array(self.dataMatrix, dtype='Float64')
         samples = []
         for l in range(len(dataAux)):
             if sum(abs(dataAux[l, :]) >= fold):
@@ -161,29 +161,29 @@ class DataSet(object):
 
 
     def replace(self, column, values):
-        dataAux = numpy.array(self.dataMatrix, dtype='Float64')
+        dataAux = np.array(self.dataMatrix, dtype='Float64')
         dataAux[:, column] = values
         self.dataMatrix = dataAux.tolist()
 
     def normalize(self, columns=None, mad=0):
-        dataAux = numpy.array(self.dataMatrix)
+        dataAux = np.array(self.dataMatrix)
         if columns == None:
             columns = range(self.p)
         for c in columns:
             if mad:
-                #print (numpy.median(dataAux[:,c]-numpy.median(dataAux[:,c])))
-                dataAux[:, c] = dataAux[:, c] / (numpy.median(numpy.abs(dataAux[:, c] - numpy.median(dataAux[:, c]))))
+                #print (np.median(dataAux[:,c]-np.median(dataAux[:,c])))
+                dataAux[:, c] = dataAux[:, c] / (np.median(np.abs(dataAux[:, c] - np.median(dataAux[:, c]))))
             else:
-                dataAux[:, c] = dataAux[:, c] / numpy.std(dataAux[:, c])
+                dataAux[:, c] = dataAux[:, c] / np.std(dataAux[:, c])
         self.dataMatrix = dataAux.tolist()
 
 
     def shuffle(self, columns=None):
-        dataAux = numpy.array(self.dataMatrix)
+        dataAux = np.array(self.dataMatrix)
         if columns == None:
             columns = range(self.p)
         for c in columns:
-            numpy.random.shuffle(dataAux[:, c])
+            np.random.shuffle(dataAux[:, c])
         self.dataMatrix = dataAux.tolist()
 
     def fromArray(self, array, IDs=None, headers=None, col_headers=None, row_headers=None):
@@ -441,7 +441,7 @@ class DataSet(object):
             space = col_width
 
         for i in d:
-            t = numpy.where(c == i)
+            t = np.where(c == i)
             index = t[0]
             print "\n----------------------------------- cluster ", i, "------------------------------------"
             print ' ' * (max_sid + 3),
@@ -456,7 +456,7 @@ class DataSet(object):
                     print str(self.dataMatrix[index[j]][k]) + " " * (space - dlen),
                 print
 
-        t = numpy.where(c == -1)
+        t = np.where(c == -1)
         index = t[0]
         if len(index) > 0:
             print "\n----------- Unassigned ----------------"
@@ -496,7 +496,7 @@ class DataSet(object):
 
             templist.append(dat)
 
-        self.internalData = numpy.array(templist, dtype='Float64')
+        self.internalData = np.array(templist, dtype='Float64')
 
         if m.dist_nr > 1:
             self.suff_dataRange = copy.copy(m.components[0].suff_dataRange)
@@ -599,11 +599,11 @@ class DataSet(object):
 
         @param percentage: minimal allowed missing value percentage
         """
-        dataAux = numpy.array(self.dataMatrix)
-        missing = numpy.zeros((1, len(dataAux)))
+        dataAux = np.array(self.dataMatrix)
+        missing = np.zeros((1, len(dataAux)))
         for symbol in self.missingSymbols:
-            missing = numpy.sum(dataAux == symbol, axis=1)
-            #print sum(missing), numpy.mean(missing)
+            missing = np.sum(dataAux == symbol, axis=1)
+            #print sum(missing), np.mean(missing)
         remove = []
         #print missing
         self.missingStatistics()
@@ -612,9 +612,9 @@ class DataSet(object):
             if j / float(len(dataAux[0])) > percentage:
                 remove.append(self.sampleIDs[i])
         self.removeSamples(remove)
-        dataAux = numpy.array(self.dataMatrix)
+        dataAux = np.array(self.dataMatrix)
         for symbol in self.missingSymbols:
-            missing = numpy.sum(dataAux == symbol, axis=1)
+            missing = np.sum(dataAux == symbol, axis=1)
         print "Missing After"
         self.missingStatistics()
         print "Samples", len(remove), len(self.sampleIDs)
@@ -622,10 +622,10 @@ class DataSet(object):
     def missingStatistics(self):
         """Statitics of missing values
         """
-        dataAux = numpy.array(self.dataMatrix)
-        missing = numpy.zeros((1, len(dataAux)))
+        dataAux = np.array(self.dataMatrix)
+        missing = np.zeros((1, len(dataAux)))
         for symbol in self.missingSymbols:
-            missing = numpy.sum(dataAux == symbol, axis=1)
+            missing = np.sum(dataAux == symbol, axis=1)
             #print "Missing Entries", sum(missing)
         #print "Genes with Missing Entries", sum(missing>0)
         #print missing
@@ -635,19 +635,19 @@ class DataSet(object):
         """
         Replace missing symbols with mean value of feature
         """
-        dataRes = numpy.zeros((len(self.dataMatrix), len(self.dataMatrix[0])))
+        dataRes = np.zeros((len(self.dataMatrix), len(self.dataMatrix[0])))
         for i, line in enumerate(self.dataMatrix):
             for j, element in enumerate(line):
                 try:
                     dataRes[i, j] = float(element)
                 except ValueError:
                     dataRes[i, j] = 'nan'
-        nanvalues = numpy.isnan(dataRes)
-        dataRes = numpy.ma.masked_array(dataRes, numpy.isnan(dataRes))
+        nanvalues = np.isnan(dataRes)
+        dataRes = np.ma.masked_array(dataRes, np.isnan(dataRes))
         if median:
-            mean = numpy.median(dataRes, axis=1)
+            mean = np.median(dataRes, axis=1)
         else:
-            mean = numpy.mean(dataRes, axis=1)
+            mean = np.mean(dataRes, axis=1)
         for i in range(len(dataRes)):
             dataRes[i, nanvalues[i, :]] = mean[i]
         self.dataMatrix = dataRes.tolist()
@@ -663,13 +663,13 @@ class DataSet(object):
         @return filtered samples
 
         """
-        dataAux = numpy.array(self.dataMatrix, dtype='Float64')
+        dataAux = np.array(self.dataMatrix, dtype='Float64')
 
-        #means = numpy.mean(dataAux,axis=0)
+        #means = np.mean(dataAux,axis=0)
         #for i,m in enumerate(means):
         #    dataAux[:,i]=dataAux[:,i]
         #print means
-        changes = numpy.sum(abs(dataAux) >= fold, axis=1)
+        changes = np.sum(abs(dataAux) >= fold, axis=1)
         print changes
         remove = []
         ids = []
@@ -897,7 +897,7 @@ class DataSet(object):
         res.row_headers = []
 
         if self.internalData is not None:
-            res.internalData = numpy.zeros((res.N, res.suff_p), self.internalData.type())
+            res.internalData = np.zeros((res.N, res.suff_p), self.internalData.type())
 
         else:
             res.internalData = None
@@ -905,7 +905,7 @@ class DataSet(object):
         #remove subset entries from self.internalData
         new_intData = None
         if self.internalData is not None:
-            new_intData = numpy.zeros(( (self.N - res.N), res.suff_p), self.internalData.type())
+            new_intData = np.zeros(( (self.N - res.N), res.suff_p), self.internalData.type())
             #new_sampleIDs = []
             ni = 0
             for i in range(self.N):
@@ -997,7 +997,7 @@ class DataSet(object):
             dat_ind = self.getInternalFeature(ind)
             for i, v in enumerate(dat_ind):
                 # check sample 'i' for missing symbol
-                if numpy.all(v == self.missingSymbols[ind]):
+                if np.all(v == self.missingSymbols[ind]):
                     m_ind.append(i)
             return m_ind
 
@@ -1021,7 +1021,7 @@ class DataSet(object):
 
         # write data to file
         for k in d:
-            t = numpy.where(c == k)
+            t = np.where(c == k)
             index = t[0]
             f = open(fn_pref + '_' + str(k) + '.fa', 'w')
             for i in index:

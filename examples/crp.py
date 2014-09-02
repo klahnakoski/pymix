@@ -3,7 +3,7 @@ import random
 import copy
 import math
 import pygsl.sf
-import numpy
+import numpy as np
 import pygsl.rng
 import sys
 
@@ -148,7 +148,7 @@ class GibbsSampler:
 
         # XXX initialisation by sampling a component for each data item
 
-        self.dist_index_list = numpy.zeros(data_nr,dtype='Int32')
+        self.dist_index_list = np.zeros(data_nr,dtype='Int32')
 
         dist_id = 0
         for d in range(data_nr):
@@ -394,7 +394,7 @@ class GibbsSampler:
                 assert len(self.dist_dict.keys()) == curr_K, str(len(self.dist_dict.keys()))+' , '+  str(curr_K)
                 assert self.dist_dict.keys() == self.data_assignment_dict.keys()
                 for kk in self.dist_dict.keys():
-                    assert self.data_assignment_dict[kk] == len(numpy.where(self.dist_index_list == kk)[0]), str(self.data_assignment_dict[kk])+' , '+str(len(numpy.where(self.dist_index_list == kk)[0]))
+                    assert self.data_assignment_dict[kk] == len(np.where(self.dist_index_list == kk)[0]), str(self.data_assignment_dict[kk])+' , '+str(len(np.where(self.dist_index_list == kk)[0]))
                 assert sum( [ self.data_assignment_dict[kk] for kk in self.data_assignment_dict.keys() ] ) == data_nr, str(sum( [ self.data_assignment_dict[kk] for kk in self.data_assignment_dict.keys() ]))+' != '+ str(data_nr)
 
 
@@ -431,7 +431,7 @@ class GibbsSamplerVariant2:
         # XXX data is a list of observations, should be DataSet object later
 
         data_nr = len(data)
-        self.dist_index_list = numpy.zeros(data_nr)
+        self.dist_index_list = np.zeros(data_nr)
 
         print "data_nr = ",data_nr
 
@@ -441,7 +441,7 @@ class GibbsSamplerVariant2:
 
         # XXX initialisation by sampling a component for each data item
 
-        self.dist_index_list = numpy.zeros(data_nr,dtype='Int32')
+        self.dist_index_list = np.zeros(data_nr,dtype='Int32')
 
         dist_id = 0
         for d in range(data_nr):
@@ -605,14 +605,14 @@ class GibbsSamplerVariant2:
 
             for key in self.dist_dict.keys():
                 # compute sufficient statistics
-                key_ind = numpy.where(self.dist_index_list == key)[0]  # find sample indices assigned to distribution 'key'
+                key_ind = np.where(self.dist_index_list == key)[0]  # find sample indices assigned to distribution 'key'
                 nr_dat = len(key_ind)
                 T1 = data[key_ind].sum()
                 #tt = data[key_ind]**2
                 #T2 = tt.sum()
 
                 mean = T1 / nr_dat
-                SSE = numpy.sum((data[key_ind] - mean)**2)
+                SSE = np.sum((data[key_ind] - mean)**2)
 
                 # update distribution parameters by sampling from posterior
                 #   def __init__(self, shape, scale, mu, tau  ):
@@ -649,7 +649,7 @@ class GibbsSamplerVariant2:
                 #assert len(self.dist_dict.keys()) == curr_K, str(len(self.dist_dict.keys()))+' , '+  str(curr_K)
                 assert self.dist_dict.keys() == self.data_assignment_dict.keys()
                 for kk in self.dist_dict.keys():
-                    assert self.data_assignment_dict[kk] == len(numpy.where(self.dist_index_list == kk)[0]), str(self.data_assignment_dict[kk])+' , '+str(len(numpy.where(self.dist_index_list == kk)[0]))
+                    assert self.data_assignment_dict[kk] == len(np.where(self.dist_index_list == kk)[0]), str(self.data_assignment_dict[kk])+' , '+str(len(np.where(self.dist_index_list == kk)[0]))
                 assert sum( [ self.data_assignment_dict[kk] for kk in self.data_assignment_dict.keys() ] ) == data_nr, str(sum( [ self.data_assignment_dict[kk] for kk in self.data_assignment_dict.keys() ]))+' != '+ str(data_nr)
 
 

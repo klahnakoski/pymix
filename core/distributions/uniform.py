@@ -1,5 +1,5 @@
 import random
-import numpy
+import numpy as np
 from core.distributions.prob import ProbDistribution
 from core.pymix_util.errors import InvalidDistributionInput
 from core.pymix_util.dataset import DataSet
@@ -23,7 +23,7 @@ class UniformDistribution(ProbDistribution):
 
         self.start = start
         self.end = end
-        self.density = numpy.log(1.0 / (end - start))   # compute log density value only once
+        self.density = np.log(1.0 / (end - start))   # compute log density value only once
 
     def __eq__(self,other):
         raise NotImplementedError
@@ -37,11 +37,11 @@ class UniformDistribution(ProbDistribution):
     def pdf(self,data):
         if isinstance(data, DataSet ):
             x = data.internalData
-        elif isinstance(data, numpy.ndarray):
+        elif hasattr(data, "__iter__"):
             x = data
         else:
             raise TypeError,"Unknown/Invalid input type."
-        res = numpy.zeros(len(x),dtype='Float64')
+        res = np.zeros(len(x),dtype='Float64')
         for i in range(len(x)):
             # density is self.density inside the interval and -inf (i.e. 0) outside
             if self.start <= x[i][0] <= self.end:
