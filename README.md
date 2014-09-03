@@ -5,7 +5,7 @@ Refactoring of PyMix so it is pure Python:
 
 * Split code into smaller files
 * Remove GSL GNU Scientific library dependency
-* Remove Numpy dependency
+* Remove Numpy dependency (well, not yet)
 
 Requirements
 ------------
