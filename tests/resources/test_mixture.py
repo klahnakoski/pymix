@@ -1,14 +1,14 @@
 import random
 from time import clock
 from pandas.core.expressions import evaluate
-from core.distributions.exponential import ExponentialDistribution
-from core.distributions.multinomial import MultinomialDistribution
-from core.distributions.normal import NormalDistribution
-from core.distributions.product import ProductDistribution
-from core.models.mixture import MixtureModel
-from core.pymix_util.alphabet import DNA, Alphabet
-from core.pymix_util.dataset import DataSet
-from core.pymix_util.stats import random_vector
+from pymix.distributions.exponential import ExponentialDistribution
+from pymix.distributions.multinomial import MultinomialDistribution
+from pymix.distributions.normal import NormalDistribution
+from pymix.distributions.product import ProductDistribution
+from pymix.models.mixture import MixtureModel
+from pymix.util.alphabet import DNA, Alphabet
+from pymix.util.dataset import DataSet
+from pymix.util.stats import random_vector
 
 SNP = Alphabet([
     "A/A", "A/C", "A/G", "A/T",

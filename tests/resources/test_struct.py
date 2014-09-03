@@ -1,11 +1,11 @@
-from core.distributions.multinomial import MultinomialDistribution
-from core.distributions.normal import NormalDistribution
-from core.distributions.product import ProductDistribution
-from core.mixture import *
+from pymix.distributions.multinomial import MultinomialDistribution
+from pymix.distributions.normal import NormalDistribution
+from pymix.distributions.product import ProductDistribution
+from pymix.mixture import *
 from numpy import numarray
 from Graph import *
-from core.models.mixture import MixtureModel
-from core.pymix_util.alphabet import Alphabet
+from pymix.models.mixture import MixtureModel
+from pymix.util.alphabet import Alphabet
 
 # DOES NOTHING??
 # def compStructure(v1, v2):

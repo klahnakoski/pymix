@@ -1,4 +1,4 @@
-from core import mixture
+from pymix import mixture
 import numpy as np
 import random
 

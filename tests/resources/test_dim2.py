@@ -1,8 +1,8 @@
 from random import random
-from core.util.times.timer import Timer
-from core.distributions.multinomial import MultinomialDistribution
-from core.distributions.product import ProductDistribution
-from core.models.mixture import MixtureModel
+from pymix.util.times.timer import Timer
+from pymix.distributions.multinomial import MultinomialDistribution
+from pymix.distributions.product import ProductDistribution
+from pymix.models.mixture import MixtureModel
 
 pdList= []
 for j in range(3):

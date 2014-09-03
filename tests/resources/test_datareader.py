@@ -1,11 +1,11 @@
 import random
 
 #d = DataSet(["test.txt","drd1.txt","pheno.txt"])
-from core.distributions.multinomial import MultinomialDistribution
-from core.distributions.normal import NormalDistribution
-from core.distributions.product import ProductDistribution
-from core.models.mixture import MixtureModel
-from core.pymix_util.dataset import DataSet
+from pymix.distributions.multinomial import MultinomialDistribution
+from pymix.distributions.normal import NormalDistribution
+from pymix.distributions.product import ProductDistribution
+from pymix.models.mixture import MixtureModel
+from pymix.util.dataset import DataSet
 from test_mixture import SNP
 
 d = DataSet(["test.txt", "drd1.txt", "pheno.txt"])

@@ -1,12 +1,10 @@
-from core import mixture
-
 # building generating models
-from core import mixtureHMM
-from core.distributions.multinomial import MultinomialDistribution
-from core.distributions.normal import NormalDistribution
-from core.distributions.product import ProductDistribution
-from core.models.mixture import MixtureModel
-from core.pymix_util.alphabet import Alphabet
+from pymix import mixtureHMM
+from pymix.distributions.multinomial import MultinomialDistribution
+from pymix.distributions.normal import NormalDistribution
+from pymix.distributions.product import ProductDistribution
+from pymix.models.mixture import MixtureModel
+from pymix.util.alphabet import Alphabet
 
 DIAG = Alphabet(['.', '0', '8', '1'])
 

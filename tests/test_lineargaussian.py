@@ -11,7 +11,7 @@
 import unittest
 import copy
 
-from core import mixtureLinearGaussian, BaseTest
+from pymix import mixtureLinearGaussian, BaseTest
 
 
 class LinearGaussianDistributionTests(BaseTest):

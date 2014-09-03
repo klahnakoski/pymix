@@ -1,4 +1,4 @@
-from core.mixture import *
+from pymix.mixture import *
 import random
 
 N = 50

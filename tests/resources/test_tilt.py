@@ -1,8 +1,8 @@
-from core import mixture
+from pymix import mixture
 import random
-from core.parse import readMixture
-from core.pymix_util.alphabet import Alphabet
-from core.pymix_util.dataset import DataSet
+from pymix.parse import readMixture
+from pymix.util.alphabet import Alphabet
+from pymix.util.dataset import DataSet
 
 VNTR = Alphabet(['.', '2/4', '2/7', '3/4', '3/7', '4/4', '4/6', '4/7', '4/8', '4/9', '7/7'])
 DIAG = Alphabet(['.', '0', '8', '1'])

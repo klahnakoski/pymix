@@ -45,30 +45,30 @@ import copy
 import random
 import numpy as np
 
-from core import BaseTest
-from core.distributions.discrete import DiscreteDistribution
-from core.distributions.exponential import ExponentialDistribution
-from core.distributions.multinomial import MultinomialDistribution
-from core.distributions.multinormal import MultiNormalDistribution
-from core.distributions.normal import NormalDistribution
-from core.distributions.product import ProductDistribution
-from core.priors.normal_gamma import NormalGammaPrior
-from core.pymix_util import mixextend
-from core.pymix_util.errors import InvalidDistributionInput
-from core.mixture import modelSelection
-from core.models.bayes import BayesMixtureModel
-from core.models.constrained import ConstrainedMixtureModel
-from core.models.labeled import LabeledMixtureModel
-from core.models.mixture import MixtureModel
-from core.parse import readMixture, writeMixture
-from core.priors.dirichlet import DirichletPrior
-from core.priors.dirichlet_mixture import DirichletMixturePrior
-from core.priors.mixture_model import MixtureModelPrior
-from core.priors.product import ProductDistributionPrior
-from core.pymix_util.alphabet import Alphabet
-from core.pymix_util.candidate_group import CandidateGroup
-from core.pymix_util.constrained_dataset import ConstrainedDataSet
-from core.pymix_util.dataset import DataSet
+from pymix import BaseTest
+from pymix.distributions.discrete import DiscreteDistribution
+from pymix.distributions.exponential import ExponentialDistribution
+from pymix.distributions.multinomial import MultinomialDistribution
+from pymix.distributions.multinormal import MultiNormalDistribution
+from pymix.distributions.normal import NormalDistribution
+from pymix.distributions.product import ProductDistribution
+from pymix.priors.normal_gamma import NormalGammaPrior
+from pymix.util.errors import InvalidDistributionInput
+from pymix.mixture import modelSelection
+from pymix.models.bayes import BayesMixtureModel
+from pymix.models.constrained import ConstrainedMixtureModel
+from pymix.models.labeled import LabeledMixtureModel
+from pymix.models.mixture import MixtureModel
+from pymix.parse import readMixture, writeMixture
+from pymix.priors.dirichlet import DirichletPrior
+from pymix.priors.dirichlet_mixture import DirichletMixturePrior
+from pymix.priors.mixture_model import MixtureModelPrior
+from pymix.priors.product import ProductDistributionPrior
+from pymix.util.alphabet import Alphabet
+from pymix.util.candidate_group import CandidateGroup
+from pymix.util.constrained_dataset import ConstrainedDataSet
+from pymix.util.dataset import DataSet
+from pymix.vendor.pyLibrary.thread.threads import Thread
 
 
 
@@ -120,7 +120,6 @@ from core.pymix_util.dataset import DataSet
 #            print ' '*14 ,row,','
 #    print ' '*8 +'data.fromList(l)'
 #    print ' '*8 +'data.internalInit(gen)'
-from core.util.thread.threads import Thread
 
 
 def _testLists(tcase, list1, list2, places):

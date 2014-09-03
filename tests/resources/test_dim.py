@@ -1,6 +1,6 @@
 from random import *
-from core.distributions.multinomial import MultinomialDistribution
-from core.models.mixture import MixtureModel
+from pymix.distributions.multinomial import MultinomialDistribution
+from pymix.models.mixture import MixtureModel
 
 dList = []
 piList = [random(), random(), random(), random(), random(), random(), random(), random(), random(), random()]

@@ -1,7 +1,7 @@
-from core.distributions.normal import NormalDistribution
-from core.distributions.product import ProductDistribution
-from core.models.mixture import MixtureModel
-from core.pymix_util.dataset import DataSet
+from pymix.distributions.normal import NormalDistribution
+from pymix.distributions.product import ProductDistribution
+from pymix.models.mixture import MixtureModel
+from pymix.util.dataset import DataSet
 
 pr1 = ProductDistribution([NormalDistribution(-6.0, 0.5), NormalDistribution(-4.0, 0.5), NormalDistribution(-3.0, 0.5)])
 pr2 = ProductDistribution([NormalDistribution(-5.0, 0.5), NormalDistribution(-3.3, 0.5), NormalDistribution(-2.3, 0.5)])

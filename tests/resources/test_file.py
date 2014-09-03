@@ -1,4 +1,4 @@
-from core import mixture
+from pymix import mixture
 
 #m = MixtureModel(3,[0.25,0.15,0.6],
 #                [ NormalDistribution(-6.0, 1.5),
@@ -117,14 +117,14 @@ from core import mixture
 ##print adhd
 
 #-----------------------------------------------------------------------------------
-from core.distributions.dirichlet import DirichletDistribution
-from core.distributions.discrete import DiscreteDistribution
-from core.distributions.normal import NormalDistribution
-from core.distributions.product import ProductDistribution
-from core.models.bayes import BayesMixtureModel
-from core.parse import readMixture
-from core.pymix_util.alphabet import Alphabet
-from core.pymix_util.stats import random_vector
+from pymix.distributions.dirichlet import DirichletDistribution
+from pymix.distributions.discrete import DiscreteDistribution
+from pymix.distributions.normal import NormalDistribution
+from pymix.distributions.product import ProductDistribution
+from pymix.models.bayes import BayesMixtureModel
+from pymix.parse import readMixture
+from pymix.util.alphabet import Alphabet
+from pymix.util.stats import random_vector
 
 G = 3
 p = 4
