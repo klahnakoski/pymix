@@ -13,6 +13,7 @@ Requirements
 **Required Packages**
 
 * Python (version 2.7.x recommended)
+* SciPy (and NumPy, of course)
 
 **Optional Packages**
 
