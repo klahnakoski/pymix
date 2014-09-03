@@ -1,5 +1,13 @@
 ################################################################################
 #
+#       This file is part of the Modified Python Mixture Package, original
+#       source code is from https://svn.code.sf.net/p/pymix/code.  Also see
+#       http://www.pymix.org/pymix/index.php?n=PyMix.Download
+#
+#       Changes made by: Kyle Lahnakoski (kyle@lahnakoski.com)
+#
+################################################################################
+#
 #       This file is part of the Python Mixture Package
 #
 #       file:    mixture.py
@@ -25,9 +33,8 @@
 #       License along with this library; if not, write to the Free
 #       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
-#
-#
 ################################################################################
+
 
 """
 
