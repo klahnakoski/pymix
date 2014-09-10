@@ -8,6 +8,7 @@
 # Author: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 from __future__ import unicode_literals
+from __future__ import division
 
 from datetime import datetime, timedelta
 import thread
@@ -347,6 +348,11 @@ class Thread(object):
 class Signal(object):
     """
     SINGLE-USE THREAD SAFE SIGNAL
+
+    go() - ACTIVATE SIGNAL (DOES NOTHING IF SIGNAL IS ALREADY ACTIVATED)
+    wait_for_go() - PUT THREAD IN WAIT STATE UNTIL SIGNAL IS ACTIVATED
+    is_go() - TEST IF SIGNAL IS ACTIVATED, DO NOT WAIT
+    on_go() - METHOD FOR OTHEr THREAD TO RUN WHEN ACTIVATING SIGNAL
     """
 
     def __init__(self):
@@ -365,6 +371,9 @@ class Signal(object):
 
 
     def wait_for_go(self, timeout=None, till=None):
+        """
+        PUT THREAD IN WAIT STATE UNTIL SIGNAL IS ACTIVATED
+        """
         with self.lock:
             while not self._go:
                 self.lock.wait(timeout=timeout, till=till)
@@ -372,6 +381,9 @@ class Signal(object):
             return True
 
     def go(self):
+        """
+        ACTIVATE SIGNAL (DOES NOTHING IF SIGNAL IS ALREADY ACTIVATED)
+        """
         with self.lock:
             if self._go:
                 return
@@ -385,6 +397,9 @@ class Signal(object):
             j()
 
     def is_go(self):
+        """
+        TEST IF SIGNAL IS ACTIVATED, DO NOT WAIT
+        """
         with self.lock:
             return self._go
 

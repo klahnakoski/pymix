@@ -9,6 +9,8 @@
 #
 
 from __future__ import unicode_literals
+from __future__ import division
+
 from datetime import timedelta, date
 from datetime import datetime as builtin_datetime
 import re
@@ -45,20 +47,19 @@ def unix(value):
 
     return str(CNV.datetime2unix(value))
 
-def url(value, use_plus=False):
+def url(value):
     """
-    CONVERT FROM dict TO URL PARAMETERS
+    CONVERT FROM dict OR string TO URL PARAMETERS
     """
-    if use_plus:
-        return urlencode(value)
-    else:
-        # I LOVE ENCODING SPACES AS "+", BECAUSE IT IS HUMANE.  BUT, SINCE
-        # MANY LIBRARIES DO IT WRONG, WE CAN TRUST NOTHING TO INTERPRET URLS
-        # PROPERLY.  SO WE GO WITH LOWEST COMMON DENOMINATOR.
-        #
-        # BTW, THIS WOULD BE MUCH FASTER IF urlencode WAS NOT USED
-        return urlencode(value).replace("+", "%20")
+    from .cnv import CNV
+    return CNV.value2url(value)
 
+def html(value):
+    """
+    CONVERT FROM unicode TO HTML OF THE SAME
+    """
+    from .cnv import CNV
+    return CNV.unicode2HTML(value)
 
 def upper(value):
     return value.upper()
@@ -111,6 +112,7 @@ def outdent(value):
         Log.error("can not outdent value", e)
 
 def round(value, decimal=None, digits=None):
+    value=float(value)
     if digits != None:
         m = pow(10, math.ceil(math.log10(abs(value))))
         return __builtin__.round(value / m, digits) * m
@@ -277,7 +279,7 @@ def edit_distance(s1, s2):
             current_row.append(min(insertions, deletions, substitutions))
         previous_row = current_row
 
-    return float(previous_row[-1]) / len(s1)
+    return previous_row[-1] / len(s1)
 
 
 DIFF_PREFIX = re.compile(r"@@ -(\d+(?:\s*,\d+)?) \+(\d+(?:\s*,\d+)?) @@")
@@ -321,7 +323,7 @@ def apply_diff(text, diff, reverse=False):
         add = [add[0], 1]
 
     # UNUSUAL CASE WHERE @@ -x +x, n @@ AND FIRST LINE HAS NOT CHANGED
-    half = len(diff[1]) / 2
+    half = int(len(diff[1]) / 2)
     first_half = diff[1][:half]
     last_half = diff[1][half:half * 2]
     if remove[1] == 1 and add[0] == remove[0] and first_half[1:] == last_half[1:]:

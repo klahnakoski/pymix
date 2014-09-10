@@ -39,10 +39,10 @@ import copy
 import random
 import numpy as np
 from .prob import ProbDistribution
-from .. import assertAlmostEqual
 from ..util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from ..util.alphabet import IntegerRange
 from ..util.dataset import DataSet
+from vendor.pyLibrary.testing.fuzzytestcase import assertAlmostEqual
 
 
 class MultinomialDistribution(ProbDistribution):

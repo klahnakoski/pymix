@@ -10,6 +10,8 @@
 
 
 from __future__ import unicode_literals
+from __future__ import division
+
 from datetime import datetime
 import os
 import sys
@@ -180,11 +182,11 @@ class Log(object):
 
     @classmethod
     def fatal(
-            cls,
-            template, # human readable template
-            params=None, # parameters for template
-            cause=None, # pausible cause
-            offset=0    # stack trace offset (==1 if you do not want to report self)
+        cls,
+        template, # human readable template
+        params=None, # parameters for template
+        cause=None, # pausible cause
+        offset=0    # stack trace offset (==1 if you do not want to report self)
     ):
         """
         SEND TO STDERR

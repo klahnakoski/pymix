@@ -9,6 +9,7 @@
 #
 
 from __future__ import unicode_literals
+from __future__ import division
 import __builtin__
 
 from . import group_by
@@ -21,7 +22,7 @@ from .index import UniqueIndex, Index
 from .flat_list import FlatList
 from ..maths import Math
 from ..env.logs import Log
-from ..struct import nvl, EmptyList, split_field, join_field
+from ..struct import nvl, EmptyList, split_field, join_field, set_default
 from ..structs.wraps import listwrap, wrap, unwrap
 from .. import struct
 from ..struct import Struct, Null, StructList
@@ -76,6 +77,17 @@ groupby = group_by.groupby
 def index(data, keys=None):
 # return dict that uses keys to index data
     o = Index(keys)
+
+    if isinstance(data, Cube):
+        if data.edges[0].name==keys[0]:
+            #QUICK PATH
+            names = list(data.data.keys())
+            for d in (set_default(struct.zip(names, r), {keys[0]: p}) for r, p in zip(zip(*data.data.values()), data.edges[0].domain.partitions.value)):
+                o.add(d)
+            return o
+        else:
+            Log.error("Can not handle indexing cubes at this time")
+
     for d in data:
         o.add(d)
     return o
@@ -270,10 +282,11 @@ def _select(template, data, fields, depth):
         children = None
         for f in fields:
             index, c = _select_deep(d, f, depth, record)
-            children = nvl(children, c)
+            children = c if children is None else children
             if index:
                 path = f.value[0:index:]
-                deep_fields.add(f)  # KEEP TRACK OF WHICH FIELDS NEED DEEPER SELECT
+                if not deep_fields[f]:
+                    deep_fields.add(f)  # KEEP TRACK OF WHICH FIELDS NEED DEEPER SELECT
                 short = MIN(len(deep_path), len(path))
                 if path[:short:] != deep_path[:short:]:
                     Log.error("Dangerous to select into more than one branch at time")

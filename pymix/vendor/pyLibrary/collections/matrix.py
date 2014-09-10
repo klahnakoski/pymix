@@ -8,7 +8,10 @@
 # Author: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 from __future__ import unicode_literals
-from ..collections import PRODUCT, reverse, MAX, MIN
+from __future__ import division
+
+
+from ..collections import PRODUCT, reverse, MAX, MIN, OR
 from ..cnv import CNV
 from ..env.logs import Log
 from ..struct import Null, Struct
@@ -39,7 +42,7 @@ class Matrix(object):
 
         self.num = len(dims)
         self.dims = tuple(dims)
-        if self.num == 0:
+        if self.num == 0 or OR(d == 0 for d in dims):  #NO DIMS, OR HAS A ZERO DIM, THEN IT IS A NULL CUBE
             self.cube = Null
         else:
             self.cube = _null(*dims)
@@ -53,13 +56,49 @@ class Matrix(object):
         return output
 
     def __getitem__(self, index):
-        if isinstance(index, list):
-            m = self.cube
-            for k in index:
-                m = m[k]
-            return m
-        if isinstance(index, slice):
-            pass
+        if not isinstance(index, (list, tuple)):
+            if isinstance(index, slice):
+                sub = self.cube[index]
+                output = Matrix()
+                output.num = 1
+                output.dims = (len(sub), )
+                output.cube = sub
+                return output
+            else:
+                return self.cube[index]
+
+        def _getitem(c, i):
+            select = i[0]
+            if len(i)==1:
+                if select == None:
+                    return (len(c), ), c
+                elif isinstance(select, slice):
+                    sub = c[select]
+                    dims, cube = zip(*[_getitem(cc, i[1::]) for cc in sub])
+                    return (len(cube),)+dims[0], cube
+                else:
+                    return (), c[select]
+            else:
+                if select == None:
+                    dims, cube = zip(*[_getitem(cc, i[1::]) for cc in c])
+                    return (len(cube),)+dims[0], cube
+                elif isinstance(select, slice):
+                    sub = c[select]
+                    dims, cube = zip(*[_getitem(cc, i[1::]) for cc in sub])
+                    return (len(cube),)+dims[0], cube
+                else:
+                    return _getitem(c[select], i[1::])
+
+        dims, cube = _getitem(self.cube, index)
+
+        if len(dims) == 0:
+            return cube  # SIMPLE VALUE
+
+        output = Matrix()
+        output.num = len(dims)
+        output.dims = dims
+        output.cube = cube
+        return output
 
     def __setitem__(self, key, value):
         try:
@@ -126,6 +165,7 @@ class Matrix(object):
         return other / self.value
 
     def __iter__(self):
+        # TODO: MAKE THIS FASTER BY NOT CALLING __getitem__ (MAKES CUBE OBJECTS)
         return (self[c] for c in self._all_combos())
 
     def __float__(self):

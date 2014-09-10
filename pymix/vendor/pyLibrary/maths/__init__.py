@@ -8,6 +8,7 @@
 # Author: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 from __future__ import unicode_literals
+from __future__ import division
 import math
 import __builtin__
 from ..struct import Null, nvl
@@ -54,10 +55,28 @@ class Math(object):
         return abs(v)
 
     @staticmethod
-    def log(v, base=None):
+    def pow(v, expo):
         if v == None:
             return Null
-        return math.log(v, base)
+        return math.pow(v, expo)
+
+    @staticmethod
+    def exp(v):
+        if v == None:
+            return Null
+        return math.exp(v)
+
+    @staticmethod
+    def log(v, base=None):
+        try:
+            if v == None:
+                return Null
+            if base == None:
+                return math.log(v)
+            return math.log(v, base)
+        except Exception, e:
+            raise Exception("error in log")
+
 
     @staticmethod
     def log10(v):
@@ -148,8 +167,8 @@ class Math(object):
         return value
 
     @staticmethod
-    def ceiling(value):
-        return int(math.ceil(value))
+    def ceiling(value, mod=1):
+        return int(math.ceil(value/mod))*mod
 
 
     @staticmethod

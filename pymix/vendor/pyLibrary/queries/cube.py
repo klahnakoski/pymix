@@ -8,11 +8,12 @@
 # Author: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 from __future__ import unicode_literals
+from __future__ import division
 from .. import struct
 from ..collections.matrix import Matrix
 from ..collections import MAX, OR
 from ..queries.query import _normalize_edge
-from ..struct import StructList
+from ..struct import StructList, Null
 from ..structs.wraps import wrap, wrap_dot, listwrap
 from ..env.logs import Log
 
@@ -148,13 +149,82 @@ class Cube(object):
         return other / self.value
 
     def __getitem__(self, item):
-        return self.data[item]
+        # TODO: SOLVE FUNDAMENTAL QUESTION OF IF SELECTING A PART OF AN
+        # EDGE REMOVES THAT EDGE FROM THIS RESULT, OR ADDS THE PART
+        # AS A select {"name":edge.name, "value":edge.domain.partitions[coord]}
+        # PROBABLY NOT, THE value IS IDENTICAL OVER THE REMAINING
+        if isinstance(item, dict):
+            coordinates = [None] * len(self.edges)
+
+            # MAP DICT TO NUMERIC INDICES
+            for name, v in item.items():
+                ei, parts = wrap([(i, e.domain.partitions) for i, e in enumerate(self.edges) if e.name == name])[0]
+                if not parts:
+                    Log.error("Can not find {{name}} in list of edges, maybe this feature is not implemented yet", {"name": name})
+                part = wrap([p for p in parts if p.value == v])[0]
+                if not part:
+                    return Null
+                else:
+                    coordinates[ei] = part.dataIndex
+
+            edges = [e for e, v in zip(self.edges, coordinates) if v is None]
+            if not edges and self.is_value:
+                # ZERO DIMENSIONAL VALUE
+                return self.data.values()[0].__getitem__(coordinates)
+            else:
+                output = Cube(
+                    select=self.select,
+                    edges=[e for e, v in zip(self.edges, coordinates) if v is None],
+                    data={k: c.__getitem__(coordinates) for k, c in self.data.items()}
+                )
+                return output
+        elif isinstance(item, basestring):
+            # RETURN A VALUE CUBE
+            if self.is_value:
+                if item != self.select.name:
+                    Log.error("{{name}} not found in cube", {"name": item})
+                return self
+
+            if item not in self.select.name:
+                Log.error("{{name}} not found in cube", {"name": item})
+
+            output = Cube(
+                select=[s for s in self.select if s.name == item][0],
+                edges=self.edges,
+                data={item: self.data[item]}
+            )
+            return output
+        else:
+            Log.error("not implemented yet")
 
     def __getattr__(self, item):
         return self.data[item]
 
     def get_columns(self):
         return self.edges + listwrap(self.select)
+
+    def forall(self, method):
+        """
+        TODO: I AM NOT HAPPY THAT THIS WILL NOT WORK WELL WITH WINDOW FUNCTIONS
+        THE parts GIVE NO INDICATION OF NEXT ITEM OR PREVIOUS ITEM LIKE rownum
+        DOES.  MAYBE ALGEBRAIC EDGES SHOULD BE LOOPED DIFFERENTLY?  ON THE
+        OTHER HAND, MAYBE WINDOW FUNCTIONS ARE RESPONSIBLE FOR THIS COMPLICATION
+
+        IT IS EXPECTED THE method ACCEPTS (value, coord, cube), WHERE
+        value - VALUE FOUND AT ELEMENT
+        parts - THE ONE PART CORRESPONDING TO EACH EDGE
+        cube - THE WHOLE CUBE, FOR USE IN WINDOW FUNCTIONS
+        """
+        if not self.is_value:
+            Log.error("Not dealing with this case yet")
+
+        matrix = self.data.values()[0]
+        parts = [e.domain.partitions for e in self.edges]
+        for c in matrix._all_combos():
+            method(matrix[c], [parts[i][cc] for i, cc in enumerate(c)], self)
+
+
+
 
     def _select(self, select):
         selects = listwrap(select)
@@ -182,7 +252,7 @@ class Cube(object):
         # CACHE SOME RESULTS
         keys = [e.name for e in self.edges]
         getKey = [e.domain.getKey for e in self.edges]
-        lookup = [[getKey[i](p) for p in e.domain.partitions] for i, e in enumerate(self.edges)]
+        lookup = [[getKey[i](p) for p in e.domain.partitions+([None] if e.allowNulls else [])] for i, e in enumerate(self.edges)]
 
         def coord2term(coord):
             output = wrap_dot({keys[i]: lookup[i][c] for i, c in enumerate(coord)})

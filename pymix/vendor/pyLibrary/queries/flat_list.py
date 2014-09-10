@@ -9,6 +9,7 @@
 #
 
 from __future__ import unicode_literals
+from __future__ import division
 from ..collections import MIN
 from ..env.logs import Log
 from ..struct import nvl, split_field, StructList

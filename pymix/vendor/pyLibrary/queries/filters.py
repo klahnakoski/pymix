@@ -8,7 +8,9 @@
 # Author: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 from __future__ import unicode_literals
-from dzAlerts.util.collections import OR
+from __future__ import division
+
+from ..collections import OR
 from ..structs.wraps import wrap
 
 TRUE_FILTER = True

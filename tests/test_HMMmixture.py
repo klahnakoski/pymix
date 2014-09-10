@@ -36,9 +36,10 @@
 ################################################################################
 
 import unittest
-from pymix import mixture, BaseTest
 
 from numpy import numarray
+
+from pymix.vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 from pymix import mixtureHMM
 from pymix.distributions.multinomial import MultinomialDistribution
 from pymix.distributions.normal import NormalDistribution
@@ -47,7 +48,7 @@ from pymix.models.mixture import MixtureModel
 from pymix.util.alphabet import Alphabet
 
 
-class HMMTests(BaseTest):
+class HMMTests(FuzzyTestCase):
     def setUp(self):
         # building generating models
         self.DIAG = Alphabet(['.', '0', '8', '1'])

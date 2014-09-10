@@ -9,6 +9,7 @@
 #
 
 from __future__ import unicode_literals
+from __future__ import division
 from ..collections import SUM
 
 class Relation_usingList(object):

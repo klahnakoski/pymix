@@ -9,6 +9,7 @@
 #
 
 from __future__ import unicode_literals
+from __future__ import division
 from ..queries.unique_index import UniqueIndex
 from ..env.logs import Log
 from ..structs.wraps import wrap, unwrap, tuplewrap

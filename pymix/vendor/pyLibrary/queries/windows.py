@@ -9,6 +9,7 @@
 #
 
 from __future__ import unicode_literals
+from __future__ import division
 import functools
 from ..struct import StructList
 from ..maths import stats

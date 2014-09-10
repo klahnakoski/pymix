@@ -8,6 +8,7 @@
 # Author: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 from __future__ import unicode_literals
+from __future__ import division
 
 from ..collections.matrix import Matrix
 from ..collections import COUNT, PRODUCT
@@ -90,9 +91,9 @@ def es_terms_stats(esq, mvel, query):
 
         esFacets = []
 
-        def add_facet(value, coord, cube):
+        def add_facet(value, parts, cube):
             if value:
-                esFacets.append([e.domain.partitions[coord[i]] for i, e in enumerate(facetEdges)])
+                esFacets.append(parts)
 
         counts["count"].forall(add_facet)
 

@@ -9,6 +9,8 @@
 #
 
 from __future__ import unicode_literals
+from __future__ import division
+
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib

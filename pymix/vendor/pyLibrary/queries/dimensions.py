@@ -8,6 +8,7 @@
 # Author: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 from __future__ import unicode_literals
+from __future__ import division
 from .. import struct
 from ..collections import SUM
 from ..queries.domains import Domain, ALGEBRAIC, KNOWN

@@ -9,6 +9,8 @@
 #
 
 from __future__ import unicode_literals
+from __future__ import division
+
 from collections import Iterable
 from types import GeneratorType
 from ..struct import nvl
@@ -84,7 +86,6 @@ class Multithread(object):
                 self.outbound.close()
             for t in self.threads:
                 t.join()
-
 
     def execute(self, requests):
         """

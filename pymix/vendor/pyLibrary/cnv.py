@@ -8,14 +8,15 @@
 #
 
 from __future__ import unicode_literals
+from __future__ import division
 
 import StringIO
 import base64
+import cgi
 import datetime
 import json
 import re
 import time
-from urllib import urlencode
 
 from . import struct
 from . import jsons
@@ -125,6 +126,8 @@ class CNV:
 
     @staticmethod
     def milli2datetime(u):
+        if u == None:
+            return None
         return CNV.unix2datetime(u / 1000.0)
 
     @staticmethod
@@ -185,9 +188,31 @@ class CNV:
     def string2quote(value):
         return jsons.quote(value)
 
+
     @staticmethod
     def value2url(value):
-        return urlencode(value)
+        if isinstance(value, dict):
+            output = "&".join([CNV.value2url(k)+"="+CNV.value2url(v) for k, v in value.items()])
+        elif isinstance(value, unicode):
+            output = "".join([map2url[c] for c in CNV.unicode2latin1(value)])
+        elif isinstance(value, str):
+            output = "".join([map2url[c] for c in value])
+        elif hasattr(value, "__iter__"):
+            output = ",".join(CNV.value2url(v) for v in value)
+        else:
+            output = unicode(value)
+        return output
+
+
+    @staticmethod
+    def unicode2html(value):
+        return cgi.escape(value)
+
+
+    @staticmethod
+    def unicode2latin1(value):
+        output = value.encode("latin1")
+        return output
 
     @staticmethod
     def quote2string(value):
@@ -321,6 +346,11 @@ class CNV:
             return output
 
         return [CNV.pipe2value(v) for v in output.split("|")]
+
+
+map2url = {chr(i): CNV.latin12unicode(chr(i)) for i in range(32, 256)}
+for c in " {}<>;/?:@&=+$,":
+    map2url[c] = "%" + CNV.int2hex(ord(c), 2)
 
 
 def unPipe(value):

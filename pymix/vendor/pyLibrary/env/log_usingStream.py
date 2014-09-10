@@ -10,6 +10,8 @@
 
 
 from __future__ import unicode_literals
+from __future__ import division
+
 from datetime import datetime, timedelta
 import sys
 from .logs import BaseLog, DEBUG_LOGGING, Log

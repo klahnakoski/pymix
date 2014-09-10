@@ -6,6 +6,7 @@ This module offers extensions to the standard Python
 datetime module.
 """
 from __future__ import unicode_literals
+from __future__ import division
 __license__ = "Simplified BSD"
 
 
@@ -174,7 +175,7 @@ class parserinfo(object):
     # m from a.m/p.m, t from ISO T separator
     JUMP = [" ", ".", ",", ";", "-", "/", "'",
             "at", "on", "and", "ad", "m", "t", "of",
-            "st", "nd", "rd", "th"] 
+            "st", "nd", "rd", "th"]
 
     WEEKDAYS = [("Mon", "Monday"),
                 ("Tue", "Tuesday"),
@@ -387,7 +388,7 @@ class parser(object):
                             res.minute = int(s[2:])
                     elif len_li == 6 or (len_li > 6 and l[i-1].find('.') == 6):
                         # YYMMDD or HHMMSS[.ss]
-                        s = l[i-1] 
+                        s = l[i-1]
                         if not ymd and l[i-1].find('.') == -1:
                             ymd.append(info.convertyear(int(s[:2])))
                             ymd.append(int(s[2:4]))
@@ -888,7 +889,7 @@ class _tzparser(object):
 
         except (IndexError, ValueError, AssertionError):
             return None
-        
+
         return res
 
 

@@ -11,10 +11,11 @@
 import unittest
 import copy
 
-from pymix import mixtureLinearGaussian, BaseTest
+from pymix import mixtureLinearGaussian
+from vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
-class LinearGaussianDistributionTests(BaseTest):
+class LinearGaussianDistributionTests(FuzzyTestCase):
     """
     Tests for class LinearGaussianDistribution
     """

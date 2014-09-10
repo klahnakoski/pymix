@@ -8,6 +8,7 @@
 #
 
 from __future__ import unicode_literals
+from __future__ import division
 
 _get = object.__getattribute__
 _set = object.__setattr__
@@ -48,7 +49,8 @@ class Struct(dict):
        > a == {"b": {"c": 42}}
     5) attribute names (keys) are corrected to unicode - it appears Python
        object.getattribute() is called with str() even when using
-       <code>from __future__ import unicode_literals</code>
+       <code>from __future__ import unicode_literals
+from __future__ import division</code>
 
     More on missing values: http://www.np.org/NA-overview.html
     it only considers the legitimate-field-with-missing-value (Statistical Null)
@@ -278,6 +280,7 @@ class Struct(dict):
     def setdefault(self, k, d=None):
         if self[k] == None:
             self[k] = d
+        return self
 
 # KEEP TRACK OF WHAT ATTRIBUTES ARE REQUESTED, MAYBE SOME (BUILTIN) ARE STILL USEFUL
 requested = set()

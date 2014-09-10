@@ -45,7 +45,6 @@ import copy
 import random
 import numpy as np
 
-from pymix import BaseTest
 from pymix.distributions.discrete import DiscreteDistribution
 from pymix.distributions.exponential import ExponentialDistribution
 from pymix.distributions.multinomial import MultinomialDistribution
@@ -69,6 +68,7 @@ from pymix.util.candidate_group import CandidateGroup
 from pymix.util.constrained_dataset import ConstrainedDataSet
 from pymix.util.dataset import DataSet
 from pymix.vendor.pyLibrary.thread.threads import Thread
+from pymix.vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
 
@@ -140,7 +140,7 @@ def _testTupleLists(tcase, list1, list2, places):
         tcase.assertEqual(list1[i][1], list2[i][1], places)
 
 
-class DataSetTests(BaseTest):
+class DataSetTests(FuzzyTestCase):
     """
     Tests for class DataSet.
     """
@@ -538,7 +538,7 @@ class DataSetTests(BaseTest):
 
 
 
-class FormatDataTests(BaseTest):
+class FormatDataTests(FuzzyTestCase):
     """
     Test functions for formatData
     """
@@ -631,7 +631,7 @@ class FormatDataTests(BaseTest):
         self.assertEqual(s, [7, [3, 0.5, 0, 1, 2, 2, 1]])
 
 
-class NormalDistributionTests(BaseTest):
+class NormalDistributionTests(FuzzyTestCase):
     """
     Tests for class NormalDistribution
     """
@@ -711,7 +711,7 @@ class NormalDistributionTests(BaseTest):
         pass
 
 
-class MultiNormalDistributionTests(BaseTest):
+class MultiNormalDistributionTests(FuzzyTestCase):
     def setUp(self):
         random.seed(3586662)
 
@@ -773,7 +773,7 @@ class MultiNormalDistributionTests(BaseTest):
     def testmerge(self):
         pass
 
-#class ExponentialDistributionTests(BaseTest):
+#class ExponentialDistributionTests(FuzzyTestCase):
 #    def setUp(self):
 #        # some setup
 #        pass
@@ -814,7 +814,7 @@ class MultiNormalDistributionTests(BaseTest):
 #        pass
 #
 #
-#class UniformDistributionTests(BaseTest):
+#class UniformDistributionTests(FuzzyTestCase):
 #    def setUp(self):
 #        # some setup
 #        pass
@@ -854,7 +854,7 @@ class MultiNormalDistributionTests(BaseTest):
 #    def testmerge(self):
 #        pass
 #
-#class MultinomialDistributionTests(BaseTest):
+#class MultinomialDistributionTests(FuzzyTestCase):
 #    def setUp(self):
 #        # some setup
 #        pass
@@ -895,7 +895,7 @@ class MultiNormalDistributionTests(BaseTest):
 #
 
 
-class DiscreteDistributionTests(BaseTest):
+class DiscreteDistributionTests(FuzzyTestCase):
     """
     Tests for class DiscreteDistribution.
     """
@@ -965,7 +965,7 @@ class DiscreteDistributionTests(BaseTest):
 #
 
 
-#class DirichletDistributionTests(BaseTest):
+#class DirichletDistributionTests(FuzzyTestCase):
 #    def setUp(self):
 #        self.d1 = DirichletDistribution(4,[1.0,1.0,1.0,1.0])  # uniform prior
 #        self.d2 = DirichletDistribution(4,[1.5,1.5,1.5,1.5])  # prior with emphasis on uniform phi
@@ -987,7 +987,7 @@ class DiscreteDistributionTests(BaseTest):
 #  XXX more...
 
 
-class DirichletPriorTests(BaseTest):
+class DirichletPriorTests(FuzzyTestCase):
     """
     Tests for class DirichletPrior.
     """
@@ -1140,7 +1140,7 @@ class DirichletPriorTests(BaseTest):
 #        pass
 #
 
-class NormalGammaPriorTests(BaseTest):
+class NormalGammaPriorTests(FuzzyTestCase):
     """
     Tests for class NormalGammaPrior.
     """
@@ -1202,7 +1202,7 @@ class NormalGammaPriorTests(BaseTest):
         self.assertEqual(str(cmr.dist), str(d))  #
 
 
-class DirichletMixturePriorTests(BaseTest):
+class DirichletMixturePriorTests(FuzzyTestCase):
     """
     Tests for class DirichletMixturePrior.
     """
@@ -1363,7 +1363,7 @@ class DirichletMixturePriorTests(BaseTest):
         self.assertEqual(cmr.dist, {"M": 4, "phi": [0.54933743, 0.28053815, 0.2713648, 0.59875962]})  #  str(d)
 
 
-class ProductDistributionPriorTests(BaseTest):
+class ProductDistributionPriorTests(FuzzyTestCase):
     """
     Tests for class ProductDistributionPrior.
     """
@@ -1388,7 +1388,7 @@ class ProductDistributionPriorTests(BaseTest):
         # XXX ...
 
 
-class MixtureModelPriorTests(BaseTest):
+class MixtureModelPriorTests(FuzzyTestCase):
     """
     Tests for class MixtureModelPrior.
     """
@@ -1470,7 +1470,7 @@ class MixtureModelPriorTests(BaseTest):
         self.assertRaises(InvalidDistributionInput, self.prior.isValid, m4)
 
 
-class ProductDistributionTests(BaseTest):
+class ProductDistributionTests(FuzzyTestCase):
     """
     Tests for class ProductDistribution.
     """
@@ -1520,7 +1520,7 @@ class ProductDistributionTests(BaseTest):
 
 
 
-class MixtureModelPartialLearningTests(BaseTest):
+class MixtureModelPartialLearningTests(FuzzyTestCase):
     """
     Tests for semi-supervised learning in classes LabeledMixtureModel and ConstrainedMixtureModel.
     """
@@ -1594,7 +1594,7 @@ class MixtureModelPartialLearningTests(BaseTest):
         self.assertEqual(train.components[1][0], {"mu": 6.31242489602, "sigma": 0.630612790811})
 
 
-class BayesMixtureModelTests(BaseTest):
+class BayesMixtureModelTests(FuzzyTestCase):
     """
     Tests for class BayesMixtureModel.
     """
@@ -1859,7 +1859,7 @@ class BayesMixtureModelTests(BaseTest):
         self.assertEqual(self.m.freeParams, 12)
 
 
-class MixtureModelTests(BaseTest):
+class MixtureModelTests(FuzzyTestCase):
     """
     Tests for class MixtureModel.
     """
@@ -2512,7 +2512,7 @@ class MixtureModelTests(BaseTest):
         self.assertEqual(self.m.components[0][0].mu, 2.5)
 
 
-class ModelInitTests(BaseTest):
+class ModelInitTests(FuzzyTestCase):
     """
     Tests for function modelInitialization().
     """
@@ -2793,7 +2793,7 @@ class ModelInitTests(BaseTest):
         self.assertEqual(m.components[1].distList[2].components[1].distList[0], {"mu": -0.206838765738, "sigma": 5.39509340632})
 
 
-class ModelSelectionTests(BaseTest):
+class ModelSelectionTests(FuzzyTestCase):
     def setUp(self):
         random.seed(3586662)
 
