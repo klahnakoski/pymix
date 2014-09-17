@@ -93,12 +93,8 @@ class Alphabet(EmissionDomain):
     def __init__(self, listOfCharacters):
         """ Creates an alphabet out of a listOfCharacters """
         self.listOfCharacters = listOfCharacters
-        self.index = {} # Which index belongs to which character
-        i = 0
-        for c in self.listOfCharacters:
-            self.index[c] = i
-            i += 1
-        self.CDataType = "int" # flag indicating which C data type should be used
+        self.index = {c: i for i, c in enumerate(self.listOfCharacters)}
+        self.CDataType = "int"  # flag indicating which C data type should be used
 
     def __str__(self):
         strout = "Alphabet:\n"

@@ -42,7 +42,7 @@ Mixtures of HMMs (requires the GHMM package)
 import copy
 import numpy as np
 
-import ghmm
+from vendor.ghmm import ghmm
 from .distributions.prob import ProbDistribution
 from .distributions.product import ProductDistribution
 from .util.constrained_dataset import ConstrainedDataSet

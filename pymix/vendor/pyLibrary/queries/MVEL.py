@@ -85,7 +85,7 @@ class _MVEL(object):
         columns = INDEX_CACHE[path[0]].columns
         for i, c in enumerate(columns):
             if c.name=="attachments":
-                Log.debug("")
+                Log.note("")
             if c.name.find("\\.") >= 0:
                 self.prefixMap.insert(0, {
                     "path": c.name,
