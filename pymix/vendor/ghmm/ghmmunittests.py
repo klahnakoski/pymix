@@ -60,6 +60,7 @@ import re
 
 # adjust verbosity level
 import logging, sys
+from vendor.pyLibrary.env.logs import Log
 
 log = logging.getLogger("GHMM unit tests")
 # creating StreamHandler to stderr
