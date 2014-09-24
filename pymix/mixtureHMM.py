@@ -103,10 +103,7 @@ class SequenceDataSet(ConstrainedDataSet):
             self.sampleIDs = IDs
 
         if not col_header:
-            l = range(self.p)
-            self.headers = []
-            for k in l:
-                self.headers.append(str(k))
+            self.headers = [str(k) for k in range(self.p)]
         else:
             assert len(col_header) == self.p
             self.headers = col_header
@@ -149,8 +146,6 @@ class SequenceDataSet(ConstrainedDataSet):
             else:
                 ind = 0
                 for i in range(m.components[0].dist_nr):
-
-
                     if isinstance(m.components[0].distList[i], HMM):
                         self.complexFeature.append(1)
                         self.complexDataIndexMap[i] = ind
@@ -197,7 +192,7 @@ class SequenceDataSet(ConstrainedDataSet):
     def getExternalFeature(self, fid):
         raise NotImplementedError, "Needs implementation"
 
-    def getInternalFeature(self, i):
+    def getInternalFeature(self, i, m=None):
         """
         Returns the columns of self.internalData containing the data of the feature with index 'i'
         """
@@ -235,7 +230,8 @@ class SequenceDataSet(ConstrainedDataSet):
             return self.internalData[:]
 
         elif (this_index - prev_index) == 1:   # multiple features, feature 'i' has single dimension
-            return np.take(self.internalData, (this_index - 1,), axis=1)
+            output =np.take(self.internalData, (this_index - 1,), axis=1)
+            return output
         else:
             return self.internalData[:, prev_index:this_index]  # multiple features, feature 'i' has multiple dimensions
 

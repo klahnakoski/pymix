@@ -46,6 +46,7 @@ from pymix.distributions.normal import NormalDistribution
 from pymix.distributions.product import ProductDistribution
 from pymix.models.mixture import MixtureModel
 from pymix.util.alphabet import Alphabet
+from vendor.ghmm.ghmm import SequenceSet
 
 
 class HMMTests(FuzzyTestCase):
@@ -147,7 +148,7 @@ class HMMTests(FuzzyTestCase):
         self.assertEqual(isinstance(f1, numarray.numarraycore.NumArray), True)
 
         f2 = data.getInternalFeature(2)
-        self.assertEqual(isinstance(f2, ghmm.SequenceSet), True)
+        self.assertEqual(isinstance(f2, SequenceSet), True)
 
 
     def testem(self):

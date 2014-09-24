@@ -13,6 +13,10 @@ SEED = random.Random()
 
 class Random(object):
     @staticmethod
+    def set_seed(seed):
+        globals()["SEED"] = random.Random(seed)
+
+    @staticmethod
     def string(length, alphabet=SIMPLE_ALPHABET):
         result = ''
         for i in range(0, length):
@@ -25,14 +29,14 @@ class Random(object):
 
     @staticmethod
     def int(*args):
-        return random.randrange(*args)
+        return SEED.randrange(*args)
 
     @staticmethod
     def float(*args):
         if args:
-            return random.random()*args[0]
+            return SEED.random()*args[0]
         else:
-            return random.random()
+            return SEED.random()
 
     @staticmethod
     def sample(data, count):
@@ -53,5 +57,5 @@ class Random(object):
 
     @staticmethod
     def bytes(count):
-        output = bytearray(random.randrange(256) for i in range(count))
+        output = bytearray(SEED.randrange(256) for i in range(count))
         return output

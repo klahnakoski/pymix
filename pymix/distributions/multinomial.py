@@ -209,8 +209,7 @@ class MultinomialDistribution(ProbDistribution):
 
         for i in range(self.M):
             self.isValid(x)
-            f = lambda x: x == self.alphabet.listOfCharacters[i]
-            count[i] = sum(map(f, x))
+            count[i] = sum([1 for c in x if c == self.alphabet.listOfCharacters[i]])
 
         return [self.M, count]
 

@@ -35,33 +35,43 @@ ASCI_SEQ_FILE = 0
 SEQ_LABEL_FIELD = 0
 GHMM_MAX_SEQ_LEN = 1000000
 DBL_MIN = 0.0000001
+GHMM_EPS_PREC = 1e-8
 
+normal = 0,        #< gaussian */
+normal_right = 1  #< right tail */
+normal_approx = 2 #< approximated gaussian */
+normal_left = 3   #< left tail */
+uniform = 4
+binormal = 5      #< two dimensional gaussian */
+multinormal = 6   #< multivariate gaussian */
+density_number = 7 #< number of density types, has to stay last */
 
-normal=0,        #< gaussian */
-normal_right=1  #< right tail */
-normal_approx=2 #< approximated gaussian */
-normal_left=3   #< left tail */
-uniform=4
-binormal=5      #< two dimensional gaussian */
-multinormal=6   #< multivariate gaussian */
-density_number=7 #< number of density types, has to stay last */
 
 def fake_random_number_generator():
     pass
+
+
 RNG = fake_random_number_generator
 
 
 def int_array_getitem(array, index):
     return array[index]
 
+
 def ARRAY_REALLOC(pointer, bytes):
     pass
+
 
 def ARRAY_CALLOC(pointer, bytes):
     pass
 
+
 def set_pylogging(logwrapper):
     pass
+
+
+def GHMM_RNG_SET(rng, seed):
+    Random.set_seed(seed)
 
 
 def ghmm_rng_init():
@@ -372,7 +382,7 @@ class ghmm_dseq():
         self.states = None  #int **
 
         # array of sequence length
-        self.seq_len = 0
+        self.seq_len = []
         # array of state path lengths
         self.states_len = []
 
@@ -395,10 +405,22 @@ class ghmm_dseq():
         ## flags internal
         self.flags = 0
 
+    def add(self, other):
+        self.seq_number += other.seq_number
+        self.seq += other.seq
+        self.seq_len += other.seq
+        self.states += other.states
+        self.states_len += other.states_len
 
     def init_labels(self, labels, length):
         self.state_labels = labels
         self.state_labels_len = length
+
+    def getSequence(self, index):
+        return self.seq[index]
+
+    def getLength(self, index):
+        return self.seq_len[index]
 
 
 class ghmm_cseq():
@@ -468,352 +490,12 @@ class ghmm_dstate():
         self.yPosition = 0 #int
 
 
-class ghmm_dmodel():
-    def __init__(self, N, M, model_type=0, inDegVec=None, outDegVec=None):
-        # assert (modeltype & kDiscreteHMM)
-
-        # Number of states */
-        self.N = N  # int
-
-        # Number of outputs */
-        self.M = M  # int
-
-        # Vector of the states */
-        if inDegVec:
-            self.s = [model_state_alloc(M, i, o) for i, o in zip(inDegVec, outDegVec)]
-        else:
-            self.s = None  # ghmm_dstate*
-
-        # The a priori probability for the model.
-        # A value of -1 indicates that no prior is defined.
-        # Note: this is not to be confused with priors on emission
-        # distributions*/
-        self.prior = 0.0 #double
-
-        # contains a arbitrary name for the model (null terminated utf-8) */
-        self.name = "" #char*
-
-        # Contains bit flags for varios model extensions such as
-        # kSilentStates, kTiedEmissions (see ghmm.h for a complete list)
-        # */
-        self.model_type = model_type #int
-
-        # Flag variables for each state indicating whether it is emitting
-        # or not.
-        # Note: silent != NULL iff (model_type & kSilentStates) == 1  */
-
-        if self.model_type & kSilentStates:
-            self.silent = [0]*N
-        else:
-            self.silent = None
-
-        #AS*/
-        # Int variable for the maximum level of higher order emissions */
-        self.maxorder = 0 #int
-        # saves the history of emissions as int,
-        # the nth-last emission is (emission_history * |alphabet|^n+1) % |alphabet|
-        # see ...*/
-        self.emission_history = 0 #int
-
-        # Flag variables for each state indicating whether the states emissions
-        # are tied to another state. Groups of tied states are represented
-        # by their tie group leader (the lowest numbered member of the group).
-        #
-        # tied_to[s] == kUntied  : s is not a tied state
-        #
-        # tied_to[s] == s        : s is a tie group leader
-        #
-        # tied_to[t] == s        : t is tied to state s (t>s)
-        #
-        # Note: tied_to != NULL iff (model_type & kTiedEmissions) != 0  */
-        if (self.model_type & kTiedEmissions) :
-            self.tied_to=[kUntied]*N
-        else:
-            self.tied_to = None
-
-        # Note: State store order information of the emissions.
-        # Classic HMMS have emission order 0, that is the emission probability
-        # is conditioned only on the state emitting the symbol.
-        #
-        # For higher order emissions, the emission are conditioned on the state s
-        # as well as the previous emission_order[s] observed symbols.
-        #
-        # The emissions are stored in the state's usual double* b. The order is
-        # set order.
-        #
-        # Note: order != NULL iff (model_type & kHigherOrderEmissions) != 0  */
-        if self.model_type & kHigherOrderEmissions:
-            self.order=[0]*N
-        else:
-            self.order = None #int*
-
-        # ghmm_dbackground is a pointer to a
-        # ghmm_dbackground structure, which holds (essentially) an
-        # array of background distributions (which are just vectors of floating
-        # point numbers like state.b).
-        #
-        # For each state the array background_id indicates which of the background
-        # distributions to use in parameter estimation. A value of kNoBackgroundDistribution
-        # indicates that none should be used.
-        #
-        #
-        # Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) != 0  */
-        if self.model_type & kBackgroundDistributions:
-            self.background_id = [kNoBackgroundDistribution]*N
-        else:
-            self.background_id = None #int*
-
-        self.bp = None #ghmm_dbackground*
-
-        # (WR) added these variables for topological ordering of silent states
-        # Condition: topo_order != NULL iff (model_type & kSilentStates) != 0  */
-        self.topo_order = None #int*
-        self.topo_order_length = 0 #int
-
-        # pow_lookup is a array of precomputed powers
-        # It contains in the i-th entry M (alphabet size) to the power of i
-        # The last entry is maxorder+1 */
-        self.pow_lookup = None #int*
-
-        # Store for each state a class label. Limits the possibly state sequence
-        #
-        # Note: label != NULL iff (model_type & kLabeledStates) != 0  */
-        if self.model_type & kLabeledStates:
-            self.label=[0]*N
-        else:
-            self.label = None
-
-
-        self.label_alphabet = None #ghmm_alphabet*
-
-        self.alphabet = None #ghmm_alphabet*
-
-    def getStateName(self, index):
-        try:
-            return self.s[index].desc
-        except Exception:
-            return None
-
-    def setStateName(self, index, name):
-        try:
-            self.s[index].desc = name
-        except Exception:
-            return None
-
-
-    def generate_sequences(self, seed, global_len, seq_number, Tmax):
-        # An end state is characterized by not having an output probabiliy. */
-
-        len = global_len
-        up = 0
-        stillbadseq = 0
-        reject_os_tmp = 0
-
-        sq = ghmm_cseq()
-
-        # set dimension of the sequence to match dimension of the model (multivariate) */
-        sq.dim = self.dim
-
-        # A specific length of the sequences isn't given. As a model should have
-        # an end state, the konstant MAX_SEQ_LEN is used. */
-        if len <= 0:
-            len = GHMM_MAX_SEQ_LEN
-
-        # Maximum length of a sequence not given */
-        if Tmax <= 0:
-            Tmax = GHMM_MAX_SEQ_LEN
-
-
-        # rng is also used by ighmm_rand_std_normal
-        # seed == -1: Initialization, has already been done outside the function */
-        if seed >= 0:
-            ghmm_rng_init()
-            if seed > 0:
-                GHMM_RNG_SET(RNG, seed)
-            else:                        # Random initialization! */
-                ghmm_rng_timeseed(RNG)
-
-        n = 0
-        reject_os = reject_tmax = 0
-
-        # calculate cholesky decomposition of covariance matrix (multivariate case),
-        # this needs to be called before ghmm_c_get_random_var */
-        if self.dim > 1:
-            for i in range(self.N):
-                for m in range(self.s[i].M):
-                    self.s[i].e[m].sigmacd = ighmm_cholesky_decomposition(self.dim, self.s[i].e[m].variance.mat)
-
-        while n < seq_number:
-            # Test: A new seed for each sequence */
-            # ghmm_rng_timeseed(RNG) */
-            stillbadseq = badseq = 0
-            ARRAY_CALLOC(sq.seq[n], len * (self.dim))
-
-            # Get a random initial state i */
-            p = GHMM_RNG_UNIFORM(RNG)
-            sum = 0.0
-            for i in range(self.N):
-                sum += self.s[i].pi
-                if sum >= p:
-                    break
-            if i == self.N:          # Can happen by a rounding error in the input */
-                i -= 1
-                while i > 0 and self.s[i].pi == 0.0:
-                    i -= 1
-
-
-            # Get a random initial output
-            # . get a random m and then respectively a pdf omega. */
-            p = GHMM_RNG_UNIFORM(RNG)
-            sum = 0.0
-            for m in range(self.s[i].M):
-                sum += self.s[i].c[m]
-                if sum >= p:
-                    break
-
-            if m == self.s[i].M:
-                m -= 1
-
-            # Get random numbers according to the density function */
-            ghmm_cmodel_get_random_var(self, i, m, sq.seq[n] + 0)
-            pos = 1
-
-            # The first symbol chooses the start class */
-            if self.cos == 1:
-                clazz = 0
-            else:
-                #Log.error("1: cos = %d, k = %d, t = %d\n",self.cos,n,state)*/
-
-                if not self.class_change.get_class:
-                    Log.error("ERROR: get_class not initialized\n")
-                    return None
-
-                clazz = self.class_change.get_class(self, sq.seq[n], n, 0)
-                if clazz >= self.cos:
-                    Log.error("ERROR: get_class returned index %d but model has only %d classes !\n", clazz, self.cos)
-                    return None
-
-            while pos < len:
-                # Get a new state */
-                p = GHMM_RNG_UNIFORM(RNG)
-                sum = 0.0
-                for j in range(self.s[i].out_states):
-                    sum += self.s[i].out_a[clazz][j]
-                    if sum >= p:
-                        break
-
-                if j == self.s[i].out_states:  # Can happen by a rounding error */
-                    j -= 1
-                    while j > 0 and self.s[i].out_a[clazz][j] == 0.0:
-                        j -= 1
-
-                if sum == 0.0:
-                    if self.s[i].out_states > 0:
-                        # Repudiate the sequence, if all self.s[i].out_a[clazz][.] == 0,
-                        # that is, clazz "clazz" isn't used in the original data:
-                        # go out of the while-loop, n should not be counted. */
-                        # Log.error("Zustand %d, clazz %d, len %d out_states %d \n", i, clazz,
-                        # state, self.s[i].out_states) */
-                        badseq = 1
-                        # break */
-
-                        # Try: If the clazz is "empty", try the neighbour clazz
-                        # first, sweep down to zero if still no success, sweep up to
-                        # COS - 1. If still no success -. Repudiate the sequence. */
-                        if clazz > 0 and up == 0:
-                            clazz -= 1
-                            continue
-                        elif clazz < self.cos - 1:
-                            clazz += 1
-                            up = 1
-                            continue
-                        else:
-                            stillbadseq = 1
-                            break
-
-                    else:
-                        # Final state reached, out of while-loop */
-                        break
-
-                i = self.s[i].out_id[j]
-                # fprintf(stderr, "%d\n", i) */
-                # fprintf(stderr, "%d\n", i) */
-
-                # Get output from state i */
-                p = GHMM_RNG_UNIFORM(RNG)
-                sum = 0.0
-                for m in range(self.s[i].M):
-                    sum += self.s[i].c[m]
-                    if sum >= p:
-                        break
-
-                if m == self.s[i].M:
-                    m -= 1
-                    while m > 0 and self.s[i].c[m] == 0.0:
-                        m -= 1
-
-                # Get a random number from the corresponding density function */
-                ghmm_cmodel_get_random_var(self, i, m, sq.seq[n] + (pos * self.dim))
-                # Decide the clazz for the next step */
-                if self.cos == 1:
-                    clazz = 0
-                else:
-                    #Log.error("2: cos = %d, k = %d, t = %d\n",self.cos,n,state)*/
-                    if not self.class_change.get_class:
-                        Log.error("ERROR: get_class not initialized\n")
-                        return None
-
-                    clazz = self.class_change.get_class(self, sq.seq[n], n, pos)
-                    Log.error("class = %d\n", clazz)
-                    if clazz >= self.cos:
-                        Log.error("ERROR: get_class returned index %d but model has only %d classes !\n", clazz, self.cos)
-                        return None
-
-                up = 0
-                pos += 1
-                # while (state < len) */
-            if badseq:
-                reject_os_tmp += 1
-
-            if stillbadseq:
-                reject_os += 1
-            elif pos > Tmax:
-                reject_tmax += 1
-            else:
-                if pos < len:
-                    ARRAY_REALLOC(sq.seq[n], pos)
-                sq.seq_len[n] = pos * (self.dim)
-                # ighmm_cvector_print(stdout, sq.seq[n], sq.seq_len[n]," "," ","") */
-                n += 1
-
-            # Log.error("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax) */
-
-            if reject_os > 10000:
-                Log.note("Reached max. no. of rejections\n")
-                break
-
-            if not n % 1000:
-                Log.error("%d Seqs. generated\n", n)
-                # n-loop */
-
-        if reject_os > 0:
-            Log.error("%d sequences rejected (os)!\n", reject_os)
-        if reject_os_tmp > 0:
-            Log.error("%d sequences changed class\n", reject_os_tmp - reject_os)
-        if reject_tmax > 0:
-            Log.error("%d sequences rejected (Tmax, %d)!\n", reject_tmax, Tmax)
-            # Log.error ("End of selfdel_generate_sequences.\n") */
-
-        return sq
-
 
 def model_state_alloc(
     M,
     in_states,
     out_states
 ):
-    assert isinstance(s, ghmm_dstate)
-
     s = ghmm_dstate()
     s.b = [0.0] * M
     s.out_id = [0] * out_states
@@ -825,27 +507,27 @@ def model_state_alloc(
     return s
 
 
-def ighmm_cholesky_decomposition (dim, cov):
-  sigmacd = [row.copy() for row in cov]
+def ighmm_cholesky_decomposition(dim, cov):
+    sigmacd = [row.copy() for row in cov]
 
-  for row in range(dim):
-    # First compute U[row][row] */
-    total = cov[row][row]
-    for j in range(row-1):
-        total -= sigmacd[j][row]*sigmacd[j][row]
-    if total > DBL_MIN:
-      sigmacd[row][row] = sqrt(total)
-      # Now find elements sigmacd[row*dim+k], k > row. */
-      for k in range(row+1, dim):
-        total = cov[row][k]
-        for j in range(0, row-1):
-          total -= sigmacd[j][row]*sigmacd[j][k]
-        sigmacd[row][k] = total/sigmacd[row][row]
+    for row in range(dim):
+        # First compute U[row][row] */
+        total = cov[row][row]
+        for j in range(row - 1):
+            total -= sigmacd[j][row] * sigmacd[j][row]
+        if total > DBL_MIN:
+            sigmacd[row][row] = sqrt(total)
+            # Now find elements sigmacd[row*dim+k], k > row. */
+            for k in range(row + 1, dim):
+                total = cov[row][k]
+                for j in range(0, row - 1):
+                    total -= sigmacd[j][row] * sigmacd[j][k]
+                sigmacd[row][k] = total / sigmacd[row][row]
 
-    else:  # blast off the entire row. */
-      for k in range(row, dim):
-          sigmacd[row][k] = 0.0
-  return sigmacd
+        else:  # blast off the entire row. */
+            for k in range(row, dim):
+                sigmacd[row][k] = 0.0
+    return sigmacd
 
 
 def GHMM_RNG_UNIFORM(rng):
@@ -853,7 +535,6 @@ def GHMM_RNG_UNIFORM(rng):
 
 
 class ghmm_dsmodel():
-
     def __init__(self):
         # Number of states */
         self.N = 0  # int
@@ -931,52 +612,272 @@ class ghmm_dsmodel():
         self.topo_order = None  # int *
         self.topo_order_length = 0  # int
 
-        # pow_lookup is a array of precomputed powers
-        # It contains in the i-th entry M (alphabet size) to the power of i
-        # The last entry is maxorder+1 */
-        self.pow_lookup = None  # int *
+        # Store for each state a class label. Limits the possibly state sequence
 
-       # Store for each state a class label. Limits the possibly state sequence
-
-          # Note: label != NULL iff (model_type & kLabeledStates) != 0  */
+        # Note: label != NULL iff (model_type & kLabeledStates) != 0  */
         self.label = None  # int*
         self.label_alphabet = None  # ghmm_alphabet*
 
         self.alphabet = None  # ghmm_alphabet*
 
+
 class ghmm_cmodel:
-
     def __init__(self):
+        # Number of states */
+        self.N = None  # int
+        # Maximun number of components in the states */
+        self.M = None  # int
+        # Number of dimensions of the emission components.
+        # All emissions must have the same number of dimensions */
+        self.dim = None  # int
+        # ghmm_cmodel includes continuous model with one transition matrix
+        # (cos  is set to 1) and an extension for models with several matrices
+        # (cos is set to a positive integer value > 1).*/
+        self.cos = None  # int
+        # prior for a priori prob. of the model. -1 means no prior specified (all
+        # models have equal prob. a priori. */
+        self.prior = None  # double
 
-        pass
+        # contains a arbitrary name for the model (null terminated utf-8) */
 
-    def ghmm_cmodel_get_random_var(self, state, m, x):
-    # define CUR_PROC "ghmm_cmodel_get_random_var"
-      ghmm_c_emission *emission = self.s[state].e + m
-      if emission.type in (normal_approx, normal):
-        *x = ighmm_rand_normal(emission.mean.val, emission.variance.val, 0)
-        return 0
-      elif emission.type==binormal:
-        #return ighmm_rand_binormal(emission.mean.vec, emission.variance.mat, 0)*/
-      elif emission.type==multinormal:
-        return ighmm_rand_multivariate_normal(emission.dimension, x,
-                                              emission.mean.vec,
-                                              emission.sigmacd, 0)
-      elif emission.type==normal_right:
-        *x = ighmm_rand_normal_right(emission.min, emission.mean.val,
-                                     emission.variance.val, 0)
-        return 0
-      elif emission.type==normal_left:
-        *x = -ighmm_rand_normal_right(-emission.max, -emission.mean.val,
-                                      emission.variance.val, 0)
-        return 0
-      elif emission.type==uniform:
-        *x = ighmm_rand_uniform_cont(0, emission.max, emission.min)
-        return 0
-      else:
-        Log.error("unknown density function specified!")
-        return -1
-      }
-    # undef CUR_PROC
-    }                               # ghmm_cmodel_get_random_var */
+        self.name = None  # char *
 
+        # Contains bit flags for varios model extensions such as
+        # kSilentStates (see ghmm.h for a complete list)
+        self.model_type = None  # int
+
+        # All states of the model. Transition probs are part of the states. */
+        self.s = None  # ghmm_cstate *
+
+        # pointer to a ghmm_cmodel_class_change_context struct necessary for multiple transition
+        # classes * /
+        self.class_change = None  # ghmm_cmodel_class_change_context *
+
+
+    def ghmm_cmodel_get_random_var(self, state, m):
+        # PARAMETER x IS THE RETURN VALUES
+        # define CUR_PROC "ghmm_cmodel_get_random_var"
+        emission = self.s[state].e[m]
+        if emission.type in (normal_approx, normal):
+            return ighmm_rand_normal(emission.mean.val, emission.variance.val, 0)
+        elif emission.type == binormal:
+            #return ighmm_rand_binormal(emission.mean.vec, emission.variance.mat, 0)*/
+            pass
+        elif emission.type == multinormal:
+            return ighmm_rand_multivariate_normal(emission.dimension, x,
+                emission.mean.vec,
+                emission.sigmacd, 0)
+        elif emission.type == normal_right:
+            return ighmm_rand_normal_right(emission.min, emission.mean.val, emission.variance.val, 0)
+        elif emission.type == normal_left:
+            return -ighmm_rand_normal_right(-emission.max, -emission.mean.val, emission.variance.val, 0)
+        elif emission.type == uniform:
+            return ighmm_rand_uniform_cont(0, emission.max, emission.min)
+        else:
+            Log.error("unknown density function specified!")
+            return -1
+
+    def generate_sequences(self, seed, global_len, seq_number, Tmax):
+        # An end state is characterized by not having an output probabiliy. */
+
+        len = global_len
+        up = 0
+        stillbadseq = 0
+        reject_os_tmp = 0
+
+        sq = ghmm_cseq()
+
+        # set dimension of the sequence to match dimension of the model (multivariate) */
+        sq.dim = self.dim
+
+        # A specific length of the sequences isn't given. As a model should have
+        # an end state, the konstant MAX_SEQ_LEN is used. */
+        if len <= 0:
+            len = GHMM_MAX_SEQ_LEN
+
+        # Maximum length of a sequence not given */
+        if Tmax <= 0:
+            Tmax = GHMM_MAX_SEQ_LEN
+
+
+        # rng is also used by ighmm_rand_std_normal
+        # seed == -1: Initialization, has already been done outside the function */
+        if seed >= 0:
+            ghmm_rng_init()
+            if seed > 0:
+                Random.set_seed(seed)
+            else:                        # Random initialization! */
+                pass
+
+        n = 0
+        reject_os = reject_tmax = 0
+
+        # calculate cholesky decomposition of covariance matrix (multivariate case),
+        # this needs to be called before ghmm_c_get_random_var */
+        if self.dim > 1:
+            for i in range(self.N):
+                for m in range(self.s[i].M):
+                    self.s[i].e[m].sigmacd = ighmm_cholesky_decomposition(self.dim, self.s[i].e[m].variance.mat)
+
+        while n < seq_number:
+            # Test: A new seed for each sequence */
+            # ghmm_rng_timeseed(RNG) */
+            stillbadseq = badseq = 0
+            sq.seq[n] = [0] * ( len * (self.dim))
+
+            # Get a random initial state i */
+            p = GHMM_RNG_UNIFORM(RNG)
+            sum = 0.0
+            for i in range(self.N):
+                sum += self.s[i].pi
+                if sum >= p:
+                    break
+            if i == self.N:          # Can happen by a rounding error in the input */
+                i -= 1
+                while i > 0 and self.s[i].pi == 0.0:
+                    i -= 1
+
+
+            # Get a random initial output
+            # . get a random m and then respectively a pdf omega. */
+            p = GHMM_RNG_UNIFORM(RNG)
+            sum = 0.0
+            for m in range(self.s[i].M):
+                sum += self.s[i].c[m]
+                if sum >= p:
+                    break
+
+            if m == self.s[i].M:
+                m -= 1
+
+            # Get random numbers according to the density function */
+            self.ghmm_cmodel_get_random_var(i, m, sq.seq[n])
+            pos = 1
+
+            # The first symbol chooses the start class */
+            if self.cos == 1:
+                clazz = 0
+            else:
+                #Log.error("1: cos = %d, k = %d, t = %d\n",self.cos,n,state)*/
+
+                if not self.class_change.get_class:
+                    Log.error("ERROR: get_class not initialized\n")
+                    return None
+
+                clazz = self.class_change.get_class(self, sq.seq[n], n, 0)
+                if clazz >= self.cos:
+                    Log.error("ERROR: get_class returned index %d but model has only %d classes !\n", clazz, self.cos)
+                    return None
+
+            while pos < len:
+                # Get a new state */
+                p = GHMM_RNG_UNIFORM(RNG)
+                sum = 0.0
+                for j in range(self.s[i].out_states):
+                    sum += self.s[i].out_a[clazz][j]
+                    if sum >= p:
+                        break
+
+                if j == self.s[i].out_states:  # Can happen by a rounding error */
+                    j -= 1
+                    while j > 0 and self.s[i].out_a[clazz][j] == 0.0:
+                        j -= 1
+
+                if sum == 0.0:
+                    if self.s[i].out_states > 0:
+                        # Repudiate the sequence, if all self.s[i].out_a[clazz][.] == 0,
+                        # that is, clazz "clazz" isn't used in the original data:
+                        # go out of the while-loop, n should not be counted. */
+                        # Log.error("Zustand %d, clazz %d, len %d out_states %d \n", i, clazz,
+                        # state, self.s[i].out_states) */
+                        badseq = 1
+                        # break */
+
+                        # Try: If the clazz is "empty", try the neighbour clazz
+                        # first, sweep down to zero if still no success, sweep up to
+                        # COS - 1. If still no success -. Repudiate the sequence. */
+                        if clazz > 0 and up == 0:
+                            clazz -= 1
+                            continue
+                        elif clazz < self.cos - 1:
+                            clazz += 1
+                            up = 1
+                            continue
+                        else:
+                            stillbadseq = 1
+                            break
+
+                    else:
+                        # Final state reached, out of while-loop */
+                        break
+
+                i = self.s[i].out_id[j]
+                # fprintf(stderr, "%d\n", i) */
+                # fprintf(stderr, "%d\n", i) */
+
+                # Get output from state i */
+                p = GHMM_RNG_UNIFORM(RNG)
+                sum = 0.0
+                for m in range(self.s[i].M):
+                    sum += self.s[i].c[m]
+                    if sum >= p:
+                        break
+
+                if m == self.s[i].M:
+                    m -= 1
+                    while m > 0 and self.s[i].c[m] == 0.0:
+                        m -= 1
+
+                # Get a random number from the corresponding density function */
+                self.ghmm_cmodel_get_random_var(i, m, sq.seq[n] + (pos * self.dim))
+                # Decide the clazz for the next step */
+                if self.cos == 1:
+                    clazz = 0
+                else:
+                    #Log.error("2: cos = %d, k = %d, t = %d\n",self.cos,n,state)*/
+                    if not self.class_change.get_class:
+                        Log.error("ERROR: get_class not initialized\n")
+                        return None
+
+                    clazz = self.class_change.get_class(self, sq.seq[n], n, pos)
+                    Log.error("class = %d\n", clazz)
+                    if clazz >= self.cos:
+                        Log.error("ERROR: get_class returned index %d but model has only %d classes !\n", clazz, self.cos)
+                        return None
+
+                up = 0
+                pos += 1
+                # while (state < len) */
+            if badseq:
+                reject_os_tmp += 1
+
+            if stillbadseq:
+                reject_os += 1
+            elif pos > Tmax:
+                reject_tmax += 1
+            else:
+                if pos < len:
+                    ARRAY_REALLOC(sq.seq[n], pos)
+                sq.seq_len[n] = pos * (self.dim)
+                # ighmm_cvector_print(stdout, sq.seq[n], sq.seq_len[n]," "," ","") */
+                n += 1
+
+            # Log.error("reject_os %d, reject_tmax %d\n", reject_os, reject_tmax) */
+
+            if reject_os > 10000:
+                Log.note("Reached max. no. of rejections\n")
+                break
+
+            if not n % 1000:
+                Log.error("%d Seqs. generated\n", n)
+                # n-loop */
+
+        if reject_os > 0:
+            Log.error("%d sequences rejected (os)!\n", reject_os)
+        if reject_os_tmp > 0:
+            Log.error("%d sequences changed class\n", reject_os_tmp - reject_os)
+        if reject_tmax > 0:
+            Log.error("%d sequences rejected (Tmax, %d)!\n", reject_tmax, Tmax)
+            # Log.error ("End of selfdel_generate_sequences.\n") */
+
+        return sq

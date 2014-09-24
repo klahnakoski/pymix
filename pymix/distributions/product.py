@@ -192,7 +192,7 @@ class ProductDistribution(ProbDistribution):
             # is an HMM by string matching  __class__ (for now).
             if self.distList[i].p == 1:
                 strg = str(self.distList[i].__class__)
-                if strg == 'mixtureHMM.HMM':
+                if strg.endswith('mixtureHMM.HMM'):
                     continue
 
             if self.dist_nr == 1:
