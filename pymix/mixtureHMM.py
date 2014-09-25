@@ -42,7 +42,7 @@ Mixtures of HMMs (requires the GHMM package)
 import copy
 import numpy as np
 
-from vendor.ghmm import ghmm
+from pymix.vendor.ghmm import ghmm
 from .distributions.prob import ProbDistribution
 from .distributions.product import ProductDistribution
 from .util.constrained_dataset import ConstrainedDataSet
@@ -299,7 +299,6 @@ class HMM(ProbDistribution):
             pass
         else:
             raise TypeError, "Unknown/Invalid input type:" + str(data)
-
 
         #print "pdf "+str(self.hmm.cmodel.name) +":"
         #print self.hmm.loglikelihoods(data)

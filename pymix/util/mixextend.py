@@ -17,6 +17,7 @@ import scipy
 from scipy import stats, special
 
 
+
 def get_normalized_posterior_matrix(data):
     logsum = np.log(np.sum(np.exp(data), axis=0))
     result = data - logsum

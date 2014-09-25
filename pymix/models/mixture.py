@@ -49,6 +49,8 @@ from ..util.errors import InvalidPosteriorDistribution, ConvergenceFailureEM, In
 from ..util.dataset import DataSet
 from ..util.maths import sum_logs, dict_intersection
 from ..util.stats import entropy, sym_kl_dist, get_posterior
+from vendor.pyLibrary.collections import array
+from vendor.pyLibrary.collections.matrix import Matrix
 
 
 class MixtureModel(ProbDistribution):
@@ -657,7 +659,7 @@ class MixtureModel(ProbDistribution):
         @return: tuple of log likelihood matrices and sum of log-likelihood of components
 
         """
-        log_l = np.zeros((self.G, data.N), dtype='Float64')
+        log_l = array.zeros(self.G, data.N)
         log_col_sum = np.zeros(data.N, dtype='Float64')  # array of column sums of log_l
         log_pi = np.log(self.pi)  # array of log mixture coefficients
 

@@ -582,10 +582,6 @@ def write_profile(profile_settings, cprofiler):
     stats_file = File(profile_settings.filename, suffix=CNV.datetime2string(datetime.now(), "_%Y%m%d_%H%M%S"))
     stats_file.write(CNV.list2tab(stats))
 
-
-
-
-
 if not Log.main_log:
     from log_usingStream import Log_usingStream
     Log.main_log = Log_usingStream("sys.stdout")

@@ -35,17 +35,13 @@
 #*             last change by $Author: grunau $.
 #*
 #*******************************************************************************/
-from util import ghmmwrapper
-import math
-import os.path
-from modhmmer import *
-from random import *
+from util.ghmm import wrapper
 
 
 def double_matrix2list(cmatrix, row, col):
     llist = []
     for i in range(row):
-        llist.append(ghmmwrapper.double_array2list(ghmmwrapper.double_matrix_get_col(cmatrix, i), col))
+        llist.append(wrapper.double_array2list(wrapper.double_matrix_get_col(cmatrix, i), col))
     return llist
 
 
@@ -57,11 +53,11 @@ def list2double_matrix(matrix):
     """
     cols = len(matrix)
 
-    seq = ghmmwrapper.double_matrix_alloc_row(cols)
+    seq = wrapper.double_matrix_alloc_row(cols)
     col_len = []
     for i in range(cols):
-        col = ghmmwrapper.list2double_array(matrix[i])
-        ghmmwrapper.double_matrix_set_col(seq, i, col)
+        col = wrapper.list2double_array(matrix[i])
+        wrapper.double_matrix_set_col(seq, i, col)
         col_len.append(len(matrix[i]))
 
     return seq, col_len
@@ -75,11 +71,11 @@ def list2int_matrix(matrix):
     """
     rows = len(matrix)
 
-    seq = ghmmwrapper.int_matrix_alloc_row(rows)
+    seq = wrapper.int_matrix_alloc_row(rows)
     col_len = []
     for i in range(rows):
-        col = ghmmwrapper.list2int_array(matrix[i])
-        ghmmwrapper.int_matrix_set_col(seq, i, col)
+        col = wrapper.list2int_array(matrix[i])
+        wrapper.int_matrix_set_col(seq, i, col)
         col_len.append(len(matrix[i]))
 
     return seq, col_len
@@ -88,7 +84,7 @@ def list2int_matrix(matrix):
 def int_matrix2list(cmatrix, row, col):
     llist = []
     for i in range(row):
-        llist.append(ghmmwrapper.int_array2list(ghmmwrapper.int_matrix_get_col(cmatrix, i), col))
+        llist.append(wrapper.int_array2list(wrapper.int_matrix_get_col(cmatrix, i), col))
     return llist
 
 
@@ -106,11 +102,11 @@ def extract_out(lisprobs):
     for i in range(len(lisprobs)):
         if lisprobs[i] != 0:
             lis.append(i)
-    trans_id = ghmmwrapper.int_array_alloc(len(lis))
-    trans_prob = ghmmwrapper.double_array_alloc(len(lis))
+    trans_id = wrapper.int_array_alloc(len(lis))
+    trans_prob = wrapper.double_array_alloc(len(lis))
     for i in range(len(lis)):
-        ghmmwrapper.int_array_setitem(trans_id, i, lis[i])
-        ghmmwrapper.double_array_setitem(trans_prob, i, lisprobs[lis[i]])
+        wrapper.int_array_setitem(trans_id, i, lis[i])
+        wrapper.double_array_setitem(trans_prob, i, lisprobs[lis[i]])
 
     return len(lis), trans_id, trans_prob
 
@@ -131,18 +127,18 @@ def extract_out(lisprobs):
 #            if lisprobs[j][i] != 0 and i not in lis:
 #                lis.append(i)
 #    print "lis: ", lis
-#    trans_id   = ghmmwrapper.int_array_alloc(len(lis))
-#    probsarray = ghmmwrapper.double_2d_array(cos, len(lis)) # C-function
+#    trans_id   = wrapper.int_array_alloc(len(lis))
+#    probsarray = wrapper.double_2d_array(cos, len(lis)) # C-function
 # creating list with positive probabilities
 #    for k in range(cos):
 #        for j in range(len(lis)):
-#            ghmmwrapper.set_2d_arrayd(probsarray,k,j, lisprobs[k][lis[j]])
+#            wrapper.set_2d_arrayd(probsarray,k,j, lisprobs[k][lis[j]])
 #    trans_prob = twodim_double_array(probsarray, cos, len(lis)) # python CLASS, C internal
 #
 #    print trans_prob
 # initializing c state index array
 #    for i in range(len(lis)):
-#        ghmmwrapper.int_array_setitem(trans_id,i,lis[i])
+#        wrapper.int_array_setitem(trans_id,i,lis[i])
 #    return [len(lis),trans_id,trans_prob]
 
 def extract_out_cos(transmat, cos, state):
@@ -165,17 +161,17 @@ def extract_out_cos(transmat, cos, state):
     #lis.sort()
     #print "lis: ", lis
 
-    trans_id = ghmmwrapper.int_array_alloc(len(lis))
-    probsarray = ghmmwrapper.double_matrix_alloc(cos, len(lis)) # C-function
+    trans_id = wrapper.int_array_alloc(len(lis))
+    probsarray = wrapper.double_matrix_alloc(cos, len(lis)) # C-function
 
     # creating list with positive probabilities
     for k in range(cos):
         for j in range(len(lis)):
-            ghmmwrapper.double_matrix_setitem(probsarray, k, j, transmat[k][state][lis[j]])
+            wrapper.double_matrix_setitem(probsarray, k, j, transmat[k][state][lis[j]])
 
     # initializing C state index array
     for i in range(len(lis)):
-        ghmmwrapper.int_array_setitem(trans_id, i, lis[i])
+        wrapper.int_array_setitem(trans_id, i, lis[i])
     return [len(lis), trans_id, probsarray]
 
 
@@ -203,17 +199,17 @@ def extract_in_cos(transmat, cos, state):
 
 
 
-    trans_id = ghmmwrapper.int_array_alloc(len(lis))
-    probsarray = ghmmwrapper.double_matrix_alloc(cos, len(lis)) # C-function
+    trans_id = wrapper.int_array_alloc(len(lis))
+    probsarray = wrapper.double_matrix_alloc(cos, len(lis)) # C-function
 
     # creating list with positive probabilities
     for k in range(cos):
         for j in range(len(lis)):
-            ghmmwrapper.double_matrix_setitem(probsarray, k, j, transmat[k][lis[j]][state])
+            wrapper.double_matrix_setitem(probsarray, k, j, transmat[k][lis[j]][state])
 
     # initializing C state index array
     for i in range(len(lis)):
-        ghmmwrapper.int_array_setitem(trans_id, i, lis[i])
+        wrapper.int_array_setitem(trans_id, i, lis[i])
     return [len(lis), trans_id, probsarray]
 
 
@@ -235,14 +231,14 @@ class twodim_double_array:
         """
         defines twodim_double_array[index[0],index[1]]
         """
-        return ghmmwrapper.double_matrix_getitem(self.array, index[0], index[1])
+        return wrapper.double_matrix_getitem(self.array, index[0], index[1])
 
     def __setitem__(self, index, value):
         """
         defines twodim_double_array[index[0],index[1]]
         """
         if len(index) == 2:
-            ghmmwrapper.set_2d_arrayd(self.array, index[0], index[1], value)
+            wrapper.set_2d_arrayd(self.array, index[0], index[1], value)
 
     def __str__(self):
         """
@@ -278,11 +274,11 @@ class twodim_double_array:
 
 #     def __getitem__(self,index):
 #         """defines double_array[index] """
-#         return ghmmwrapper.get_arrayd(self.array,index)
+#         return wrapper.get_arrayd(self.array,index)
 
 #     def __setitem__(self,index,value):
 #         """ double_array[index] = value """
-#         ghmmwrapper.set_arrayd(self.array,index,value)
+#         wrapper.set_arrayd(self.array,index,value)
 
 #     def __str__(self):
 #         """defines string representation"""

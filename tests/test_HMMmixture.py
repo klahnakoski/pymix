@@ -37,7 +37,7 @@
 
 import unittest
 
-from numpy import numarray
+from numpy import ndarray
 
 from pymix.vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 from pymix import mixtureHMM
@@ -46,7 +46,7 @@ from pymix.distributions.normal import NormalDistribution
 from pymix.distributions.product import ProductDistribution
 from pymix.models.mixture import MixtureModel
 from pymix.util.alphabet import Alphabet
-from vendor.ghmm.ghmm import SequenceSet
+from pymix.vendor.ghmm.ghmm import SequenceSet
 
 
 class HMMTests(FuzzyTestCase):
@@ -142,10 +142,10 @@ class HMMTests(FuzzyTestCase):
         data.internalInit(self.m)
 
         f0 = data.getInternalFeature(0)
-        self.assertEqual(isinstance(f0, numarray.numarraycore.NumArray), True)
+        self.assertEqual(isinstance(f0, ndarray), True)
 
         f1 = data.getInternalFeature(1)
-        self.assertEqual(isinstance(f1, numarray.numarraycore.NumArray), True)
+        self.assertEqual(isinstance(f1, ndarray), True)
 
         f2 = data.getInternalFeature(2)
         self.assertEqual(isinstance(f2, SequenceSet), True)
