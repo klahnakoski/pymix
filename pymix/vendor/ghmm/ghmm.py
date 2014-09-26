@@ -142,15 +142,15 @@ fmt = logging.Formatter("%(name)s %(filename)s:%(lineno)d - %(message)s")
 hdlr.setFormatter(fmt)
 
 # adding handler to logger object
-log.addHandler(hdlr)
+Log.addHandler(hdlr)
 
 # Set the minimal severity of a message to be shown. The levels in
 # increasing severity are: DEBUG, INFO, WARNING, ERROR, CRITICAL
 
-log.setLevel(logging.WARNING)
-log.info(" I'm the ghmm in " + __file__)
+Log.setLevel(logging.WARNING)
+Log.info(" I'm the ghmm in " + __file__)
 
-c_log = [log.critical, log.error, log.warning, log.info, Log.note]
+c_log = [Log.critical, Log.error, Log.warning, Log.info, Log.note]
 
 
 def logwrapper(level, message):
@@ -248,31 +248,7 @@ class ParseFileError(GHMMError):
     def __str__(self):
         return repr(self.message)
 
-#-------------------------------------------------------------------------------
-#- constants -------------------------------------------------------------------
-kNotSpecified = wrapper.kNotSpecified
-kLeftRight = wrapper.kLeftRight
-kSilentStates = wrapper.kSilentStates
-kTiedEmissions = wrapper.kTiedEmissions
-kHigherOrderEmissions = wrapper.kHigherOrderEmissions
-kBackgroundDistributions = wrapper.kBackgroundDistributions
-kLabeledStates = wrapper.kLabeledStates
-kTransitionClasses = wrapper.kTransitionClasses
-kDiscreteHMM = wrapper.kDiscreteHMM
-kContinuousHMM = wrapper.kContinuousHMM
-kPairHMM = wrapper.kPairHMM
-types = {
-    kLeftRight: 'kLeftRight',
-    kSilentStates: 'kSilentStates',
-    kTiedEmissions: 'kTiedEmissions',
-    kHigherOrderEmissions: 'kHigherOrderEmissions',
-    kBackgroundDistributions: 'kBackgroundDistributions',
-    kLabeledStates: 'kLabeledStates',
-    kTransitionClasses: 'kTransitionClasses',
-    kDiscreteHMM: 'kDiscreteHMM',
-    kContinuousHMM: 'kContinuousHMM',
-    kPairHMM: 'kPairHMM',
-}
+
 #-------------------------------------------------------------------------------
 #- EmissionDomain and derived  -------------------------------------------------
 class EmissionDomain(object):
@@ -397,7 +373,7 @@ class Alphabet(EmissionDomain):
     def size(self):
         """ @deprecated use len() instead
         """
-        log.warning("Warning: The use of .size() is deprecated. Use len() instead.")
+        Log.warning("Warning: The use of .size() is deprecated. Use len() instead.")
         return len(self.listOfCharacters)
 
     def internal(self, emission):
@@ -1307,7 +1283,7 @@ class HMMOpenFactory(HMMFactory):
 
         if not filetype:
             if self.defaultFileType:
-                log.warning("HMMOpenHMMER, HMMOpenSMO and HMMOpenXML are deprecated. "
+                Log.warning("HMMOpenHMMER, HMMOpenSMO and HMMOpenXML are deprecated. "
                             + "Use HMMOpen and the filetype parameter if needed.")
                 filetype = self.defaultFileType
             else:
@@ -1535,7 +1511,7 @@ class HMMOpenFactory(HMMFactory):
             m = stat.match(line)
             if m:
                 name = m.group(1)
-                log.info("Reading model " + str(name) + ".")
+                Log.info("Reading model " + str(name) + ".")
 
             match = res.match(line)
             if match:
@@ -1576,13 +1552,13 @@ class HMMOpenFactory(HMMFactory):
 
                 if hmm != None:
                     if emission_domain != None and emission_domain != 'int':
-                        log.error("HMMOpenFactory:determineHMMClass: both HMM and SHMM? " + str(emission_domain))
+                        Log.error("HMMOpenFactory:determineHMMClass: both HMM and SHMM? " + str(emission_domain))
                     else:
                         emission_domain = 'int'
 
                 if shmm != None:
                     if emission_domain != None and emission_domain != 'double':
-                        log.error("HMMOpenFactory:determineHMMClass: both HMM and SHMM? " + str(emission_domain))
+                        Log.error("HMMOpenFactory:determineHMMClass: both HMM and SHMM? " + str(emission_domain))
                     else:
                         emission_domain = 'double'
 
@@ -2341,7 +2317,7 @@ class HMM(object):
 
         error, unused = self.cmodel.forward(seq, t, calpha, cscale)
         if error == -1:
-            log.error("forward finished with -1: EmissionSequence cannot be build.")
+            Log.error("forward finished with -1: EmissionSequence cannot be build.")
 
         # translate alpha / scale to python lists
         pyscale = wrapper.double_array2list(cscale, t)
@@ -2371,7 +2347,7 @@ class HMM(object):
 
         error = self.cmodel.backward(seq, t, cbeta, cscale)
         if error == -1:
-            log.error("backward finished with -1: EmissionSequence cannot be build.")
+            Log.error("backward finished with -1: EmissionSequence cannot be build.")
 
         pybeta = ghmmhelper.double_matrix2list(cbeta, t, self.N)
 
@@ -2558,7 +2534,7 @@ class HMM(object):
 
         i_error = self.cmodel.normalize()
         if i_error == -1:
-            log.error("normalization failed")
+            Log.error("normalization failed")
 
     def randomize(self, noiseLevel):
         """ to be defined in derived class """
@@ -2600,7 +2576,7 @@ class HMM(object):
 def HMMwriteList(fileName, hmmList, fileType=GHMM_FILETYPE_XML):
     if fileType == GHMM_FILETYPE_XML:
         if os.path.exists(fileName):
-            log.warning("HMMwriteList: File " + str(fileName) + " already exists. Model will be overwritted.")
+            Log.warning("HMMwriteList: File " + str(fileName) + " already exists. Model will be overwritted.")
         models = wrapper.cmodel_ptr_array_alloc(len(hmmList))
         for i, model in enumerate(hmmList):
             wrapper.cmodel_ptr_array_setitem(models, i, model.cmodel)
@@ -2737,7 +2713,7 @@ class DiscreteEmissionHMM(HMM):
             if durationlist[i] > 1:
                 error = self.cmodel.duration_apply(i, durationlist[i])
                 if error:
-                    log.error("durations not applied")
+                    Log.error("durations not applied")
                 else:
                     self.N = self.cmodel.N
 
@@ -2799,7 +2775,7 @@ class DiscreteEmissionHMM(HMM):
 
         error, logp = self.cmodel.backward_termination(seq, t, cbeta[0], cscale)
         if error == -1:
-            log.error("backward finished with -1: EmissionSequence cannot be build.")
+            Log.error("backward finished with -1: EmissionSequence cannot be build.")
 
         # deallocation
         wrapper.free(cscale)
@@ -2909,7 +2885,7 @@ class DiscreteEmissionHMM(HMM):
 
         wrapper.free(cweights)
         if result:
-            log.error("applyBackground failed.")
+            Log.error("applyBackground failed.")
 
 
     def setBackgrounds(self, backgroundObject, stateBackground):
@@ -3322,7 +3298,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         tmp_model = self.cmodel.label_gradient_descent(emissionSequences.cseq, eta, steps)
         if tmp_model is None:
-            log.error("Gradient descent finished not successfully.")
+            Log.error("Gradient descent finished not successfully.")
             return False
         else:
             self.cmodel = tmp_model
@@ -3354,7 +3330,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
                 likelihood = self.cmodel.label_logp(seq, labels, tmp)
                 likelihoodList.append(likelihood)
             except Exception, e:
-                log.warning("forward returned -1: Sequence" + str(i) + "cannot be build.", e)
+                Log.warning("forward returned -1: Sequence" + str(i) + "cannot be build.", e)
                 likelihoodList.append(-float('Inf'))
 
         return likelihoodList
@@ -3382,7 +3358,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         error, logp = self.cmodel.label_forward(seq, label, t, calpha, cscale)
         if error == -1:
-            log.error("Forward finished with -1: Sequence cannot be build.")
+            Log.error("Forward finished with -1: Sequence cannot be build.")
 
         # translate alpha / scale to python lists
         pyscale = wrapper.double_array2list(cscale, t)
@@ -3416,7 +3392,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         error, logp = self.cmodel.label_backward(seq, label, t, cbeta, cscale)
         if error == -1:
-            log.error("backward finished with -1: EmissionSequence cannot be build.")
+            Log.error("backward finished with -1: EmissionSequence cannot be build.")
 
         pybeta = ghmmhelper.double_matrix2list(cbeta, t, self.cmodel.N)
 
@@ -3639,7 +3615,7 @@ class GaussianEmissionHMM(HMM):
 
         error, logp = self.cmodel.forward(seq, t, None, calpha, cscale)
         if error == -1:
-            log.error("Forward finished with -1: Sequence " + str(seq) + " cannot be build.")
+            Log.error("Forward finished with -1: Sequence " + str(seq) + " cannot be build.")
 
         # translate alpha / scale to python lists
         pyscale = wrapper.double_array2list(cscale, t) # XXX return Python2.5 arrays???
@@ -3669,7 +3645,7 @@ class GaussianEmissionHMM(HMM):
 
         error = self.cmodel.backward(seq, t, None, cbeta, cscale)
         if error == -1:
-            log.error("backward finished with -1: EmissionSequence cannot be build.")
+            Log.error("backward finished with -1: EmissionSequence cannot be build.")
 
         pybeta = ghmmhelper.double_matrix2list(cbeta, t, self.cmodel.N)
 
@@ -4511,7 +4487,7 @@ class DiscretePairDistribution(DiscreteDistribution):
                 counts[self.getPairIndex(charX, charY)] += 1
             return counts
         elif self.offsetX == 0 and self.offsetY == 0:
-            log.error("Silent states (offsetX==0 and offsetY==0) not supported")
+            Log.error("Silent states (offsetX==0 and offsetY==0) not supported")
             return counts
         elif self.offsetX == 0:
             charX = "-"
