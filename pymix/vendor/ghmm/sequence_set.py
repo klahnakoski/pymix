@@ -1,8 +1,9 @@
 import os
 from string import join
 from util.ghmm import wrapper
-from util.ghmm.dseq import ghmm_dseq
-from util.ghmm.wrapper import ghmm_cseq
+from util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
+from util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
+from util.ghmm.wrapper import double_matrix_getitem
 from vendor.ghmm import ghmmhelper
 from vendor.ghmm.emission_domain import LabelDomain
 from vendor.pyLibrary.env.logs import Log
@@ -37,16 +38,16 @@ class SequenceSet(object):
             self.allocSingleSeq = wrapper.int_array_alloc
             #obsolete
             if wrapper.ASCI_SEQ_FILE:
-                self.seq_read = wrapper.ghmm_dseq_read
+                self.seq_read = ghmm_dseq_read
             self.seq_ptr_array_getitem = wrapper.dseq_ptr_array_getitem
             self.sequence_cmatrix = ghmmhelper.list2int_matrix
         elif self.emissionDomain.CDataType == "double":
             # necessary C functions for accessing the ghmm_cseq struct
-            self.sequenceAllocationFunction = wrapper.ghmm_cseq
+            self.sequenceAllocationFunction = ghmm_cseq
             self.allocSingleSeq = wrapper.double_array_alloc
             #obsolete
             if wrapper.ASCI_SEQ_FILE:
-                self.seq_read = wrapper.ghmm_cseq_read
+                self.seq_read = ghmm_cseq_read
             self.seq_ptr_array_getitem = wrapper.cseq_ptr_array_getitem
             self.sequence_cmatrix = ghmmhelper.list2double_matrix
         else:
@@ -73,16 +74,16 @@ class SequenceSet(object):
                 else:
                     tmp = self.seq_read(sequenceSetInput)
                     if len(tmp) > 0:
-                        self.cseq = wrapper.ghmm_cseq(tmp[0])
+                        self.cseq = ghmm_cseq(tmp[0])
                     else:
                         Log.error('File ' + str(sequenceSetInput) + ' not valid.')
 
         elif isinstance(sequenceSetInput, list):
             internalInput = [self.emissionDomain.internalSequence(seq) for seq in sequenceSetInput]
             (seq, lengths) = self.sequence_cmatrix(internalInput)
-            lens = wrapper.list2int_array(lengths)
+            # lens = wrapper.list2int_array(lengths)
 
-            self.cseq = self.sequenceAllocationFunction(seq, lens, len(sequenceSetInput))
+            self.cseq = self.sequenceAllocationFunction(seq)
 
             if isinstance(labelInput, list) and isinstance(labelDomain, LabelDomain):
                 assert len(sequenceSetInput) == len(labelInput), "no. of sequences and labels do not match."
@@ -94,7 +95,7 @@ class SequenceSet(object):
                 self.cseq.init_labels(label, lens)
 
         #internal use
-        elif isinstance(sequenceSetInput, ghmm_dseq) or isinstance(sequenceSetInput, wrapper.ghmm_cseq):
+        elif isinstance(sequenceSetInput, ghmm_dseq) or isinstance(sequenceSetInput, ghmm_cseq):
             Log.note("SequenceSet.__init__()" + str(sequenceSetInput))
             self.cseq = sequenceSetInput
             if labelDomain is not None:
@@ -139,15 +140,15 @@ class SequenceSet(object):
             strout.append(", weight " + str(seq.getWeight(i)) + ":\n")
             for j in range(seq.getLength(i)):
                 if self.emissionDomain.CDataType == "int":
-                    strout.append(str(self.emissionDomain.external(( wrapper.int_matrix_getitem(self.cseq.seq, i, j) ))))
+                    strout.append(str(self.emissionDomain.external((self.cseq.seq[i][j]))))
                 elif self.emissionDomain.CDataType == "double":
-                    strout.append(str(self.emissionDomain.external(( wrapper.double_matrix_getitem(self.cseq.seq, i, j) ))) + " ")
+                    strout.append(str(self.emissionDomain.external((double_matrix_getitem(self.cseq.seq, i, j) ))) + " ")
 
             # checking for labels
             if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:
                 strout.append("\nState labels:\n")
                 for j in range(seq.getLabelsLength(i)):
-                    strout.append(str(self.labelDomain.external(wrapper.int_matrix_getitem(seq.state_labels, i, j))) + ", ")
+                    strout.append(str(self.labelDomain.external(seq.state_labels[i][j])) + ", ")
 
         return join(strout, '')
 
@@ -232,7 +233,7 @@ class SequenceSet(object):
         label = []
         if self.cseq.seq_number > index and self.cseq.state_labels != None:
             for j in range(self.cseq.getLabelsLength(index)):
-                label.append(self.labelDomain.external(wrapper.int_matrix_getitem(self.cseq.state_labels, index, j)))
+                label.append(self.labelDomain.external(self.cseq.state_labels[index][j]))
             return label
         else:
             Log.error(str(0) + " is out of bounds, only " + str(self.cseq.seq_number) + "labels")
@@ -263,7 +264,7 @@ class SequenceSet(object):
         indices in 'seqIndixes'.
         """
         seqNumber = len(seqIndixes)
-        seq = self.sequenceAllocationFunction(seqNumber)
+        seq = self.sequenceAllocationFunction([[]]*seqNumber)
 
         # checking for state labels in the source C sequence struct
         if self.emissionDomain.CDataType == "int" and self.cseq.state_labels is not None:
@@ -272,9 +273,9 @@ class SequenceSet(object):
             seq.calloc_state_labels()
 
         for i, seq_nr in enumerate(seqIndixes):
-            len_i = self.cseq.getLength(seq_nr)
-            seq.setSequence(i, self.cseq.getSequence(seq_nr))
-            seq.setLength(i, len_i)
+            # len_i = self.cseq.getLength(seq_nr)
+            seq.seq[i] = self.cseq.getSequence(seq_nr)
+            seq.seq_len[i] = self.cseq.getLength(seq_nr)
             seq.setWeight(i, self.cseq.getWeight(i))
 
             # setting labels if appropriate
@@ -350,7 +351,7 @@ class EmissionSequence(object):
             self.sequence_carray = wrapper.list2int_array
         elif self.emissionDomain.CDataType == "double":
             # necessary C functions for accessing the ghmm_cseq struct
-            self.sequenceAllocationFunction = wrapper.ghmm_cseq
+            self.sequenceAllocationFunction = ghmm_cseq
             self.allocSingleSeq = wrapper.double_array_alloc
             self.seq_ptr_array_getitem = wrapper.cseq_ptr_array_getitem
             self.sequence_carray = wrapper.list2double_array
@@ -378,8 +379,8 @@ class EmissionSequence(object):
         #create a ghmm_dseq with state_labels, if the appropiate parameters are set
         elif isinstance(sequenceInput, list):
             internalInput = self.emissionDomain.internalSequence(sequenceInput)
-            seq = self.sequence_carray(internalInput)
-            self.cseq = self.sequenceAllocationFunction([seq])
+            seq = wrapper.list2int_array(internalInput)
+            self.cseq = self.sequenceAllocationFunction(seq)
 
             if labelInput is not None and labelDomain is not None:
                 assert len(sequenceInput) == len(labelInput), "Length of the sequence and labels don't match."
@@ -465,7 +466,7 @@ class EmissionSequence(object):
         """
         l_state = []
         for j in range(wrapper.int_array_getitem(self.cseq.states_len, 0)):
-            l_state.append(wrapper.int_matrix_getitem(self.cseq.states, 0, j))
+            l_state.append(self.cseq.states[0][j])
 
         return l_state
 
@@ -510,7 +511,7 @@ class EmissionSequence(object):
         if self.emissionDomain.CDataType == "int" and self.cseq.state_labels != None:
             strout.append("\nState labels:\n")
             for j in range(seq.getLabelsLength(0)):
-                strout.append(str(self.labelDomain.external(wrapper.int_matrix_getitem(seq.state_labels, 0, j))) + ", ")
+                strout.append(str(self.labelDomain.external(seq.state_labels[0][j])) + ", ")
 
         return join(strout, '')
 

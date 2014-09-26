@@ -54,9 +54,6 @@ def ARRAY_MALLOC(n):
     return [0]*n
 
 
-def ghmm_dseq_read():
-    pass
-
 def set_pylogging(logwrapper):
     pass
 
@@ -72,9 +69,6 @@ def ghmm_rng_init():
 def time_seed():
     pass
 
-
-def ghmm_cseq_read(filename):
-    pass
 
 def ghmm_xmlfile_validate(filename):
     pass
@@ -98,7 +92,7 @@ def double_array_alloc(length):
     return [0.0] * length
 
 
-def double_array2list(array, length):
+def double_array2list(array, index):
     return array
 
 
@@ -109,7 +103,7 @@ def double_matrix2list(array, length, N):
 
 
 def list2double_array(array, length=None):
-    return array
+    return [array]
 
 
 def double_matrix2list(array, a, b):
@@ -147,7 +141,7 @@ def double_array_getitem(array, index):
 
 
 def list2int_array(array):
-    return array
+    return [array]
 
 
 def dseq_ptr_array_getitem(array, index):
@@ -386,50 +380,6 @@ class ghmm_dpseq():
         ## length of the sequence *
         self.length = 0
 
-
-class ghmm_cseq():
-    """
-    Sequence structure for double sequences.
-
-    Contains an array of sequences and corresponding
-    data like sequnce label, sequence weight, etc. Sequences may have
-    different length. Multi-dimension sequences are linearized.
-    """
-
-    def __init__(self, seq):
-
-        # sequence array. sequence[i][j] = j-th symbol of i-th seq.
-        # sequence[i][D * j] = first dimension of j-th observation of i-th sequence
-        self.seq = seq # int **
-
-        # matrix of state ids, can be used to save the viterbi path during sequence generation.
-        # ATTENTION: is NOT allocated by ghmm_dseq_calloc
-        self.states = double_array_alloc(len(seq))  # int **
-
-        # array of sequence length
-        self.seq_len = [len(s) for s in seq]  # int*
-
-        # array of state path lengths
-        self.states_len = double_array_alloc(len(seq))
-
-        ## array of sequence IDs
-        self.seq_id = double_array_alloc(len(seq)) # double *
-        # positive! sequence weights.  default is 1 = no weight
-        self.seq_w = [1.0]*len(seq) # double*
-        ## total number of sequences
-        self.seq_number = len(seq)
-        ## reserved space for sequences is always >= seq_number
-        self.capacity = 0
-        ## sum of sequence weights
-        self.total_w = 0
-
-        ## matrix of state labels corresponding to seq
-        self.state_labels = None # int **
-        ## number of labels for each sequence
-        self.state_labels_len = None # int*
-
-        # flags (internal)
-        self.flags = 0 # int
 
 
 

@@ -121,17 +121,18 @@ from textwrap import fill
 
 from util.ghmm import types
 from util.ghmm import wrapper
+from util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
 from util.ghmm.dmodel import ghmm_dmodel
-from util.ghmm.dseq import ghmm_dseq
+from util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
 from util.ghmm.dstate import ghmm_dstate
 from util.ghmm.types import kSilentStates, kHigherOrderEmissions, kTiedEmissions, kBackgroundDistributions, kLabeledStates, kNotSpecified, kMultivariate, kContinuousHMM, kDiscreteHMM, kTransitionClasses, kPairHMM
-from util.ghmm.wrapper import ARRAY_MALLOC, ghmm_cseq
+from util.ghmm.wrapper import ARRAY_MALLOC
 from vendor.ghmm import ghmmhelper
 import modhmmer
 from vendor.ghmm.class_change import class_change_context
 from vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, DiscreteDistribution, GaussianMixtureDistribution, GaussianDistribution
 from vendor.ghmm.emission_domain import LabelDomain, Float, Alphabet, IntegerRange, AminoAcids, DNA
-from vendor.ghmm.sequence_set import SequenceSet, SequenceSetSubset
+from vendor.ghmm.sequence_set import SequenceSet, EmissionSequence
 from vendor.pyLibrary.env.logs import Log
 
 
@@ -155,11 +156,11 @@ def SequenceSetOpen(emissionDomain, fileName):
         Log.error('File ' + str(fileName) + ' not found.')
 
     if emissionDomain.CDataType == "int":
-        seq_read_func_ptr = wrapper.ghmm_dseq_read
+        seq_read_func_ptr = ghmm_dseq_read
         seq_ctor_func_ptr = ghmm_dseq
     elif emissionDomain.CDataType == "double":
-        seq_read_func_ptr = wrapper.ghmm_cseq_read
-        seq_ctor_func_ptr = wrapper.ghmm_cseq
+        seq_read_func_ptr = ghmm_cseq_read
+        seq_ctor_func_ptr = ghmm_cseq
     else:
         Log.error("Invalid c data type " + str(emissionDomain.CDataType))
 
@@ -541,6 +542,7 @@ class HMMFromMatricesFactory(HMMFactory):
             if isinstance(distribution, DiscreteDistribution):
                 # HMM has discrete emissions over finite alphabet: DiscreteEmissionHMM
                 cmodel = ghmm_dmodel(len(A), len(emissionDomain))
+                cmodel.model_type |= kDiscreteHMM
 
                 # assign model identifier (if specified)
                 if hmmName != None:
@@ -572,7 +574,7 @@ class HMMFromMatricesFactory(HMMFactory):
                                                      " emission parameters for state " +
                                                      str(i) + " is invalid. State order can not be determined.")
 
-                    state.b = wrapper.list2double_array(B[i])
+                    state.b = list(B[i])
                     state.pi = pi[i]
 
                     if sum(B[i]) == 0.0:
@@ -593,7 +595,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 cmodel.s = states
                 if sum(silent_states) > 0:
                     cmodel.model_type |= kSilentStates
-                    cmodel.silent = wrapper.list2int_array(silent_states)
+                    cmodel.silent = list(silent_states)
 
                 cmodel.maxorder = max(tmpOrder)
                 if cmodel.maxorder > 0:
@@ -1064,7 +1066,7 @@ class HMM(object):
         """
         # XXX TODO for silent states things are more complicated -> to be done
         if self.hasFlags(kSilentStates):
-            Log.error("Models with silent states not yet supported.")
+            raise NotImplementedError("Models with silent states not yet supported.")
 
         # calculate complete posterior matrix
         post = self.posterior(sequence)
@@ -1129,7 +1131,7 @@ class HMM(object):
         """
         # XXX TODO for silent states things are more complicated -> to be done
         if self.hasFlags(kSilentStates):
-            Log.error("Models with silent states not yet supported.")
+            raise NotImplementedError("Models with silent states not yet supported.")
 
         # checking function arguments
         if not 0 <= time < len(sequence):
@@ -1148,7 +1150,7 @@ class HMM(object):
         """
         # XXX TODO for silent states things are more complicated -> to be done
         if self.hasFlags(kSilentStates):
-            Log.error("Models with silent states not yet supported.")
+            raise NotImplementedError("Models with silent states not yet supported.")
 
         if not isinstance(sequence, EmissionSequence):
             Log.error("Input to posterior must be EmissionSequence object")
@@ -1189,16 +1191,16 @@ class HMM(object):
 
     # The functions for model training are defined in the derived classes.
     def baumWelch(self, trainingSequences, nrSteps=wrapper.MAX_ITER_BW, loglikelihoodCutoff=wrapper.EPS_ITER_BW):
-        Log.error("to be defined in derived classes")
+        raise NotImplementedError("to be defined in derived classes")
 
     def baumWelchSetup(self, trainingSequences, nrSteps):
-        Log.error("to be defined in derived classes")
+        raise NotImplementedError("to be defined in derived classes")
 
     def baumWelchStep(self, nrSteps, loglikelihoodCutoff):
-        Log.error("to be defined in derived classes")
+        raise NotImplementedError("to be defined in derived classes")
 
     def baumWelchDelete(self):
-        Log.error("to be defined in derived classes")
+        raise NotImplementedError("to be defined in derived classes")
 
     # extern double ghmm_c_prob_distance(smodel *cm0, smodel *cm, int maxT, int symmetric, int verbose);
     def distance(self, model, seqLength):
@@ -1459,9 +1461,13 @@ class HMM(object):
         strout = []
         if model_type == kNotSpecified:
             return 'kNotSpecified'
-        for k, v in types.items():
+        for k, v in types.__dict__.items():
+            if v==-1:
+                continue
+            if not isinstance(v, int):
+                continue
             if model_type & v:
-                strout.append(v)
+                strout.append(k)
         return ' '.join(strout)
 
     def updateName2id(self):
@@ -1659,11 +1665,11 @@ class DiscreteEmissionHMM(HMM):
             self.setFlags(kSilentStates)
             slist = [0] * self.N
             slist[i] = 1
-            self.cmodel.silent = wrapper.list2int_array(slist)
+            self.cmodel.silent = slist
 
         #set the emission probabilities
         wrapper.free(state.b)
-        state.b = wrapper.list2double_array(distributionParameters)
+        state.b = list(distributionParameters)
 
 
     # XXX Change name?
@@ -1706,7 +1712,7 @@ class DiscreteEmissionHMM(HMM):
             Log.error("EmissionSequence or SequenceSet required, got " + str(trainingSequences.__class__.__name__))
 
         if self.hasFlags(kSilentStates):
-            Log.error("Sorry, training of models containing silent states not yet supported.")
+            raise NotImplementedError("Sorry, training of models containing silent states not yet supported.")
 
         self.cmodel.baum_welch_nstep(trainingSequences.cseq, nrSteps, loglikelihoodCutoff)
 

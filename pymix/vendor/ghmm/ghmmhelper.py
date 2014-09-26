@@ -51,14 +51,8 @@ def list2double_matrix(matrix):
 
     The number of elements in each column can vary.
     """
-    cols = len(matrix)
-
-    seq = wrapper.double_matrix_alloc_row(cols)
-    col_len = []
-    for i in range(cols):
-        col = wrapper.list2double_array(matrix[i])
-        wrapper.double_matrix_set_col(seq, i, col)
-        col_len.append(len(matrix[i]))
+    seq = matrix
+    col_len = [len(s) for s in seq]
 
     return seq, col_len
 
@@ -69,15 +63,8 @@ def list2int_matrix(matrix):
 
     The number of elements in each column can vary.
     """
-    rows = len(matrix)
-
-    seq = wrapper.int_matrix_alloc_row(rows)
-    col_len = []
-    for i in range(rows):
-        col = wrapper.list2int_array(matrix[i])
-        wrapper.int_matrix_set_col(seq, i, col)
-        col_len.append(len(matrix[i]))
-
+    seq = matrix
+    col_len = [len(r) for r in seq]
     return seq, col_len
 
 

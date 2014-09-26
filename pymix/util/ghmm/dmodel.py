@@ -141,16 +141,15 @@ class ghmm_dmodel():
         seq_number,
         Tmax
     ):
-    #define CUR_PROC "generate_sequences"
 
-        sq = ghmm_dseq(seq_number)
-        len = global_len
+
+        sq = ghmm_dseq([[]] * seq_number)
         n = 0
 
         # A specific length of the sequences isn't given. As a model should have
         # an end state, the konstant MAX_SEQ_LEN is used. */
-        if len <= 0:
-            len = GHMM_MAX_SEQ_LEN
+        if global_len <= 0:
+            global_len = GHMM_MAX_SEQ_LEN
 
         if seed > 0:
             GHMM_RNG_SET(RNG, seed)
@@ -160,14 +159,14 @@ class ghmm_dmodel():
         self.emission_history = 0
 
         while n < seq_number:
-            sq.seq[n] = double_array_alloc(( len))
+            sq.seq[n] = double_array_alloc(( global_len))
 
             # for silent models we have to allocate for the maximal possible number
             # of lables and states */
             if self.model_type & kSilentStates:
-                sq.states[n] = double_array_alloc(( len * self.N))
+                sq.states[n] = double_array_alloc(global_len * self.N)
             else:
-                sq.states[n] = double_array_alloc(( len))
+                sq.states[n] = double_array_alloc(global_len)
 
             pos = label_pos = 0
 
@@ -181,7 +180,7 @@ class ghmm_dmodel():
             else:
                 state = self.N
 
-            while pos < len:
+            while pos < global_len:
                 # save the state path and label */
                 sq.states[n][label_pos] = state
                 label_pos += 1
@@ -231,7 +230,7 @@ class ghmm_dmodel():
 
             # realocate state path and label sequence to actual size */
             if self.model_type & kSilentStates:
-                ARRAY_REALLOC(sq.states[n], label_pos)
+                sq.states[n] = ARRAY_REALLOC(label_pos)
 
             sq.seq_len[n] = pos
             sq.states_len[n] = label_pos
@@ -1546,3 +1545,31 @@ class ghmm_dmodel():
     def update_emission_history_front(self, O):
         if self.model_type & kHigherOrderEmissions:
             self.emission_history = pow(self.M, self.maxorder - 1) * O + self.emission_history / self.M
+
+    def getState(self, index):
+        return self.s[index]
+
+    def get_transition(self, i, j):
+        if self.s and self.s[i].out_a and self.s[j].in_a:
+            for out in range(self.s[i].out_states):
+                if self.s[i].out_id[out] == j:
+                    return self.s[i].out_a[out]
+        return 0.0
+
+
+    def set_transition(mo, i, j, prob):
+        if mo.s and mo.s[i].out_a and mo.s[j].in_a:
+            for out in range(mo.s[i].out_states):
+                if mo.s[i].out_id[out] == j:
+                    mo.s[i].out_a[out] = prob
+                    break
+
+            for inn in range(mo.s[j].in_states):
+                if mo.s[j].in_id[inn] == i:
+                    mo.s[j].in_a[inn] = prob
+
+    def setSilent(self, index, value):
+        self.silent[index] = value
+
+    def getSilent(self, index):
+        return self.silent[index]

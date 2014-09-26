@@ -6,17 +6,17 @@ class ghmm_dstate():
         # Initial probability */
         self.pi = 0.0 #double
         # Output probability */
-        self.b = 0.0 #double*
+        self.b = [0.0] #double*
 
         # IDs of the following states */
-        self.out_id = 0 #int*
+        self.out_id = [0] #int*
         # IDs of the previous states */
-        self.in_id = 0 #int*
+        self.in_id = [0] #int*
 
         # transition probabilities to successor states. */
-        self.out_a = 0.0 #double*
+        self.out_a = [0.0] #double*
         # transition probabilities from predecessor states. */
-        self.in_a = 0.0 #double*
+        self.in_a = [0.0] #double*
 
         # Number of successor states */
         self.out_states = 0 #int
