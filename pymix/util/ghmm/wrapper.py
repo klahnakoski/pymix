@@ -344,6 +344,8 @@ class ghmm_alphabet:
     def setSymbol(self, index, value):
         self.symbols[index] = str(value)
 
+    def getSymbol(self, index):
+        return self.symbols[index]
 # class ghmm_dpmodel_class_change_context:
 #
 # def __init(self):
@@ -394,31 +396,41 @@ class ghmm_cseq():
     different length. Multi-dimension sequences are linearized.
     """
 
-    def __init__(self):
+    def __init__(self, seq):
+
         # sequence array. sequence[i][j] = j-th symbol of i-th seq.
         # sequence[i][D * j] = first dimension of j-th observation of i-th sequence
-        self.seq = None #double**
+        self.seq = seq # int **
+
+        # matrix of state ids, can be used to save the viterbi path during sequence generation.
+        # ATTENTION: is NOT allocated by ghmm_dseq_calloc
+        self.states = double_array_alloc(len(seq))  # int **
+
         # array of sequence length
-        self.seq_len = 0 #int*
-        # array of sequence IDs
-        self.seq_id = 0 #double*
+        self.seq_len = [len(s) for s in seq]  # int*
+
+        # array of state path lengths
+        self.states_len = double_array_alloc(len(seq))
+
+        ## array of sequence IDs
+        self.seq_id = double_array_alloc(len(seq)) # double *
         # positive! sequence weights.  default is 1 = no weight
-        self.seq_w = [] #double*
-        # total number of sequences
-        self.seq_number = 0 #long
-        # reserved space for sequences is always >= seq_number
-        self.capacity = 0 #long
-        # sum of sequence weights
-        self.total_w = 0.0 #double
-        # total number of dimensions
-        self.dim = 0 #int
+        self.seq_w = [1.0]*len(seq) # double*
+        ## total number of sequences
+        self.seq_number = len(seq)
+        ## reserved space for sequences is always >= seq_number
+        self.capacity = 0
+        ## sum of sequence weights
+        self.total_w = 0
+
+        ## matrix of state labels corresponding to seq
+        self.state_labels = None # int **
+        ## number of labels for each sequence
+        self.state_labels_len = None # int*
 
         # flags (internal)
-        self.flags = 0 #int
+        self.flags = 0 # int
 
-    def init_labels(self, labels, length):
-        self.state_labels = labels
-        self.state_labels_len = length
 
 
 

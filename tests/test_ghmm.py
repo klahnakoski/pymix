@@ -60,8 +60,8 @@ from util.ghmm.types import kSilentStates, kDiscreteHMM
 from util.ghmm.wrapper import ASCI_SEQ_FILE, uniform, normal_right, normal_left, int_array_getitem, normal, SMO_FILE_SUPPORT, SEQ_LABEL_FIELD
 from vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, GaussianMixtureDistribution, GaussianDistribution, DiscreteDistribution
 from vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphabet, DNA
-from vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution, ComplexEmissionSequence
-from vendor.ghmm.sequence_set import EmissionSequence, SequenceSet
+from vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
+from vendor.ghmm.sequence_set import EmissionSequence, SequenceSet, ComplexEmissionSequence
 from vendor.pyLibrary.env.logs import Log
 
 
@@ -100,7 +100,7 @@ class AlphabetTests(unittest.TestCase):
         # remove this assertion because -1 now represents a gap '-'
         # self.assertRaises(KeyError, self.dnaAlphabet.external, -1)
 
-        self.assertRaises(KeyError, self.dnaAlphabet.external, len(self.dna) + 1)
+        self.assertRaises(Exception, self.dnaAlphabet.external, len(self.dna) + 1)
 
 
     def testinternalexternalSequence(self):
@@ -128,7 +128,7 @@ class AlphabetTests(unittest.TestCase):
         self.assertEqual(self.dnaAlphabet == self.binaryAlphabet, False)
 
     def testToCStruct(self):
-        self.c = self.dnaAlphabet.toCstruct();
+        self.c = self.dnaAlphabet.toCstruct()
         self.dna3 = Alphabet(self.c)
         self.assertEqual(self.dna3 == self.dnaAlphabet, True)
 

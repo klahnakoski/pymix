@@ -105,7 +105,7 @@ class Alphabet(EmissionDomain):
         """
         self.index = {}  # Which index belongs to which character
 
-        if type(listOfCharacters) is wrapper.ghmm_alphabet:
+        if isinstance(listOfCharacters, wrapper.ghmm_alphabet):
             self.listOfCharacters = [listOfCharacters.getSymbol(i) for i in range(listOfCharacters.size)]
         else:
             self.listOfCharacters = listOfCharacters

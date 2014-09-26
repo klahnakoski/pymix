@@ -379,7 +379,7 @@ class EmissionSequence(object):
         elif isinstance(sequenceInput, list):
             internalInput = self.emissionDomain.internalSequence(sequenceInput)
             seq = self.sequence_carray(internalInput)
-            self.cseq = self.sequenceAllocationFunction(seq, len(sequenceInput))
+            self.cseq = self.sequenceAllocationFunction([seq])
 
             if labelInput is not None and labelDomain is not None:
                 assert len(sequenceInput) == len(labelInput), "Length of the sequence and labels don't match."

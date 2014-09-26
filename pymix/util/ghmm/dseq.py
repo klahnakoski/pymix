@@ -2,7 +2,7 @@ from util.ghmm.wrapper import ARRAY_CALLOC, double_array_alloc
 
 
 class ghmm_dseq():
-    def __init__(self, seq_number):
+    def __init__(self, seq):
         # sequence array. sequence[i] [j] = j-th symbol of i-th seq.
         self.seq = double_array_alloc(seq_number) #int **
 
