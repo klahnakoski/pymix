@@ -45,7 +45,7 @@ from pymix.distributions.multinomial import MultinomialDistribution
 from pymix.distributions.normal import NormalDistribution
 from pymix.distributions.product import ProductDistribution
 from pymix.models.mixture import MixtureModel
-from pymix.util.alphabet import Alphabet
+from pymix.util.emission_domain import Alphabet
 from pymix.vendor.ghmm.ghmm import SequenceSet
 
 

@@ -63,7 +63,7 @@ from pymix.priors.dirichlet import DirichletPrior
 from pymix.priors.dirichlet_mixture import DirichletMixturePrior
 from pymix.priors.mixture_model import MixtureModelPrior
 from pymix.priors.product import ProductDistributionPrior
-from pymix.util.alphabet import Alphabet
+from pymix.util.emission_domain import Alphabet
 from pymix.util.candidate_group import CandidateGroup
 from pymix.util.constrained_dataset import ConstrainedDataSet
 from pymix.util.dataset import DataSet

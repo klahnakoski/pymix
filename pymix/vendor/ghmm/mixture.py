@@ -35,12 +35,13 @@
 #             last change by $Author: grunau $.
 #
 ################################################################################
-#!/usr/bin/env python2.3
+
 
 from ghmm import *
-import numarray
+import numpy as np
 import math
 import getopt, sys, string
+
 
 def Entropy(prob_dist):
     """ Returns Entropy for the discrete prob. distribution
@@ -55,14 +56,14 @@ def Entropy(prob_dist):
         p = prob_dist[i]
         if p > 0.0:
             result -= p * math.log(p)
-        # p == 0.0 Note: lim_(x->0) x log(x) = 0
+            # p == 0.0 Note: lim_(x->0) x log(x) = 0
     return result
 
 
 def sumlogs(a):
-    """ Given a numarray.array a of log p_i, return log(sum p_i)
+    """ Given a np.array a of log p_i, return log(sum p_i)
 
-    XXX should be coded in C, check whether part of Numarray
+    XXX should be coded in C, check whether part of np
     """
     m = max(a)
     result = 0.0
@@ -78,6 +79,7 @@ def sumlogs(a):
     result += m
     return result
 
+
 def estimate_mixture(models, seqs, max_iter, eps, alpha=None):
     """ Given a Python-list of models and a SequenceSet seqs
     perform an nested EM to estimate maximum-likelihood
@@ -85,13 +87,13 @@ def estimate_mixture(models, seqs, max_iter, eps, alpha=None):
     The iteration stops after max_iter steps or if the
     improvement in log-likelihood is less than eps.
 
-    alpha is a numarray of dimension len(models) containing
+    alpha is a np of dimension len(models) containing
     the mixture coefficients. If alpha is not given, uniform
     values will be chosen.
 
     Result: The models are changed in place. Return value
     is (l, alpha, P) where l is the final log likelihood of
-    seqs under the mixture, alpha is a numarray of
+    seqs under the mixture, alpha is a np of
     dimension len(models) containing the mixture coefficients
     and P is a (|sequences| x |models|)-matrix containing
     P[model j| sequence i]
@@ -101,27 +103,27 @@ def estimate_mixture(models, seqs, max_iter, eps, alpha=None):
     iter = 1
     last_mixture_likelihood = -99999999.99
     # The (nr of seqs x nr of models)-matrix holding the likelihoods
-    l = numarray.zeros((len(seqs), len(models)), numarray.Float)
+    l = np.zeros((len(seqs), len(models)), dtype='Float64')
     if alpha == None: # Uniform alpha
-        logalpha = numarray.ones(len(models), numarray.Float) * \
-                   math.log(1.0/len(models))
+        logalpha = np.ones(len(models), dtype='Float64') * \
+                   math.log(1.0 / len(models))
     else:
-        logalpha = numarray.log(alpha)
-    print logalpha, numarray.exp(logalpha)
+        logalpha = np.log(alpha)
+    print logalpha, np.exp(logalpha)
     log_nrseqs = math.log(len(seqs))
 
     while 1:
         # Score all sequences with all models
         for i, m in enumerate(models):
             loglikelihood = m.loglikelihoods(seqs)
-            # numarray slices: l[:,i] is the i-th column of l
-            l[:,i] = numarray.array(loglikelihood)
+            # np slices: l[:,i] is the i-th column of l
+            l[:, i] = np.array(loglikelihood)
 
         #print l
         for i in xrange(len(seqs)):
             l[i] += logalpha # l[i] = ( log( a_k * P[seq i| model k]) )
-        #print l
-        mixture_likelihood = numarray.sum(numarray.sum(l))
+            #print l
+        mixture_likelihood = np.sum(np.sum(l))
         print "# iter %s joint likelihood = %f" % (iter, mixture_likelihood)
 
         improvement = mixture_likelihood - last_mixture_likelihood
@@ -134,27 +136,26 @@ def estimate_mixture(models, seqs, max_iter, eps, alpha=None):
             l[i] -= seq_logprob # l[i] = ( log P[model j | seq i] )
 
         #print l
-        l_exp = numarray.exp(l) # XXX Use approx with table lookup
+        l_exp = np.exp(l) # XXX Use approx with table lookup
         #print "exp(l)", l_exp
-        #print numarray.sum(numarray.transpose(l_exp)) # Print row sums
+        #print np.sum(np.transpose(l_exp)) # Print row sums
 
         # Compute priors alpha
         for i in xrange(len(models)):
-            logalpha[i] = sumlogs(l[:,i]) - log_nrseqs
+            logalpha[i] = sumlogs(l[:, i]) - log_nrseqs
 
-        #print "logalpha", logalpha, numarray.exp(logalpha)
+        #print "logalpha", logalpha, np.exp(logalpha)
 
         for j, m in enumerate(models):
             # Set the sequence weight for sequence i under model m to P[m| i]
             for i in xrange(len(seqs)):
-                seqs.setWeight(i,l_exp[i,j])
+                seqs.setWeight(i, l_exp[i, j])
             m.baumWelch(seqs, 10, 0.0001)
 
         iter += 1
         last_mixture_likelihood = mixture_likelihood
 
-    return (mixture_likelihood, numarray.exp(logalpha), l_exp)
-
+    return (mixture_likelihood, np.exp(logalpha), l_exp)
 
 
 def decode_mixture(P, entropy_cutoff):
@@ -164,14 +165,15 @@ def decode_mixture(P, entropy_cutoff):
     for a sequence, if the entropy of the discrete distribution
     { P[ . | sequence i] } is less than the entropy_cutoff and None else.
     """
-    nr_seqs = numarray.shape(P)[0]
+    nr_seqs = np.shape(P)[0]
     result = [None] * nr_seqs
     for i in xrange(nr_seqs):
         e = Entropy(P[i])
         #print e, P[i]
         if e < entropy_cutoff:
-            result[i] = int(numarray.argmax(P[i]))
+            result[i] = int(np.argmax(P[i]))
     return result
+
 
 usage_info = """
 mixture.py [options] hmms.smo seqs.sqd [hmms-reestimated.smo]
@@ -206,8 +208,10 @@ mixture.py -m 10 -e 0.1 -d 0.15 test2.smo test100.sqd reestimated.smo
 
 """
 
+
 def usage():
     print usage_info
+
 
 if __name__ == '__main__':
     # Default values
@@ -251,7 +255,7 @@ if __name__ == '__main__':
     if output != None:
         if output == 'p_matrix':
             for i in xrange(len(seqs)):
-                print string.join(map(lambda x:"%1.3f" % x, P[i]), '\t')
+                print string.join(map(lambda x: "%1.3f" % x, P[i]), '\t')
         else:
             if output == 'cluster':
                 assignment = decode_mixture(P, len(models)) # max ent: log(len(models))

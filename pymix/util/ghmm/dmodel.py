@@ -579,7 +579,7 @@ class ghmm_dmodel():
                 if prevstate == self.s[state].in_id[j]:
                     break
 
-            if (j == self.s[state].in_states or abs(self.s[state].in_a[j]) < GHMM_EPS_PREC):
+            if j == self.s[state].in_states or abs(self.s[state].in_a[j]) < GHMM_EPS_PREC:
                 Log.error("Sequence can't be built. There is no transition from state %d to %d.", prevstate, state)
 
             log_p += log(self.s[state].in_a[j])
@@ -592,10 +592,10 @@ class ghmm_dmodel():
         else:
             state_pos = slen
 
-        if (pos < len):
-            Log.note("state sequence too shortnot  processed only %d symbols", pos)
-        if (state_pos < slen):
-            Log.note("sequence too shortnot  visited only %d states", state_pos)
+        if pos < len:
+            Log.error("state sequence too short!  processed only %d symbols", pos)
+        if state_pos < slen:
+            Log.error("sequence too short!  visited only %d states", state_pos)
 
         return log_p
 

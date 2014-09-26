@@ -78,7 +78,6 @@ class EmissionDomain:
         """
         return internalSequence
 
-
     def isAdmissable(self, emission):
         """ Check whether emission is admissable (contained in) the domain
             raises GHMMOutOfDomain else
@@ -90,6 +89,7 @@ class Alphabet(EmissionDomain):
     """ Discrete, finite alphabet
 
     """
+
     def __init__(self, listOfCharacters):
         """ Creates an alphabet out of a listOfCharacters """
         self.listOfCharacters = listOfCharacters
@@ -141,7 +141,7 @@ class Alphabet(EmissionDomain):
             Raises KeyError
         """
         if internal < 0 or len(self.listOfCharacters) <= internal:
-            raise KeyError, "Internal symbol "+str(internal)+" not recognized."
+            raise KeyError, "Internal symbol " + str(internal) + " not recognized."
         return self.listOfCharacters[internal]
 
     def externalSequence(self, internalSequence):
@@ -161,15 +161,14 @@ class Alphabet(EmissionDomain):
         return emission in self.listOfCharacters
 
 
+DNA = Alphabet(['a', 'c', 'g', 't'])
+AminoAcids = Alphabet(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L',
+    'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y'])
 
-DNA = Alphabet(['a','c','g','t'])
-AminoAcids = Alphabet(['A','C','D','E','F','G','H','I','K','L',
-                       'M','N','P','Q','R','S','T','V','W','Y'])
 
-
-def IntegerRange(a,b):
-    l = range(a,b)
-    for i,s in enumerate(l):
+def IntegerRange(a, b):
+    l = range(a, b)
+    for i, s in enumerate(l):
         l[i] = str(s)
     return Alphabet(l)
 
@@ -181,7 +180,6 @@ class LabelDomain(Alphabet):
 
 
 class Float(EmissionDomain):
-
     def __init__(self):
         self.CDataType = "double" # flag indicating which C data type should be used
 

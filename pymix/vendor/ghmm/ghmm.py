@@ -133,8 +133,6 @@ from textwrap import fill
 #logging.basicConfig(format="%(asctime)s %(filename)s:%(lineno)d %(levelname)-5s - %(message)s")
 from vendor.pyLibrary.env.logs import Log
 
-log = logging.getLogger("GHMM")
-
 # creating StreamHandler to stderr
 hdlr = logging.StreamHandler(sys.stderr)
 
@@ -2144,7 +2142,7 @@ class HMM(object):
         likelihoodList = []
 
         for i in range(seqNumber):
-            log.warning("\ngetting likelihood for sequence %i\n" % i)
+            Log.note("getting likelihood for sequence %i\n" % i)
             seq = emissionSequences.cseq.getSequence(i)
             tmp = emissionSequences.cseq.getLength(i)
 
@@ -2299,11 +2297,7 @@ class HMM(object):
         seq = emissionSequence.cseq.getSequence(0)
         states = wrapper.list2int_array(stateSequence)
 
-        err, logp = self.cmodel.logp_joint(seq, t, states, s)
-
-        if err != 0:
-            log.error("logp_joint finished with -1: EmissionSequence cannot be build under stateSequence.")
-            return
+        logp = self.cmodel.logp_joint(seq, t, states, s)
 
         # deallocation
         wrapper.free(states)

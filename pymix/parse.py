@@ -37,7 +37,7 @@
 
 import tokenize
 import cStringIO
-from pymix.util.alphabet import Alphabet
+from pymix.util.emission_domain import Alphabet
 
 
 #----------------------------------- File IO --------------------------------------------------
