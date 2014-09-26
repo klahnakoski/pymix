@@ -3,6 +3,7 @@ from util.ghmm.dseq import ghmm_dseq
 from util.ghmm.dstate import model_state_alloc
 from util.ghmm.local_store_t import reestimate_alloc
 from util.ghmm.reestimate import ighmm_reestimate_alloc_matvek, ighmm_reestimate_free_matvek, nologSum
+from util.ghmm.topological_sort import topological_sort
 from util.ghmm.types import kHigherOrderEmissions, kSilentStates, kUntied, kTiedEmissions, kNoBackgroundDistribution, kBackgroundDistributions, kLabeledStates
 from util.ghmm.wrapper import RNG, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN, GHMM_RNG_UNIFORM, GHMM_EPS_PREC, ARRAY_REALLOC, double_matrix_alloc, double_array_alloc, ARRAY_CALLOC, ARRAY_MALLOC, MAX_ITER_BW, EPS_ITER_BW
 from vendor.pyLibrary.env.logs import Log
@@ -230,7 +231,7 @@ class ghmm_dmodel():
 
             # realocate state path and label sequence to actual size */
             if self.model_type & kSilentStates:
-                sq.states[n] = ARRAY_REALLOC(label_pos)
+                sq.states[n] = ARRAY_REALLOC(sq.states[n], label_pos)
 
             sq.seq_len[n] = pos
             sq.states_len[n] = label_pos
@@ -1573,3 +1574,7 @@ class ghmm_dmodel():
 
     def getSilent(self, index):
         return self.silent[index]
+
+    def order_topological(self):
+        self.topo_order = topological_sort(self)
+        self.topo_order_length = len(self.topo_order)

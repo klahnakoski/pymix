@@ -1,7 +1,7 @@
 
 kNotSpecified = 0
 kLeftRight = 1
-kSilentStates = pow(2, 2)
+kSilentStates = pow(2, 2)   # NOT NEEED:  A MARKOV MODEL WITH k OF N STATES BEING Silent IS THE SAME AS MODEL WITH (N - k) STATES
 kTiedEmissions = pow(2, 3)
 kUntied = -1
 kHigherOrderEmissions = pow(2, 4)

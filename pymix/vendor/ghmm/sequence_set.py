@@ -551,9 +551,9 @@ class EmissionSequence(object):
             seq.calloc_state_labels()
             self.cseq.copyStateLabel(0, seq, 0)
 
-        seq.setLength(0, self.cseq.getLength(0))
-        seq.setSequence(0, self.cseq.getSequence(0))
-        seq.setWeight(0, self.cseq.getWeight(0))
+        seq.seq_len[0] = self.cseq.getLength(0)
+        seq.seq[0] = self.cseq.getSequence(0)
+        seq.seq_w[0] = self.cseq.getWeight(0)
 
         Log.note("EmissionSequence.asSequenceSet() -- end " + repr(seq))
         return SequenceSetSubset(self.emissionDomain, seq, self)

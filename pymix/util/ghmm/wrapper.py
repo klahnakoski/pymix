@@ -32,6 +32,11 @@ multinormal = 6   #< multivariate gaussian */
 density_number = 7 #< number of density types, has to stay last */
 
 
+
+
+
+
+
 def fake_random_number_generator():
     pass
 
@@ -43,8 +48,8 @@ def int_array_getitem(array, index):
     return array[index]
 
 
-def ARRAY_REALLOC(n):
-    return [0]*n
+def ARRAY_REALLOC(array, n):
+    return array[0:n]
 
 
 def ARRAY_CALLOC(n):
@@ -78,6 +83,9 @@ def double_matrix_alloc(rows, cols):
         return [[0.0] * cols for r in range(rows)]
     except Exception, e:
         Log.unexpected(e)
+
+
+ighmm_dmatrix_stat_alloc=double_matrix_alloc
 
 
 def ighmm_cmatrix_stat_alloc(n, m):

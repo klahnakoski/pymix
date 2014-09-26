@@ -41,7 +41,7 @@ from util.ghmm import wrapper
 def double_matrix2list(cmatrix, row, col):
     llist = []
     for i in range(row):
-        llist.append(wrapper.double_array2list(wrapper.double_matrix_get_col(cmatrix, i), col))
+        llist.append(wrapper.double_array2list(cmatrix[i], col))
     return llist
 
 

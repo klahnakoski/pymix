@@ -247,7 +247,7 @@ class ghmm_cmodel:
                 reject_tmax += 1
             else:
                 if pos < len:
-                    ARRAY_REALLOC(sq.seq[n], pos)
+                    sq.seq[n] = ARRAY_REALLOC(sq.seq[n], pos)
                 sq.seq_len[n] = pos * (self.dim)
                 # ighmm_cvector_print(stdout, sq.seq[n], sq.seq_len[n]," "," ","") */
                 n += 1

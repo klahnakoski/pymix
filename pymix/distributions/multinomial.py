@@ -40,8 +40,8 @@ import random
 import numpy as np
 from .prob import ProbDistribution
 from ..util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
-from ..util.emission_domain import IntegerRange
 from ..util.dataset import DataSet
+from vendor.ghmm.emission_domain import IntegerRange
 from vendor.pyLibrary.testing.fuzzytestcase import assertAlmostEqual
 
 

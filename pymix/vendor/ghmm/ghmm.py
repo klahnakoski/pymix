@@ -1225,20 +1225,10 @@ class HMM(object):
         calpha = wrapper.double_matrix_alloc(t, self.N)
         cscale = wrapper.double_array_alloc(t)
 
-        error, unused = self.cmodel.forward(seq, t, calpha, cscale)
-        if error == -1:
-            Log.error("forward finished with -1: EmissionSequence cannot be build.")
-
-        # translate alpha / scale to python lists
-        pyscale = wrapper.double_array2list(cscale, t)
-        pyalpha = ghmmhelper.double_matrix2list(calpha, t, self.N)
-
-        # deallocation
-        wrapper.free(cscale)
-        wrapper.double_matrix_free(calpha, t)
+        self.cmodel.forward(seq, t, calpha, cscale)
 
         Log.note("HMM.forward -- end")
-        return pyalpha, pyscale
+        return calpha, cscale
 
 
     def backward(self, emissionSequence, scalingVector):
@@ -1248,25 +1238,13 @@ class HMM(object):
         Log.note("HMM.backward -- begin")
         seq = emissionSequence.cseq.getSequence(0)
 
-        # parsing 'scalingVector' to C double array.
-        cscale = wrapper.list2double_array(scalingVector)
-
         # alllocating beta matrix
         t = len(emissionSequence)
-        cbeta = wrapper.double_matrix_alloc(t, self.N)
-
-        error = self.cmodel.backward(seq, t, cbeta, cscale)
-        if error == -1:
-            Log.error("backward finished with -1: EmissionSequence cannot be build.")
-
-        pybeta = ghmmhelper.double_matrix2list(cbeta, t, self.N)
-
-        # deallocation
-        wrapper.free(cscale)
-        wrapper.double_matrix_free(cbeta, t)
+        beta = wrapper.double_matrix_alloc(t, self.N)
+        self.cmodel.backward(seq, t, beta, scalingVector)
 
         Log.note("HMM.backward -- end")
-        return pybeta
+        return beta
 
 
     def viterbi(self, eseqs):
@@ -3634,8 +3612,7 @@ class PairHMM(HMM):
                 outSum = 0.0
                 c_state = self.cmodel.getState(orders[state.index])
                 for out in range(c_state.out_states):
-                    outSum += wrapper.double_matrix_getitem(c_state.out_a,
-                        out, tclass)
+                    outSum += wrapper.double_matrix_getitem(c_state.out_a, out, tclass)
 
                 if abs(1 - outSum) > eps:
                     Log.note("Outgoing transitions in state %s (%s) do not sum to 1 (%s) for class %s" % (state.id, state.label, outSum, tclass))

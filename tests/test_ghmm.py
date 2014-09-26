@@ -63,7 +63,7 @@ from vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphab
 from vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
 from vendor.ghmm.sequence_set import EmissionSequence, SequenceSet, ComplexEmissionSequence
 from vendor.pyLibrary.env.logs import Log
-
+from vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
 def newSplit(self, s, ts):
@@ -79,7 +79,7 @@ def newSplit(self, s, ts):
             self.assertEqual(newS[i], newTS[i])
 
 
-class AlphabetTests(unittest.TestCase):
+class AlphabetTests(FuzzyTestCase):
     """Unittests for Emissiondomains subclasses"""
 
     def setUp(self):
@@ -142,7 +142,7 @@ class AlphabetTests(unittest.TestCase):
         self.assertEqual(len(self.dnaAlphabet), len(self.dna))
 
 
-class EmissionSequenceTests(unittest.TestCase):
+class EmissionSequenceTests(FuzzyTestCase):
     def setUp(self):
         self.i_dom = IntegerRange(0, 5)
         self.d_dom = Float()
@@ -238,7 +238,7 @@ class EmissionSequenceTests(unittest.TestCase):
         self.assertEqual(label, ['E', 'R', 'T', 'T', 'T', 'E', 'R', 'T', 'T', 'T', 'R'])
 
 
-class SequenceSetTests(unittest.TestCase):
+class SequenceSetTests(FuzzyTestCase):
     def setUp(self):
         Log.note("SequenceSetTests.setUp()")
         self.i_alph = IntegerRange(0, 7)
@@ -398,7 +398,7 @@ class SequenceSetTests(unittest.TestCase):
         seqs = SequenceSetOpen(Float(), 'testdata/tiny.txt.sqd')
 
 
-class HMMBaseClassTests(unittest.TestCase):
+class HMMBaseClassTests(FuzzyTestCase):
     def setUp(self):
         A = [[0.3, 0.3, 0.4], [0.6, 0.1, 0.3], [1.0, 0.0, 0.0]]
         B = [[0.0, 0.5, 0.5, 0.0], [0.1, 0.0, 0.8, 0.1], [0.0, 0.0, 0.0, 0.0]]
@@ -437,7 +437,7 @@ class HMMBaseClassTests(unittest.TestCase):
         self.assertRaises(NotImplementedError, self.model.randomize, "noiseLevel")
 
 
-class DiscreteEmissionHMMTests(unittest.TestCase):
+class DiscreteEmissionHMMTests(FuzzyTestCase):
     def setUp(self):
         Log.note("DiscreteEmissionHMMTests.setUp() -- begin")
         self.A = [[0.3, 0.3, 0.4], [0.6, 0.1, 0.3], [1.0, 0.0, 0.0]]
@@ -624,9 +624,6 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
 
         (alpha, scale) = self.model.forward(seq)
 
-        f = lambda x: round(x, 13)
-        g = lambda x: map(f, x)
-
         talpha = [[0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.50453092851201675, 0.22588976929475116, 0.26957930219323206],
             [0.7142857142857143, 0.0, 0.2857142857142857], [0.0, 0.76923076923076916, 0.23076923076923075], [0.61307901907356943, 0.10899182561307905, 0.27792915531335155],
             [0.46113149992850677, 0.27262761546160807, 0.26624088460988515], [0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077],
@@ -641,14 +638,14 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
             [0.43640897755610975, 0.29925187032418954, 0.26433915211970077], [0.7142857142857143, 0.0, 0.28571428571428575], [0.43640897755610975, 0.29925187032418954, 0.26433915211970077],
             [0.50453092851201675, 0.22588976929475116, 0.26957930219323206], [0.7142857142857143, 0.0, 0.2857142857142857], [0.0, 0.76923076923076916, 0.23076923076923075],
             [0.71428571428571419, 0.0, 0.2857142857142857], [0.7142857142857143, 0.0, 0.2857142857142857]]
-        self.assertEqual(map(g, alpha), map(g, talpha))
+        self.assertAlmostEqual(alpha, talpha)
 
         tscale = [0.69999999999999996, 0.57285714285714284, 0.56965087281795512, 0.38953070962658143, 0.027857142857142858, 0.56461538461538452, 0.57168937329700276, 0.39770983270578136,
             0.57285714285714284, 0.56965087281795512, 0.57043689532898478, 0.39269141068371188, 0.57285714285714284, 0.56965087281795501, 0.57043689532898478, 0.39269141068371188, 0.34999999999999998,
             0.34999999999999998, 0.57285714285714284, 0.40236907730673316, 0.57285714285714284, 0.56965087281795512, 0.38953070962658143, 0.34999999999999998, 0.57285714285714284, 0.40236907730673316,
             0.57285714285714284, 0.40236907730673316, 0.34999999999999998, 0.34999999999999998, 0.57285714285714284, 0.40236907730673316, 0.57285714285714284, 0.40236907730673316, 0.57285714285714284,
             0.56965087281795512, 0.38953070962658143, 0.027857142857142858, 0.48461538461538456, 0.34999999999999998]
-        self.assertEqual(map(f, scale), map(f, tscale))
+        self.assertAlmostEqual(scale, tscale)
 
         beta = self.model.backward(seq, scale)
         tbeta = [[0.99999999999999944, 0.93777288282264037, 0.90665932423396078], [1.0387725400509094, 0.87202814099718418, 0.78865594147032159],
@@ -667,10 +664,9 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
             [0.89851709082327025, 1.1552362596299188, 1.2835958440332431], [1.0000000000000002, 0.33333333333333343, 0.0], [0.72222222222222221, 0.92857142857142849, 1.0317460317460319],
             [1.0, 1.2857142857142856, 1.4285714285714286], [1.0, 1.0, 1.0]]
 
-        self.assertEqual(map(g, beta), map(g, tbeta))
+        self.assertAlmostEqual(beta, tbeta)
         #testing forward and backward log probabilities
-        self.assertEqual(f(self.model.loglikelihood(seq)),
-            f(self.model.backwardTermination(seq, beta, scale)))
+        self.assertAlmostEqual(self.model.loglikelihood(seq), self.model.backwardTermination(seq, beta, scale))
         Log.note("testFoBa -- end")
 
     def testTiedStates(self):
@@ -702,7 +698,7 @@ class DiscreteEmissionHMMTests(unittest.TestCase):
         self.assertEqual(1.0, self.model.getInitial(0))
 
 
-class BackgroundDistributionTests(unittest.TestCase):
+class BackgroundDistributionTests(FuzzyTestCase):
     " Tests for background distributions "
 
     def setUp(self):
@@ -767,7 +763,7 @@ class BackgroundDistributionTests(unittest.TestCase):
         # XXX ...
 
 
-class StateLabelHMMTests(unittest.TestCase):
+class StateLabelHMMTests(FuzzyTestCase):
     def setUp(self):
         random.seed(0)
         slength = 45
@@ -1036,7 +1032,7 @@ class StateLabelHMMTests(unittest.TestCase):
         # TO DO: testing XML-file read
 
 
-class GaussianEmissionHMMTests(unittest.TestCase):
+class GaussianEmissionHMMTests(FuzzyTestCase):
     def setUp(self):
         Log.note("GaussianEmissionHMMTests.setUp")
         F = Float()
@@ -1132,7 +1128,7 @@ class GaussianEmissionHMMTests(unittest.TestCase):
         self.assertAlmostEqual(logp, vlogp)
 
 
-class GaussianMixtureHMMTests(unittest.TestCase):
+class GaussianMixtureHMMTests(FuzzyTestCase):
     def setUp(self):
         Log.note("GaussianMixtureHMMTests.setUp")
         F = Float()
@@ -1287,7 +1283,7 @@ class GaussianMixtureHMMTests(unittest.TestCase):
         self.model.baumWelch(seq, 30, 0.000001)
 
 
-class ContinuousMixtureHMMTests(unittest.TestCase):
+class ContinuousMixtureHMMTests(FuzzyTestCase):
     def setUp(self):
         # create a continuous mixture model from matrices
         F = Float()
@@ -1353,7 +1349,7 @@ class ContinuousMixtureHMMTests(unittest.TestCase):
         self.assertAlmostEqual(loglik, -73.27162571045973)
 
 
-class ContinuousMixtureHMM2Tests(unittest.TestCase):
+class ContinuousMixtureHMM2Tests(FuzzyTestCase):
     def setUp(self):
         # create a continuous mixture model from matrices
         F = Float()
@@ -1515,7 +1511,7 @@ class ContinuousMixtureHMM2Tests(unittest.TestCase):
         self.CMmodel.baumWelch(seq, 10, 0.0000001)
 
 
-class MultivariateGaussianEmissionHMMTests(unittest.TestCase):
+class MultivariateGaussianEmissionHMMTests(FuzzyTestCase):
     def setUp(self):
         F = Float()
         self.A = [[0.0, 1.0, 0.0], [0.5, 0.0, 0.5], [0.3, 0.3, 0.4]]
@@ -1637,7 +1633,7 @@ class MultivariateGaussianEmissionHMMTests(unittest.TestCase):
         self.modelN.baumWelch(seq, 10, 0.000001)
 
 
-class MultivariateGaussianMixtureHMMTests(unittest.TestCase):
+class MultivariateGaussianMixtureHMMTests(FuzzyTestCase):
     def setUp(self):
         F = Float()
         self.A = [[0.0, 1.0, 0.0], [0.5, 0.0, 0.5], [0.3, 0.3, 0.4]]
@@ -1707,7 +1703,7 @@ class MultivariateGaussianMixtureHMMTests(unittest.TestCase):
         self.model.baumWelch(seq, 10, 0.000001)
 
 
-class MultivariateMixtureHMMTests(unittest.TestCase):
+class MultivariateMixtureHMMTests(FuzzyTestCase):
     def setUp(self):
         # create a continuous multivariate mixture model from matrices
         F = Float()
@@ -1837,7 +1833,7 @@ class XMLIOTests(unittest.TestCase):
 
 ########### PAIR HMM TESTS ##############
 
-class ComplexEmissionSequenceTests(unittest.TestCase):
+class ComplexEmissionSequenceTests(FuzzyTestCase):
     def setUp(self):
         i_alph = IntegerRange(0, 5)
         d_alph = Float()
