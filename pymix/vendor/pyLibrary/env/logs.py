@@ -273,7 +273,7 @@ class Log(object):
             caller_globals = sys._getframe(1).f_globals
             caller_file = caller_globals["__file__"]
             if not caller_file.endswith(".py"):
-                raise Exception("do not know how to handle non-python caller")
+                Log.error("do not know how to handle non-python caller")
             caller_module = caller_file[:-3].replace("/", ".")
 
             for k, v in wrap_dot(settings.constants).leaves():

@@ -49,9 +49,7 @@ class testChange:
         return 0
 
 
-
-
-def getClass( seq, k,t):
+def getClass(seq, k, t):
      """ Example of a Python class change function.
 
      @param seq list of obervations
@@ -60,7 +58,7 @@ def getClass( seq, k,t):
 
      """
      # dummy function right now
-     #return 0
+     return 0
 
      # The class change could depend on a number of variables.
      # Here are some examples:
@@ -74,20 +72,34 @@ def getClass( seq, k,t):
      #    return 1
 
      # the time step t
-     if t < 6:
-         print "t < 6 -> class 0"
-         return 0
-     else:
-         print "t > 6 -> class 1"
-         return 1
+     # if t < 6:
+     #     print "t < 6 -> class 0"
+     #     return 0
+     # else:
+     #     print "t > 6 -> class 1"
+     #     return 1
 
      # some cumulative function over the sequence
-     seq_sum = 0
-     for i in range(t):
-         seq_sum += seq[i]
-     if seq_sum <= 80:
-         return 0
-     else:
-         return 1
+     # seq_sum = 0
+     # for i in range(t):
+     #     seq_sum += seq[i]
+     # if seq_sum <= 80:
+     #     return 0
+     # else:
+     #     return 1
 
      # or some combination thereof for any number of classes.
+
+
+class class_change_context:
+
+    def __init__(self):
+        # Names of class change module/function (for python callback) */
+        self.python_module=None
+        self.python_function=None
+
+        # pointer to class function called with seq X, Y and resp indices
+        # in the void you can pass the user data */
+        self.get_class=getClass
+        # space for any data necessary for class switch, USER is RESPONSIBLE */
+        self.user_data=None

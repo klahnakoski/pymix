@@ -4,6 +4,8 @@ Copyright (c) 2003-2010  Gustavo Niemeyer <gustavo@niemeyer.net>
 This module offers extensions to the standard Python
 datetime module.
 """
+from vendor.pyLibrary.env.logs import Log
+
 __license__ = "Simplified BSD"
 
 import datetime
@@ -115,7 +117,7 @@ Here is the behavior of operations with relativedelta:
                  hour=None, minute=None, second=None, microsecond=None):
         if dt1 and dt2:
             if (not isinstance(dt1, datetime.date)) or (not isinstance(dt2, datetime.date)):
-                raise TypeError("relativedelta only diffs datetime/date")
+                Log.error("relativedelta only diffs datetime/date")
             if not type(dt1) == type(dt2): # isinstance(dt1, type(dt2)):
                 if not isinstance(dt1, datetime.datetime):
                     dt1 = datetime.datetime.fromordinal(dt1.toordinal())
@@ -195,7 +197,7 @@ Here is the behavior of operations with relativedelta:
                             self.day = yday-ydayidx[idx-1]
                         break
                 else:
-                    raise ValueError("invalid year day (%d)" % yday)
+                    Log.error("invalid year day (%d)" % yday)
 
         self._fix()
 
@@ -261,7 +263,7 @@ Here is the behavior of operations with relativedelta:
                              second=other.second or self.second,
                              microsecond=other.microsecond or self.microsecond)
         if not isinstance(other, datetime.date):
-            raise TypeError("unsupported type for add operation")
+            Log.error("unsupported type for add operation")
         elif self._has_time and not isinstance(other, datetime.datetime):
             other = datetime.datetime.fromordinal(other.toordinal())
         year = (self.year or other.year)+self.years
@@ -310,7 +312,7 @@ Here is the behavior of operations with relativedelta:
 
     def __sub__(self, other):
         if not isinstance(other, relativedelta):
-            raise TypeError("unsupported type for sub operation")
+            Log.error("unsupported type for sub operation")
         return relativedelta(years=self.years-other.years,
                              months=self.months-other.months,
                              days=self.days-other.days,

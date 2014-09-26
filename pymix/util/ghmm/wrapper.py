@@ -13,21 +13,6 @@ from vendor.pyLibrary.env.logs import Log
 from vendor.pyLibrary.maths.randoms import Random
 
 
-kNotSpecified = 0
-kLeftRight = 1
-kSilentStates = pow(2, 2)
-kTiedEmissions = pow(2, 3)
-kUntied = -1
-kHigherOrderEmissions = pow(2, 4)
-kBackgroundDistributions = pow(2, 5)
-kNoBackgroundDistribution = -1
-kLabeledStates = pow(2, 6)
-kTransitionClasses = pow(2, 7)
-kDiscreteHMM = pow(2, 8)
-kContinuousHMM = pow(2, 9)
-kPairHMM = pow(2, 10)
-kMultivariate = pow(2, 11)
-
 EPS_ITER_BW = 0.0001
 MAX_ITER_BW = 500
 SMO_FILE_SUPPORT = 0
@@ -69,6 +54,9 @@ def ARRAY_MALLOC(n):
     return [0]*n
 
 
+def ghmm_dseq_read():
+    pass
+
 def set_pylogging(logwrapper):
     pass
 
@@ -84,6 +72,12 @@ def ghmm_rng_init():
 def time_seed():
     pass
 
+
+def ghmm_cseq_read(filename):
+    pass
+
+def ghmm_xmlfile_validate(filename):
+    pass
 
 def double_matrix_alloc(rows, cols):
     try:
@@ -121,6 +115,8 @@ def list2double_array(array, length=None):
 def double_matrix2list(array, a, b):
     return array
 
+def ghmm_xmlfile_parse(fileName):
+    pass
 
 def long_array_getitem(a, i):
     return a[i]

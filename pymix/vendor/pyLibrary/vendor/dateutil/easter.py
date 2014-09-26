@@ -4,6 +4,8 @@ Copyright (c) 2003-2007  Gustavo Niemeyer <gustavo@niemeyer.net>
 This module offers extensions to the standard Python
 datetime module.
 """
+from vendor.pyLibrary.env.logs import Log
+
 __license__ = "Simplified BSD"
 
 import datetime
@@ -24,7 +26,7 @@ def easter(year, method=EASTER_WESTERN):
 
     This algorithm implements three different easter
     calculation methods:
-    
+
     1 - Original calculation in Julian calendar, valid in
         dates after 326 AD
     2 - Original method, with date converted to Gregorian
@@ -39,7 +41,7 @@ def easter(year, method=EASTER_WESTERN):
     EASTER_WESTERN  = 3
 
     The default method is method 3.
-    
+
     More about the algorithm may be found at:
 
     http://users.chariot.net.au/~gmarts/eastalg.htm
@@ -51,7 +53,7 @@ def easter(year, method=EASTER_WESTERN):
     """
 
     if not (1 <= method <= 3):
-        raise ValueError("invalid method")
+        Log.error("invalid method")
 
     # g - Golden year - 1
     # c - Century

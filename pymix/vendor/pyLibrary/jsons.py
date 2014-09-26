@@ -151,7 +151,7 @@ def _value2json(value, _buffer):
     elif hasattr(value, '__iter__'):
         _iter2json(value, _buffer)
     else:
-        raise Exception(repr(value) + " is not JSON serializable")
+        Log.error(repr(value) + " is not JSON serializable")
 
 
 def _list2json(value, _buffer):
@@ -403,7 +403,7 @@ def indent(value, prefix=INDENT):
         lines = content.splitlines()
         return prefix + (u"\n" + prefix).join(lines) + suffix
     except Exception, e:
-        raise Exception(u"Problem with indent of value (" + e.message + u")\n" + value)
+        Log.error(u"Problem with indent of value (" + e.message + u")\n" + value)
 
 
 def value_compare(a, b):
@@ -431,12 +431,12 @@ def datetime2milli(d):
         elif isinstance(d, date):
             epoch = date(1970, 1, 1)
         else:
-            raise Exception("Can not convert "+repr(d)+" to json")
+            Log.error("Can not convert "+repr(d)+" to json")
 
         diff = d - epoch
         return long(diff.total_seconds()) * 1000L + long(diff.microseconds / 1000)
     except Exception, e:
-        raise Exception("Can not convert "+repr(d)+" to json", e)
+        Log.error("Can not convert "+repr(d)+" to json", e)
 
 
 

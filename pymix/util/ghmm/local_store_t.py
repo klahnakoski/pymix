@@ -1,4 +1,5 @@
-from util.ghmm.wrapper import kHigherOrderEmissions, ARRAY_CALLOC, ARRAY_MALLOC
+from util.ghmm.types import kHigherOrderEmissions
+from util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC
 
 
 class local_store_t():

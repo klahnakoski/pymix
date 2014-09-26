@@ -85,9 +85,9 @@ class Emailer:
         to_addrs = listwrap(nvl(to_addrs, settings.to, settings.to_addrs))
 
         if not from_address or not to_addrs:
-            raise Exception("Both from_addr and to_addrs must be specified")
+            Log.error("Both from_addr and to_addrs must be specified")
         if not text_data and not html_data:
-            raise Exception("Must specify either text_data or html_data")
+            Log.error("Must specify either text_data or html_data")
 
         if not html_data:
             msg = MIMEText(text_data)

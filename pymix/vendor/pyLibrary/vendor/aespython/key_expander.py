@@ -12,6 +12,8 @@ Algorithm per NIST FIPS-197 http://csrc.nist.gov/publications/fips/fips197/fips-
 Copyright (c) 2010, Adam Newman http://www.caller9.com/
 Licensed under the MIT license http://www.opensource.org/licenses/mit-license.php
 """
+from vendor.pyLibrary.env.logs import Log
+
 __author__ = "Adam Newman"
 
 # Normally use relative import. In test mode use local import.
@@ -32,11 +34,11 @@ class KeyExpander:
         if key_length in self._expanded_key_length:
             self._b = self._expanded_key_length[key_length]
         else:
-            raise LookupError('Invalid Key Size')
+            Log.error('Invalid Key Size')
 
     def _core(self, key_array, iteration):
         if len(key_array) != 4:
-            raise RuntimeError('_core(): key segment size invalid')
+            Log.error('_core(): key segment size invalid')
 
         # Append the list of elements 1-3 and list comprised of element 0 (circular rotate left)
         # For each element of this new list, put the result of sbox into output array.
@@ -59,7 +61,7 @@ class KeyExpander:
         """
 
         if len(key_array) != self._n:
-            raise RuntimeError('expand(): key size ' + str(len(key_array)) + ' is invalid')
+            Log.error('expand(): key size ' + str(len(key_array)) + ' is invalid')
 
         # First n bytes are copied from key. Copy prevents inplace modification of original key
         new_key = list(key_array)

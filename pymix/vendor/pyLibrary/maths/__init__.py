@@ -75,7 +75,7 @@ class Math(object):
                 return math.log(v)
             return math.log(v, base)
         except Exception, e:
-            raise Exception("error in log")
+            Log.error("error in log")
 
 
     @staticmethod

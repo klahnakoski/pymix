@@ -4,6 +4,8 @@ Copyright (c) 2003-2007  Gustavo Niemeyer <gustavo@niemeyer.net>
 This module offers extensions to the standard Python
 datetime module.
 """
+from vendor.pyLibrary.env.logs import Log
+
 __license__ = "Simplified BSD"
 
 from six import string_types, PY3
@@ -46,7 +48,7 @@ class tzutc(datetime.tzinfo):
 
     def utcoffset(self, dt):
         return ZERO
-     
+
     def dst(self, dt):
         return ZERO
 
@@ -123,7 +125,7 @@ class tzlocal(datetime.tzinfo):
     def _isdst(self, dt):
         # We can't use mktime here. It is unstable when deciding if
         # the hour near to a change is DST or not.
-        # 
+        #
         # timestamp = time.mktime((dt.year, dt.month, dt.day, dt.hour,
         #                         dt.minute, dt.second, dt.weekday(), 0, -1))
         # return time.localtime(timestamp).tm_isdst
@@ -209,7 +211,7 @@ class tzfile(datetime.tzinfo):
 
     # http://www.twinsun.com/tz/tz-link.htm
     # ftp://ftp.iana.org/tz/tz*.tar.gz
-    
+
     def __init__(self, fileobj):
         if isinstance(fileobj, string_types):
             self._filename = fileobj
@@ -230,7 +232,7 @@ class tzfile(datetime.tzinfo):
         # of the value is written first).
 
         if fileobj.read(4).decode() != "TZif":
-            raise ValueError("magic not found")
+            Log.error("magic not found")
 
         fileobj.read(16)
 
@@ -240,7 +242,7 @@ class tzfile(datetime.tzinfo):
 
          # The number of standard/wall indicators stored in the file.
          ttisstdcnt,
-         
+
          # The number of leap seconds for which data is
          # stored in the file.
          leapcnt,
@@ -278,13 +280,13 @@ class tzfile(datetime.tzinfo):
         # with the same-indexed transition time. These values
         # serve as indices into an array of ttinfo structures that
         # appears next in the file.
-        
+
         if timecnt:
             self._trans_idx = struct.unpack(">%dB" % timecnt,
                                             fileobj.read(timecnt))
         else:
             self._trans_idx = []
-        
+
         # Each ttinfo structure is written as a four-byte value
         # for tt_gmtoff  of  type long,  in  a  standard  byte
         # order, followed  by a one-byte value for tt_isdst
@@ -464,7 +466,7 @@ class tzfile(datetime.tzinfo):
         # However, this class stores historical changes in the
         # dst offset, so I belive that this wouldn't be the right
         # way to implement this.
-        
+
     @tzname_in_python2
     def tzname(self, dt):
         if not self._ttinfo_std:
@@ -487,7 +489,7 @@ class tzfile(datetime.tzinfo):
 
     def __reduce__(self):
         if not os.path.isfile(self._filename):
-            raise ValueError("Unpickable %s class" % self.__class__.__name__)
+            Log.error("Unpickable %s class" % self.__class__.__name__)
         return (self.__class__, (self._filename,))
 
 class tzrange(datetime.tzinfo):
@@ -571,7 +573,7 @@ class tzrange(datetime.tzinfo):
     __reduce__ = object.__reduce__
 
 class tzstr(tzrange):
-    
+
     def __init__(self, s):
         global parser
         if not parser:
@@ -580,7 +582,7 @@ class tzstr(tzrange):
 
         res = parser._parsetz(s)
         if res is None:
-            raise ValueError("unknown string format")
+            Log.error("unknown string format")
 
         # Here we break the compatibility with the TZ variable handling.
         # GMT-3 actually *means* the timezone -3.
@@ -743,16 +745,16 @@ class tzical(object):
         if tzid is None:
             keys = list(self._vtz.keys())
             if len(keys) == 0:
-                raise ValueError("no timezones defined")
+                Log.error("no timezones defined")
             elif len(keys) > 1:
-                raise ValueError("more than one timezone available")
+                Log.error("more than one timezone available")
             tzid = keys[0]
         return self._vtz.get(tzid)
 
     def _parse_offset(self, s):
         s = s.strip()
         if not s:
-            raise ValueError("empty offset")
+            Log.error("empty offset")
         if s[0] in ('+', '-'):
             signal = (-1, +1)[s[0]=='+']
             s = s[1:]
@@ -763,12 +765,12 @@ class tzical(object):
         elif len(s) == 6:
             return (int(s[:2])*3600+int(s[2:4])*60+int(s[4:]))*signal
         else:
-            raise ValueError("invalid offset: "+s)
+            Log.error("invalid offset: "+s)
 
     def _parse_rfc(self, s):
         lines = s.splitlines()
         if not lines:
-            raise ValueError("empty string")
+            Log.error("empty string")
 
         # Unfold
         i = 0
@@ -792,7 +794,7 @@ class tzical(object):
             name, value = line.split(':', 1)
             parms = name.split(';')
             if not parms:
-                raise ValueError("empty property name")
+                Log.error("empty property name")
             name = parms[0].upper()
             parms = parms[1:]
             if invtz:
@@ -801,7 +803,7 @@ class tzical(object):
                         # Process component
                         pass
                     else:
-                        raise ValueError("unknown component: "+value)
+                        Log.error("unknown component: "+value)
                     comptype = value
                     founddtstart = False
                     tzoffsetfrom = None
@@ -811,21 +813,21 @@ class tzical(object):
                 elif name == "END":
                     if value == "VTIMEZONE":
                         if comptype:
-                            raise ValueError("component not closed: "+comptype)
+                            Log.error("component not closed: "+comptype)
                         if not tzid:
-                            raise ValueError("mandatory TZID not found")
+                            Log.error("mandatory TZID not found")
                         if not comps:
-                            raise ValueError("at least one component is needed")
+                            Log.error("at least one component is needed")
                         # Process vtimezone
                         self._vtz[tzid] = _tzicalvtz(tzid, comps)
                         invtz = False
                     elif value == comptype:
                         if not founddtstart:
-                            raise ValueError("mandatory DTSTART not found")
+                            Log.error("mandatory DTSTART not found")
                         if tzoffsetfrom is None:
-                            raise ValueError("mandatory TZOFFSETFROM not found")
+                            Log.error("mandatory TZOFFSETFROM not found")
                         if tzoffsetto is None:
-                            raise ValueError("mandatory TZOFFSETFROM not found")
+                            Log.error("mandatory TZOFFSETFROM not found")
                         # Process component
                         rr = None
                         if rrulelines:
@@ -839,7 +841,7 @@ class tzical(object):
                         comps.append(comp)
                         comptype = None
                     else:
-                        raise ValueError("invalid component end: "+value)
+                        Log.error("invalid component end: "+value)
                 elif comptype:
                     if name == "DTSTART":
                         rrulelines.append(line)
@@ -848,29 +850,29 @@ class tzical(object):
                         rrulelines.append(line)
                     elif name == "TZOFFSETFROM":
                         if parms:
-                            raise ValueError("unsupported %s parm: %s "%(name, parms[0]))
+                            Log.error("unsupported %s parm: %s "%(name, parms[0]))
                         tzoffsetfrom = self._parse_offset(value)
                     elif name == "TZOFFSETTO":
                         if parms:
-                            raise ValueError("unsupported TZOFFSETTO parm: "+parms[0])
+                            Log.error("unsupported TZOFFSETTO parm: "+parms[0])
                         tzoffsetto = self._parse_offset(value)
                     elif name == "TZNAME":
                         if parms:
-                            raise ValueError("unsupported TZNAME parm: "+parms[0])
+                            Log.error("unsupported TZNAME parm: "+parms[0])
                         tzname = value
                     elif name == "COMMENT":
                         pass
                     else:
-                        raise ValueError("unsupported property: "+name)
+                        Log.error("unsupported property: "+name)
                 else:
                     if name == "TZID":
                         if parms:
-                            raise ValueError("unsupported TZID parm: "+parms[0])
+                            Log.error("unsupported TZID parm: "+parms[0])
                         tzid = value
                     elif name in ("TZURL", "LAST-MODIFIED", "COMMENT"):
                         pass
                     else:
-                        raise ValueError("unsupported property: "+name)
+                        Log.error("unsupported property: "+name)
             elif name == "BEGIN" and value == "VTIMEZONE":
                 tzid = None
                 comps = []

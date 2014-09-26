@@ -316,7 +316,7 @@ def atom(next, token):
         return res
     elif token[0] in (tokenize.STRING, tokenize.NUMBER):
         return eval(token[1]) # safe use of eval!
-    raise SyntaxError("malformed expression (%s)" % token[1])
+    Log.error("malformed expression (%s)" % token[1])
 
 
 def simple_eval(source):
@@ -325,7 +325,7 @@ def simple_eval(source):
     src = (token for token in src if token[0] is not tokenize.NL)
     res = atom(src.next, src.next())
     if src.next()[0] is not tokenize.ENDMARKER:
-        raise SyntaxError("bogus data after expression")
+        Log.error("bogus data after expression")
     return res
 
 

@@ -4,6 +4,8 @@ Copyright (c) 2003-2010  Gustavo Niemeyer <gustavo@niemeyer.net>
 This module offers extensions to the standard Python
 datetime module.
 """
+from vendor.pyLibrary.env.logs import Log
+
 __license__ = "Simplified BSD"
 
 import itertools
@@ -56,7 +58,7 @@ class weekday(object):
 
     def __init__(self, weekday, n=None):
         if n == 0:
-            raise ValueError("Can't create weekday with n == 0")
+            Log.error("Can't create weekday with n == 0")
         self.weekday = weekday
         self.n = n
 
@@ -262,14 +264,14 @@ class rrule(rrulebase):
             self._bysetpos = None
         elif isinstance(bysetpos, integer_types):
             if bysetpos == 0 or not (-366 <= bysetpos <= 366):
-                raise ValueError("bysetpos must be between 1 and 366, "
+                Log.error("bysetpos must be between 1 and 366, "
                                  "or between -366 and -1")
             self._bysetpos = (bysetpos,)
         else:
             self._bysetpos = tuple(bysetpos)
             for pos in self._bysetpos:
                 if pos == 0 or not (-366 <= pos <= 366):
-                    raise ValueError("bysetpos must be between 1 and 366, "
+                    Log.error("bysetpos must be between 1 and 366, "
                                      "or between -366 and -1")
         if not (byweekno or byyearday or bymonthday or
                 byweekday is not None or byeaster is not None):
@@ -947,7 +949,7 @@ class _rrulestr(object):
                                            ignoretz=kwargs.get("ignoretz"),
                                            tzinfos=kwargs.get("tzinfos"))
         except ValueError:
-            raise ValueError("invalid until date")
+            Log.error("invalid until date")
 
     def _handle_WKST(self, rrkwargs, name, value, **kwargs):
         rrkwargs["wkst"] = self._weekday_map[value]
@@ -974,7 +976,7 @@ class _rrulestr(object):
         if line.find(':') != -1:
             name, value = line.split(':')
             if name != "RRULE":
-                raise ValueError("unknown parameter name")
+                Log.error("unknown parameter name")
         else:
             value = line
         rrkwargs = {}
@@ -987,9 +989,9 @@ class _rrulestr(object):
                                                ignoretz=ignoretz,
                                                tzinfos=tzinfos)
             except AttributeError:
-                raise ValueError("unknown parameter '%s'" % name)
+                Log.error("unknown parameter '%s'" % name)
             except (KeyError, ValueError):
-                raise ValueError("invalid '%s': %s" % (name, value))
+                Log.error("invalid '%s': %s" % (name, value))
         return rrule(dtstart=dtstart, cache=cache, **rrkwargs)
 
     def _parse_rfc(self, s,
@@ -1006,7 +1008,7 @@ class _rrulestr(object):
             unfold = True
         s = s.upper()
         if not s.strip():
-            raise ValueError("empty string")
+            Log.error("empty string")
         if unfold:
             lines = s.splitlines()
             i = 0
@@ -1041,36 +1043,36 @@ class _rrulestr(object):
                     name, value = line.split(':', 1)
                 parms = name.split(';')
                 if not parms:
-                    raise ValueError("empty property name")
+                    Log.error("empty property name")
                 name = parms[0]
                 parms = parms[1:]
                 if name == "RRULE":
                     for parm in parms:
-                        raise ValueError("unsupported RRULE parm: "+parm)
+                        Log.error("unsupported RRULE parm: "+parm)
                     rrulevals.append(value)
                 elif name == "RDATE":
                     for parm in parms:
                         if parm != "VALUE=DATE-TIME":
-                            raise ValueError("unsupported RDATE parm: "+parm)
+                            Log.error("unsupported RDATE parm: "+parm)
                     rdatevals.append(value)
                 elif name == "EXRULE":
                     for parm in parms:
-                        raise ValueError("unsupported EXRULE parm: "+parm)
+                        Log.error("unsupported EXRULE parm: "+parm)
                     exrulevals.append(value)
                 elif name == "EXDATE":
                     for parm in parms:
                         if parm != "VALUE=DATE-TIME":
-                            raise ValueError("unsupported RDATE parm: "+parm)
+                            Log.error("unsupported RDATE parm: "+parm)
                     exdatevals.append(value)
                 elif name == "DTSTART":
                     for parm in parms:
-                        raise ValueError("unsupported DTSTART parm: "+parm)
+                        Log.error("unsupported DTSTART parm: "+parm)
                     if not parser:
                         from dateutil import parser
                     dtstart = parser.parse(value, ignoretz=ignoretz,
                                            tzinfos=tzinfos)
                 else:
-                    raise ValueError("unsupported property: "+name)
+                    Log.error("unsupported property: "+name)
             if (forceset or len(rrulevals) > 1 or
                 rdatevals or exrulevals or exdatevals):
                 if not parser and (rdatevals or exdatevals):

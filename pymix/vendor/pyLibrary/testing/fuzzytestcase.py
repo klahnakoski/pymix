@@ -43,7 +43,7 @@ def assertAlmostEqualValue(first, second, places=None, msg=None, delta=None):
         # shortcut
         return
     if delta is not None and places is not None:
-        raise TypeError("specify delta or places not both")
+        Log.error("specify delta or places not both")
 
     if delta is not None:
         if abs(first - second) <= delta:

@@ -7,6 +7,8 @@ datetime module.
 """
 from __future__ import unicode_literals
 from __future__ import division
+from vendor.pyLibrary.env.logs import Log
+
 __license__ = "Simplified BSD"
 
 
@@ -308,7 +310,7 @@ class parser(object):
                                                       second=0, microsecond=0)
         res = self._parse(timestr, **kwargs)
         if res is None:
-            raise ValueError("unknown string format")
+            Log.error("unknown string format")
         repl = {}
         for attr in ["year", "month", "day", "hour",
                      "minute", "second", "microsecond"]:
@@ -331,7 +333,7 @@ class parser(object):
                 elif isinstance(tzdata, integer_types):
                     tzinfo = tz.tzoffset(res.tzname, tzdata)
                 else:
-                    raise ValueError("offset must be tzinfo subclass, " \
+                    Log.error("offset must be tzinfo subclass, " \
                                       "tz string, or int offset")
                 ret = ret.replace(tzinfo=tzinfo)
             elif res.tzname and res.tzname in time.tzname:
