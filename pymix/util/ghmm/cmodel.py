@@ -100,7 +100,8 @@ class ghmm_cmodel:
             for i in range(self.N):
                 for m in range(self.s[i].M):
                     self.s[i].e[m].sigmacd = ighmm_cholesky_decomposition(self.dim, self.s[i].e[m].variance.mat)
-
+                m = self.s[i].M
+            i=self.N
         while n < seq_number:
             # Test: A new seed for each sequence */
             # ghmm_rng_timeseed(RNG) */
@@ -114,6 +115,8 @@ class ghmm_cmodel:
                 sum += self.s[i].pi
                 if sum >= p:
                     break
+            else:
+                i=self.N
             if i == self.N:          # Can happen by a rounding error in the input */
                 i -= 1
                 while i > 0 and self.s[i].pi == 0.0:
@@ -128,7 +131,8 @@ class ghmm_cmodel:
                 sum += self.s[i].c[m]
                 if sum >= p:
                     break
-
+            else:
+                m=self.s[i].M
             if m == self.s[i].M:
                 m -= 1
 
@@ -159,6 +163,8 @@ class ghmm_cmodel:
                     sum += self.s[i].out_a[clazz][j]
                     if sum >= p:
                         break
+                else:
+                    j=self.s[i].out_states
 
                 if j == self.s[i].out_states:  # Can happen by a rounding error */
                     j -= 1
@@ -204,6 +210,8 @@ class ghmm_cmodel:
                     sum += self.s[i].c[m]
                     if sum >= p:
                         break
+                else:
+                    m=self.s[i].M
 
                 if m == self.s[i].M:
                     m -= 1

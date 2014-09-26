@@ -177,6 +177,8 @@ class ghmm_dmodel():
                 sum += self.s[state].pi
                 if sum >= p:
                     break
+            else:
+                state = self.N
 
             while pos < len:
                 # save the state path and label */
@@ -199,6 +201,8 @@ class ghmm_dmodel():
                         j_id = self.s[state].out_id[j]
                         if not (self.model_type & kHigherOrderEmissions) or self.order[j_id] <= pos:
                             max_sum += self.s[state].out_a[j]
+                    else:
+                        j = self.s[state].out_states
 
                     if j and abs(max_sum) < GHMM_EPS_PREC:
                         Log.error("No possible transition from state %d "
@@ -217,7 +221,6 @@ class ghmm_dmodel():
                         sum += self.s[state].out_a[j]
                         if sum >= p:
                             break
-
                 if sum == 0.0:
                     Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
                     break
@@ -253,10 +256,8 @@ class ghmm_dmodel():
                     break
             else:
                 Log.error("ERROR: State has order %d, but in the history are only %d emissions.\n", self.order[i], position)
-                return -1
         else:
             Log.error("ERROR: no valid output choosen. Are the Probabilities correct? sum: %g, p: %g\n", sum, p)
-            return -1
 
         return m
 
@@ -283,10 +284,8 @@ class ghmm_dmodel():
         return log_p
 
 
-
-
     def forward_init(self, alpha_1, symb, scale):
-        scale[0]=0.0
+        scale[0] = 0.0
 
         #printf(" *** foba_initforward\n")*/
 
@@ -300,6 +299,7 @@ class ghmm_dmodel():
                     scale[0] += alpha_1[i]
                 else:
                     alpha_1[i] = 0
+
 
         #iterate over silent states*/
         #printf(" *** iterate over silent states \n")*/
@@ -315,14 +315,12 @@ class ghmm_dmodel():
                     alpha_1[id] += self.s[id].in_a[j] * alpha_1[in_id]
 
                     #printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id])*/
-
                 scale[0] += alpha_1[id]
 
         if scale[0] >= GHMM_EPS_PREC:
             c_0 = 1 / scale[0]
             for i in range(self.N):
                 alpha_1[i] *= c_0
-
 
     def forward(self, O, len, alpha, scale):
         log_scale_sum = 0.0
@@ -403,7 +401,6 @@ class ghmm_dmodel():
                 for k in range(i + 1):
                     newalpha[i][j] *= scale[k]
 
-
     def backward(self, O, len, beta, scale):
         # beta_tmp holds beta-variables for silent states */
         beta_tmp = None
@@ -430,10 +427,9 @@ class ghmm_dmodel():
         for t in range(len - self.maxorder, len):
             self.update_emission_history(O[t])
 
-
         # Backward Step for t = T-1, ..., 0 */
         # loop over reverse topological ordering of silent states, non-silent states  */
-        for t in reversed(range(0, len-1)):  #for (t = len - 2 t >= 0 t--) :
+        for t in reversed(range(len - 1)):  #for (t = len - 2 t >= 0 t--) :
             # printf(" ----------- *** t = %d ***  ---------- \n",t) */
             # printf("\n*** O(%d) = %d\n",t+1,O[t+1]) */
 
@@ -444,7 +440,7 @@ class ghmm_dmodel():
 
             # iterating over the the silent states and filling beta_tmp */
             if self.model_type & kSilentStates:
-                for k in reversed(range(0, self.topo_order_length)):#for (k = self.topo_order_length - 1 k >= 0 k--) :
+                for k in reversed(range(self.topo_order_length)):#for (k = self.topo_order_length - 1 k >= 0 k--) :
                     id = self.topo_order[k]
                     # printf("  silent[%d] = %d\n",id,self.silent[id]) */
                     assert (self.silent[id] == 1)
@@ -465,7 +461,6 @@ class ghmm_dmodel():
                         else:
                             sum += self.s[id].out_a[j] * beta_tmp[j_id]
 
-
                     # setting beta_tmp for the silent state
                     # don't scale the betas for silent states now
                     # wait until the betas for non-silent states are complete to avoid
@@ -484,22 +479,20 @@ class ghmm_dmodel():
 
                         # out_state is not silent: get the emission probability
                         # and use beta[t+1]
-                    if not (self.model_type & kSilentStates) or not (self.silent[j_id]):
-                        e_index = self.get_emission_index(j_id, O[t + 1], t + 1)
-                        if e_index != -1:
-                            emission = self.s[j_id].b[e_index]
+                        if not (self.model_type & kSilentStates) or not (self.silent[j_id]):
+                            e_index = self.get_emission_index(j_id, O[t + 1], t + 1)
+                            if e_index != -1:
+                                emission = self.s[j_id].b[e_index]
+                            else:
+                                emission = 0
+                            sum += self.s[i].out_a[j] * emission * beta[t + 1][j_id]
+
+                            # out_state is silent: use beta_tmp */
                         else:
-                            emission = 0
-                        sum += self.s[i].out_a[j] * emission * beta[t + 1][j_id]
-
-                        # out_state is silent: use beta_tmp */
-                    else:
-                        sum += self.s[i].out_a[j] * beta_tmp[j_id]
-
+                            sum += self.s[i].out_a[j] * beta_tmp[j_id]
 
                     # updating beta[t] for non-silent state */
                     beta[t][i] = sum / scale[t + 1]
-
 
             # updating beta[t] for silent states, finally scale them
             # and resetting beta_tmp */
@@ -508,7 +501,6 @@ class ghmm_dmodel():
                     if self.silent[i]:
                         beta[t][i] = beta_tmp[i] / scale[t + 1]
                         beta_tmp[i] = 0.0
-
 
     def backward_termination(self, O, length, beta, scale):
     #define CUR_PROC "ghmm_dmodel_backward_termination"
@@ -520,7 +512,7 @@ class ghmm_dmodel():
             self.order_topological()
 
             beta_tmp = double_array_alloc(self.N)
-            for k in reversed(range(0, self.topo_order_length)):#for (k = self.topo_order_length - 1 k >= 0 k--) :
+            for k in reversed(range(self.topo_order_length)):#for (k = self.topo_order_length - 1 k >= 0 k--) :
                 id = self.topo_order[k]
                 assert (self.silent[id] == 1)
                 sum = 0.0
@@ -539,7 +531,6 @@ class ghmm_dmodel():
                     # the silent states in reversed topological order */
                     else:
                         sum += self.s[id].out_a[j] * beta_tmp[j_id]
-
 
                 # setting beta_tmp for the silent state
                 # don't scale the betas for silent states now */
@@ -584,7 +575,7 @@ class ghmm_dmodel():
             if pos >= len:
                 break
             state = S[state_pos]
-            for j in range(0, self.s[state].in_states):
+            for j in range(self.s[state].in_states):
                 if prevstate == self.s[state].in_id[j]:
                     break
 
@@ -598,6 +589,8 @@ class ghmm_dmodel():
                 pos += 1
 
             prevstate = state
+        else:
+            state_pos = slen
 
         if (pos < len):
             Log.note("state sequence too shortnot  processed only %d symbols", pos)
@@ -638,7 +631,6 @@ class ghmm_dmodel():
 
                     else:
                         alpha_curr_col[i] = 0
-
 
             # iterate over silent states  */
             if self.model_type & kSilentStates:
@@ -695,6 +687,8 @@ class ghmm_dmodel():
                     alpha_1[i] = 0.0
             else:
                 alpha_1[i] = 0.0
+        else:
+            i = self.N
 
             scale[0] += alpha_1[i]
 
@@ -796,7 +790,7 @@ class ghmm_dmodel():
         # Backward Step for t = T-1, ..., 0
         # beta_tmp: Vector for storage of scaled beta in one time step
         # loop over reverse topological ordering of silent states, non-silent states */
-        for t in reversed(range(0, len-1)): #for (t = len - 2 t >= 0 t--) :
+        for t in reversed(range(len - 1)): #for (t = len - 2 t >= 0 t--) :
 
             # updating of emission_history with O[t] such that emission_history
             # memorizes O[t - maxorder ... t] */
@@ -864,7 +858,6 @@ class ghmm_dmodel():
                     else:
                         alpha_curr_col[i] = 0
 
-
             # iterate over silent states  */
             if self.model_type & kSilentStates:
                 for i in range(self.topo_order_length):
@@ -889,7 +882,6 @@ class ghmm_dmodel():
             switching_tmp = alpha_last_col
             alpha_last_col = alpha_curr_col
             alpha_curr_col = switching_tmp
-
 
         # Termination step: compute log likelihood */
         if self.model_type & kSilentStates:
@@ -921,7 +913,7 @@ class ghmm_dmodel():
         else:
             new_emissions = ARRAY_MALLOC(self.M)
 
-        for i in range(0, self.N):
+        for i in range(self.N):
             # find tie group leaders */
             if self.tied_to[i] == i:
 
@@ -935,15 +927,14 @@ class ghmm_dmodel():
                     Log.warning("Tie group leader %d is silent.", i)
                     nr = 0
                     # initializing with zeros */
-                    for k in range(0, bi_len):
+                    for k in range(bi_len):
                         new_emissions[k] = 0.0
 
                 else:
                     nr = 1
                     # initializing with tie group leader emissions */
-                    for k in range(0, bi_len):
+                    for k in range(bi_len):
                         new_emissions[k] = self.s[i].b[k]
-
 
                 # finding tie group members */
                 for j in range(i + 1, self.N):
@@ -953,29 +944,22 @@ class ghmm_dmodel():
                             nr += 1
                             # printf("  tie group member %d . leader %d.\n",j,i) */
                             # summing up emissions in the tie group */
-                            for k in range(0, bi_len):
+                            for k in range(bi_len):
                                 new_emissions[k] += self.s[j].b[k]
-
                         else:
                             Log.warning("Tie group member %d is silent.", j)
-
-
-
 
                 # updating emissions */
                 if nr > 1:
                     for j in range(i, self.N):
                         # states within one tie group are required to have the same order */
                         if self.tied_to[j] == i and (not (self.model_type & kHigherOrderEmissions) or self.order[i] == self.order[j]) and (
-                            not (self.model_type & kSilentStates) or (self.silent[j] == 0)):
+                                not (self.model_type & kSilentStates) or (self.silent[j] == 0)):
                             for k in range(bi_len):
                                 self.s[j].b[k] = new_emissions[k] / nr
                                 # printf("s(%d)[%d] . %f / %f = %f\n", j, k, new_emissions[k], nr,mo.s[j].b[k])   */
-
-
                 else:
                     Log.note("The tie group with leader %d has only one non-silent state. Kind of pointlessnot ", i)
-
 
     def reestimate_setlambda(self, r):
         for i in range(self.N):
@@ -991,6 +975,8 @@ class ghmm_dmodel():
             if r.a_denom[i] < GHMM_EPS_PREC:
                 for h in range(self.s[i].in_states):
                     p_i += self.s[i].in_a[h]
+                else:
+                    h = self.s[i].in_states
 
                 if p_i == 0.0:
                     if h == 0:
@@ -1025,7 +1011,6 @@ class ghmm_dmodel():
 
                 self.s[j_id].in_a[l] = self.s[i].out_a[j]
 
-
             # if not positive:
             # str = ighmm_mprintf(None, 0,
             # "All numerator a[%d][j] == 0 (denom=%.4f, P(in)=%.4f)not \n",
@@ -1050,6 +1035,8 @@ class ghmm_dmodel():
                     col = hist * self.M
                     for m in range(col, col + self.M):
                         self.s[i].b[m] = -1.0
+                else:
+                    hist = size
             else:
                 for hist in range(size):
                     # If the denominator is very small, we have not seen many emissions
@@ -1108,7 +1095,7 @@ class ghmm_dmodel():
                 r.pi_num[i] += seq_w[k] * alpha[0][i] * beta[0][i]
                 r.pi_denom += seq_w[k] * alpha[0][i] * beta[0][i]
 
-                for t in range(0, T_k - 1):
+                for t in range(T_k - 1):
                     # B */
                     if not self.s[i].fix:
                         e_index = self.get_emission_index(i, O[k][t], t)
@@ -1121,20 +1108,21 @@ class ghmm_dmodel():
 
                     # A */
                     r.a_denom[i] += (seq_w[k] * alpha[t][i] * beta[t][i])
-                    for j in range(0, self.s[i].out_states):
+                    for j in range(self.s[i].out_states):
                         j_id = self.s[i].out_id[j]
                         e_index = self.get_emission_index(j_id, O[k][t + 1], t + 1)
                         if e_index != -1:
                             r.a_num[i][j] += (seq_w[k] * alpha[t][i] * self.s[i].out_a[j]
                                               * self.s[j_id].b[e_index] * beta[t + 1][j_id]
                                               * (1.0 / scale[t + 1]))       # c[t] = 1/scale[t] */
-
-                    # for j in range(0, self.s[i].out_states):
-                    # if (r.a_denom[i] - r.a_num[i][j]) <= -GHMM_EPS_PREC:
-                    # Log.error("", debug_values)
-
-                # B: last iteration for t==T_k-1 */:
-                t = T_k - 1
+                    else:
+                        j = self.s[i].out_states
+                        # for j in range(self.s[i].out_states):
+                        # if (r.a_denom[i] - r.a_num[i][j]) <= -GHMM_EPS_PREC:
+                        # Log.error("", debug_values)
+                else:
+                    t = T_k - 1
+                    # B: last iteration for t==T_k-1 */:
                 if not self.s[i].fix:
                     e_index = self.get_emission_index(i, O[k][t], t)
                     if e_index != -1:
@@ -1155,16 +1143,16 @@ class ghmm_dmodel():
 
     def reestimate_one_step_lean(self, r, seq_number, seq_length, seqs, seq_w):
         # allocating memory for two columns of alpha matrix
-        scale=[0.0]
+        scale = [0.0]
         alpha_last_col = ARRAY_CALLOC(self.N)
         alpha_curr_col = ARRAY_CALLOC(self.N)
 
         # allocating 2*N local_store_t */
         last_est = ARRAY_CALLOC(self.N)
-        for i in range(0, self.N):
+        for i in range(self.N):
             last_est[i] = reestimate_alloc(self)
         curr_est = ARRAY_CALLOC(self.N)
-        for i in range(0, self.N):
+        for i in range(self.N):
             curr_est[i] = reestimate_alloc(self)
 
 
@@ -1172,7 +1160,7 @@ class ghmm_dmodel():
         # for sums over probabilities */:
         summands = ARRAY_CALLOC(max(self.N, pow(self.M, self.maxorder + 1)) + 1)
 
-        for k in range(0, seq_number):
+        for k in range(seq_number):
             len = seq_length[k]
             O = seqs[k]
 
@@ -1188,7 +1176,7 @@ class ghmm_dmodel():
                 self.update_emission_history(O[t - 1])
 
                 # iterate over non-silent states */
-                for i in range(0, self.N):
+                for i in range(self.N):
                     # printf("  akt_ state %d\n",i)*/
 
                     e_index = self.get_emission_index(i, O[t], t)
@@ -1203,26 +1191,27 @@ class ghmm_dmodel():
                     Log.error("scale smaller than eps")
 
                 c_t = 1 / scale[0]
-                for i in range(0, self.N):
+                for i in range(self.N):
                     alpha_curr_col[i] *= c_t
 
                 # sum log(c[t]) scaling values to get  log( P(O|lambda) ) */
                 log_p -= log(c_t)
 
                 scalingf = 1 / old_scale
-                for m in range(0, self.N):
-                    for i in range(0, self.N):
+                for m in range(self.N):
+                    for i in range(self.N):
                         # computes estimates for the numerator of transition probabilities */:
-                        for j in range(0, self.s[i].out_states):
+                        for j in range(self.s[i].out_states):
                             j_id = self.s[i].out_id[j]
 
-                            for g in range(0, self.s[j_id].in_states):
+                            for g in range(self.s[j_id].in_states):
                                 g_id = self.s[j_id].out_id[g]
                                 e_index = self.get_emission_index(g_id, O[t], t)
                                 # scales all summands with the current */
                                 summands[g] = last_est[m].a_num[i][j] * self.s[j_id].in_a[g] * self.s[g_id].b[e_index] * scalingf
+                            else:
+                                g = self.s[j_id].in_states
 
-                            g = self.s[j_id].in_states
                             if j_id == m:
                                 e_index = self.get_emission_index(j_id, O[t], t)
                                 # alpha is scaled. no other scaling necessary */
@@ -1232,17 +1221,20 @@ class ghmm_dmodel():
                             curr_est[m].a_num[i][j] = nologSum(summands, g)
 
                         # computes denominator of transition probabilities */
-                        for g in range(0, self.s[m].in_states):
+                        for g in range(self.s[m].in_states):
                             g_id = self.s[m].in_id[g]
                             e_index = self.get_emission_index(m, O[t], t)
                             # scales all summands with the current factor */
                             summands[g] = last_est[m].a_denom[i] * self.s[m].in_a[g] * self.s[m].b[e_index] * scalingf
+                        else:
+                            g = self.s[m].in_states
 
-                        g = self.s[m].in_states
                         if i == m:
-                            for l in range(0, self.s[i].out_states):
+                            for l in range(self.s[i].out_states):
                                 if self.s[i].out_id[l] == i:
                                     break
+                            else:
+                                l = self.s[i].out_states
                             if l < self.s[i].out_states:
                                 e_index = self.get_emission_index(i, O[t], t)
                                 # alpha is scaled. no other scaling necessary */
@@ -1256,21 +1248,22 @@ class ghmm_dmodel():
                             size = pow(self.M, self.order[i])
                         else:
                             size = 1
-                        for h in range(0, size):
+                        for h in range(size):
                             for s in range(h * self.M, h * self.M + self.M):
-                                for g in range(0, self.s[m].in_states):
+                                for g in range(self.s[m].in_states):
                                     g_id = self.s[m].out_id[g]
                                     e_index = self.get_emission_index(g_id, O[t], t)
                                     # scales all summands with the last scaling factor
                                     # of alpha */
                                     summands[g] = last_est[m].b_num[i][s] * self.s[m].in_a[g] * self.s[g_id].b[e_index] * scalingf
+                                else:
+                                    g = self.s[m].in_states
 
-                                g = self.s[m].in_states
                                 curr_est[m].b_num[i][s] = nologSum(summands, g)
 
                         e_index = self.get_emission_index(m, O[t], t)
                         if i == m:
-                            for l in range(0, self.s[m].out_states):
+                            for l in range(self.s[m].out_states):
                                 if self.s[m].out_id[l] == m:
                                     # alpha is scaled. no other scaling necessary */
                                     curr_est[m].b_num[i][e_index] += alpha_last_col[i] * self.s[m].out_a[l] * self.s[m].b[e_index]
@@ -1285,11 +1278,10 @@ class ghmm_dmodel():
                 last_est = curr_est
                 curr_est = switch_lst
 
-
             # filling the usual reestimate arrays by summing all states */
-            for m in range(0, self.N):
+            for m in range(self.N):
                 curr_est[m].pi_denom = 0
-                for i in range(0, self.N):
+                for i in range(self.N):
                     # PI */
                     # XXX calculate the estimates for pi numerator */:
                     curr_est[m].pi_num[i] = self.s[i].pi
@@ -1298,23 +1290,21 @@ class ghmm_dmodel():
 
                     # A */
                     curr_est[m].a_denom[i] = 0
-                    for j in range(0, self.s[i].out_states):
+                    for j in range(self.s[i].out_states):
                         r.a_num[i][j] += seq_w[k] * curr_est[m].a_num[i][j]
                         curr_est[m].a_denom[i] += curr_est[m].a_num[i][j]
 
                     r.a_denom[i] += seq_w[k] * curr_est[m].a_denom[i]
 
                     # B */
-                    for h in range(0, size):
+                    for h in range(size):
                         curr_est[m].b_denom[i][h] = 0
                         for s in range(h * self.M, h * self.M + self.M):
                             r.b_num[i][s] += seq_w[k] * curr_est[m].b_num[i][s]
                             curr_est[m].b_denom[i][h] += curr_est[m].b_num[i][s]
 
                         r.b_denom[i][h] += seq_w[k] * curr_est[m].b_denom[i][h]
-
-
-                # PI */
+                    # PI */
                 r.pi_denom += seq_w[k] * curr_est[m].pi_denom
 
         return log_p
@@ -1334,7 +1324,7 @@ class ghmm_dmodel():
         # main loop Baum-Welch-Alg. */
         while n <= max_step:
 
-            if 0:
+            if 1:
                 log_p = self.reestimate_one_step(r, sq.seq_number, sq.seq_len, sq.seq, sq.seq_w)
             else:
                 log_p = self.reestimate_one_step_lean(r, sq.seq_number, sq.seq_len, sq.seq, sq.seq_w)
@@ -1426,7 +1416,6 @@ class ghmm_dmodel():
                                                   self.s[j_id].b[e_index] * beta[t + 1][j_id] *
                                                   (1.0 / scale[t + 1]))
 
-
                     # B: last iteration for t==T_k-1 */:
                     t = T_k - 1
                     if not (self.s[i].fix) and (self.label[i] == label[k][t]):
@@ -1435,9 +1424,9 @@ class ghmm_dmodel():
                             gamma = seq_w[k] * alpha[t][i] * beta[t][i]
                             r.b_num[i][e_index] += gamma
                             r.b_denom[i][e_index / (self.M)] += gamma
-
             ighmm_reestimate_free_matvek(alpha, beta, scale, T_k)
             # for (k = 0 k < seq_number k+=1) */:
+
         if valid:
             # new parameter lambda: set directly in model */
             self.reestimate_setlambda(r)
@@ -1504,7 +1493,7 @@ class ghmm_dmodel():
 
         # The sum of the Pi[i]'s is 1 */
         sum = 0.0
-        for i in range(0, self.N):
+        for i in range(self.N):
             sum += self.s[i].pi
 
         if abs(sum - 1.0) >= GHMM_EPS_PREC:
@@ -1512,10 +1501,10 @@ class ghmm_dmodel():
 
 
         # check each state */
-        for i in range(0, self.N):
+        for i in range(self.N):
             sum = 0.0
             # Sum the a[i][j]'s : normalized out transitions */
-            for j in range(0, self.s[i].out_states):
+            for j in range(self.s[i].out_states):
                 sum += self.s[i].out_a[j]
 
             if not self.s[i].out_states:
@@ -1527,7 +1516,7 @@ class ghmm_dmodel():
 
             # Sum the a[i][j]'s : normalized in transitions */
             sum = self.s[i].pi
-            for j in range(0, self.s[i].in_states):
+            for j in range(self.s[i].in_states):
                 sum += self.s[i].in_a[j]
 
             if abs(sum) <= GHMM_EPS_PREC:
@@ -1537,7 +1526,7 @@ class ghmm_dmodel():
 
             # Sum the b[j]'s: normalized emission probs */
             sum = 0.0
-            for j in range(0, self.M):
+            for j in range(self.M):
                 sum += self.s[i].b[j]
 
             if imag:
@@ -1555,4 +1544,4 @@ class ghmm_dmodel():
 
     def update_emission_history_front(self, O):
         if self.model_type & kHigherOrderEmissions:
-            self.emission_history = pow(self.M, self.maxorder-1) * O + self.emission_history / self.M
+            self.emission_history = pow(self.M, self.maxorder - 1) * O + self.emission_history / self.M

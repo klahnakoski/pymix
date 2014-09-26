@@ -1,13 +1,14 @@
 from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc
+from vendor.pyLibrary.env.logs import Log
 
 
-def nologSum(vec, len):
-    return sum(vec[0:len])
-
+def nologSum(vec, n):
+    if n != len(vec):
+        Log.error("Not expected")
+    return sum(vec[0:n])
 
 def reestimate_free(r, N):
     pass
-
 
 
 def ighmm_reestimate_alloc_matvek(T, N):
