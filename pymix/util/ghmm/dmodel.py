@@ -5,7 +5,7 @@ from util.ghmm.local_store_t import reestimate_alloc
 from util.ghmm.reestimate import ighmm_reestimate_alloc_matvek, ighmm_reestimate_free_matvek, nologSum
 from util.ghmm.topological_sort import topological_sort
 from util.ghmm.types import kHigherOrderEmissions, kSilentStates, kUntied, kTiedEmissions, kNoBackgroundDistribution, kBackgroundDistributions, kLabeledStates
-from util.ghmm.wrapper import RNG, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN, GHMM_RNG_UNIFORM, GHMM_EPS_PREC, ARRAY_REALLOC, double_matrix_alloc, double_array_alloc, ARRAY_CALLOC, ARRAY_MALLOC, MAX_ITER_BW, EPS_ITER_BW
+from util.ghmm.wrapper import RNG, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN, GHMM_RNG_UNIFORM, GHMM_EPS_PREC, ARRAY_REALLOC, double_matrix_alloc, double_array_alloc, ARRAY_CALLOC, ARRAY_MALLOC, MAX_ITER_BW, EPS_ITER_BW, ighmm_cvector_normalize
 from vendor.pyLibrary.env.logs import Log
 
 
@@ -561,7 +561,6 @@ class ghmm_dmodel():
         return log_p
 
     def logp_joint(self, O, len, S, slen):
-    # define CUR_PROC "ghmm_dmodel_logp_joint"
         state_pos = 0
         pos = 0
 
@@ -574,10 +573,13 @@ class ghmm_dmodel():
         for state_pos in range(1, slen):
             if pos >= len:
                 break
+
             state = S[state_pos]
             for j in range(self.s[state].in_states):
                 if prevstate == self.s[state].in_id[j]:
                     break
+            else:
+                j = self.s[state].in_states
 
             if j == self.s[state].in_states or abs(self.s[state].in_a[j]) < GHMM_EPS_PREC:
                 Log.error("Sequence can't be built. There is no transition from state %d to %d.", prevstate, state)
@@ -1580,7 +1582,58 @@ class ghmm_dmodel():
 
 
 
-    def ghmm_cmodel_calc_b(state, omega):
-        for m in range(0, state.M):
-            b += state.c[m] * density_func[state.e[m].type](state.e + m, omega)
-        return b
+    # def ghmm_cmodel_calc_b(state, omega):
+    #     b=0
+    #     for m in range(0, state.M):
+    #         b += state.c[m] * density_func[state.e[m].type](state.e + m, omega)
+    #     return b
+
+
+    def normalize(self):
+    # Scales the output and transitions probs of all states in a given model
+        pi_sum = 0.0
+        i_id = 0
+        res = 0
+        size = 1
+
+        for i in range(0, self.N):
+            if self.s[i].pi >= 0.0:
+                pi_sum += self.s[i].pi
+            else:
+                self.s[i].pi = 0.0
+
+            # check model_type before using state order
+            if self.model_type & kHigherOrderEmissions:
+                size = pow(self.M, self.order[i])
+
+            # normalize transition probabilities
+            ighmm_cvector_normalize(self.s[i].out_a, self.s[i].out_states)
+
+            # for every outgoing probability update the corrosponding incoming probability
+            for j in range(0, self.s[i].out_states):
+                j_id = self.s[i].out_id[j]
+                for m in range(0, self.s[j_id].in_states):
+                    if i == self.s[j_id].in_id[m]:
+                        i_id = m
+                        break
+
+                if i_id == self.s[j_id].in_states:
+                    Log.error("Outgoing transition from state %d to state %d has no corresponding incoming transition.", i, j_id)
+
+                self.s[j_id].in_a[i_id] = self.s[i].out_a[j]
+
+            # normalize emission probabilities, but not for silent states
+            if not ((self.model_type & kSilentStates) and self.silent[i]):
+                if size == 1:
+                    ighmm_cvector_normalize(self.s[i].b, self.M)
+                else:
+                    for m in range(0, size):
+                        #NORMALIZE THIS SUB-ARRAY
+                        v = self.s[i].b[m * self.M:(m + 1) * self.M]
+                        ighmm_cvector_normalize(v, self.M)
+                        for i, vv in enumerate(range(m * self.M, (m + 1) * self.M)):
+                            self.s[i].b[vv] = v[i]
+
+        for i in range(0, self.N):
+            self.s[i].pi /= pi_sum
+

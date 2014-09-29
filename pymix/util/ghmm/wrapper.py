@@ -86,7 +86,7 @@ def double_matrix_alloc(rows, cols):
 
 
 ighmm_dmatrix_stat_alloc=double_matrix_alloc
-
+ighmm_cmatrix_alloc=double_matrix_alloc
 
 def ighmm_cmatrix_stat_alloc(n, m):
     return [[0.0] * m for i in range(n)]
@@ -507,3 +507,22 @@ class ghmm_dsmodel():
 
         self.alphabet = None  # ghmm_alphabet*
 
+def ighmm_cmatrix_normalize(matrix, rows, cols):
+    # Scales the row vectors of a matrix to have the sum 1
+    for i in range( 0,  rows):
+        ighmm_cvector_normalize(matrix[i], cols)
+
+
+def ighmm_cvector_normalize(v, len):
+    """
+    Scales the elements of a vector to have the sum 1
+    PROBLEM: Entries can get very small and be rounded to 0
+    """
+    sum = 0.0
+
+    for i in range(len):
+        sum += v[i]
+    if len > 0 and sum < GHMM_EPS_PREC:
+        Log.error("Can't normalize vector. Sum smaller than %g\n", GHMM_EPS_PREC)
+    for i in range(len):
+        v[i] /= sum

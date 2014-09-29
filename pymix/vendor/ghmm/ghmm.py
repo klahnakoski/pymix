@@ -1,5 +1,3 @@
-#!/usr/bin/env python2.3
-
 # From http://sourceforge.net/projects/ghmm/files/latest/download?source=typ_redirect
 #
 
@@ -125,9 +123,9 @@ from util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
 from util.ghmm.dmodel import ghmm_dmodel
 from util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
 from util.ghmm.dstate import ghmm_dstate
-from util.ghmm.sviterbi import ghmm_cmodel_viterbi
 from util.ghmm.types import kSilentStates, kHigherOrderEmissions, kTiedEmissions, kBackgroundDistributions, kLabeledStates, kNotSpecified, kMultivariate, kContinuousHMM, kDiscreteHMM, kTransitionClasses, kPairHMM
 from util.ghmm.wrapper import ARRAY_MALLOC
+from util.ghmm.viterbi import ghmm_dmodel_viterbi
 from vendor.ghmm import ghmmhelper
 import modhmmer
 from vendor.ghmm.class_change import class_change_context
@@ -1182,7 +1180,7 @@ class HMM(object):
                              "but the model has no silent states.")
 
         seq = emissionSequence.cseq.getSequence(0)
-        states = wrapper.list2int_array(stateSequence)
+        states = stateSequence
 
         logp = self.cmodel.logp_joint(seq, t, states, s)
 
@@ -1270,12 +1268,11 @@ class HMM(object):
             seq_len = emissionSequences.cseq.getLength(i)
 
             if seq_len > 0:
-                viterbiPath, pathlen, log_p = ghmm_cmodel_viterbi(self.cmodel, seq, seq_len)
+                viterbiPath, log_p = ghmm_dmodel_viterbi(self.cmodel, seq, seq_len)
             else:
-                viterbiPath = None
+                viterbiPath, log_p = ([], 0)
 
-            onePath = wrapper.int_array2list(viterbiPath, pathlen)
-            allPaths.append(onePath)
+            allPaths.append(viterbiPath)
             allLogs.append(log_p)
             wrapper.free(viterbiPath)
 
