@@ -504,7 +504,6 @@ class ghmm_dmodel():
                         beta_tmp[i] = 0.0
 
     def backward_termination(self, O, length, beta, scale):
-    #define CUR_PROC "ghmm_dmodel_backward_termination"
         beta_tmp = None
 
         # topological ordering for models with silent states and precomputing
@@ -551,7 +550,7 @@ class ghmm_dmodel():
                     if not (self.model_type & kHigherOrderEmissions) or self.order[i] == 0:
                         sum += self.s[i].pi * self.s[i].b[O[0]] * beta[0][i]
 
-        log_p = log(sum / scale[0])
+        log_p = log(sum) - log(scale[0])
 
         log_scale_sum = 0.0
         for i in range(length):
@@ -1578,3 +1577,10 @@ class ghmm_dmodel():
     def order_topological(self):
         self.topo_order = topological_sort(self)
         self.topo_order_length = len(self.topo_order)
+
+
+
+    def ghmm_cmodel_calc_b(state, omega):
+        for m in range(0, state.M):
+            b += state.c[m] * density_func[state.e[m].type](state.e + m, omega)
+        return b

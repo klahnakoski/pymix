@@ -12,7 +12,7 @@ from math import sqrt
 from vendor.pyLibrary.env.logs import Log
 from vendor.pyLibrary.maths.randoms import Random
 
-
+DBL_MAX = 1e300
 EPS_ITER_BW = 0.0001
 MAX_ITER_BW = 500
 SMO_FILE_SUPPORT = 0
@@ -91,6 +91,8 @@ ighmm_dmatrix_stat_alloc=double_matrix_alloc
 def ighmm_cmatrix_stat_alloc(n, m):
     return [[0.0] * m for i in range(n)]
 
+def ighmm_dmatrix_alloc(n,m):
+    return [[0.0] * m for i in range(n)]
 
 def int_matrix_alloc_row(rows):
     return [0] * rows

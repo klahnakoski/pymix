@@ -125,6 +125,7 @@ from util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
 from util.ghmm.dmodel import ghmm_dmodel
 from util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
 from util.ghmm.dstate import ghmm_dstate
+from util.ghmm.sviterbi import ghmm_cmodel_viterbi
 from util.ghmm.types import kSilentStates, kHigherOrderEmissions, kTiedEmissions, kBackgroundDistributions, kLabeledStates, kNotSpecified, kMultivariate, kContinuousHMM, kDiscreteHMM, kTransitionClasses, kPairHMM
 from util.ghmm.wrapper import ARRAY_MALLOC
 from vendor.ghmm import ghmmhelper
@@ -1269,7 +1270,7 @@ class HMM(object):
             seq_len = emissionSequences.cseq.getLength(i)
 
             if seq_len > 0:
-                viterbiPath, pathlen, log_p = self.cmodel.viterbi(seq, seq_len)
+                viterbiPath, pathlen, log_p = ghmm_cmodel_viterbi(self.cmodel, seq, seq_len)
             else:
                 viterbiPath = None
 
@@ -1651,27 +1652,14 @@ class DiscreteEmissionHMM(HMM):
 
 
     # XXX Change name?
-    def backwardTermination(self, emissionSequence, pybeta, scalingVector):
+    def backwardTermination(self, emissionSequence, beta, scalingVector):
         """
         Result: the backward log probability of emissionSequence
         """
         seq = emissionSequence.cseq.getSequence(0)
-
-        # parsing 'scalingVector' to C double array.
-        cscale = wrapper.list2double_array(scalingVector)
-
-        # alllocating beta matrix
         t = len(emissionSequence)
-        cbeta = ghmmhelper.list2double_matrix(pybeta)
-        #print cbeta[0]
 
-        error, logp = self.cmodel.backward_termination(seq, t, cbeta[0], cscale)
-        if error == -1:
-            Log.error("backward finished with -1: EmissionSequence cannot be build.")
-
-        # deallocation
-        wrapper.free(cscale)
-        wrapper.double_matrix_free(cbeta[0], t)
+        logp = self.cmodel.backward_termination(seq, t, beta, scalingVector)
         return logp
 
     def baumWelch(self, trainingSequences, nrSteps=wrapper.MAX_ITER_BW, loglikelihoodCutoff=wrapper.EPS_ITER_BW):
