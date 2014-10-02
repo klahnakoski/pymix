@@ -284,7 +284,6 @@ class twodim_double_array:
 
 def classNumber(A):
     """ Returns the number of transition classes in the matrix A   """
-    cos = 0
     if type(A[0][0]) == list:
         cos = len(A)
     else:

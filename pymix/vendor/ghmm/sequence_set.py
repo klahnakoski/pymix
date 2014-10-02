@@ -379,7 +379,7 @@ class EmissionSequence(object):
         #create a ghmm_dseq with state_labels, if the appropiate parameters are set
         elif isinstance(sequenceInput, list):
             internalInput = self.emissionDomain.internalSequence(sequenceInput)
-            seq = wrapper.list2int_array(internalInput)
+            seq = [internalInput]
             self.cseq = self.sequenceAllocationFunction(seq)
 
             if labelInput is not None and labelDomain is not None:
@@ -391,8 +391,7 @@ class EmissionSequence(object):
 
                 #translate the external labels in internal
                 internalLabel = self.labelDomain.internalSequence(labelInput)
-                label = wrapper.list2int_array(internalLabel)
-                self.cseq.init_labels(label, len(internalInput))
+                self.cseq.init_labels([internalLabel], [len(internalInput)])
 
         # internal use
         elif isinstance(sequenceInput, (ghmm_dseq, ghmm_cseq)):

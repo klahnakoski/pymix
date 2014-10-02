@@ -119,12 +119,15 @@ from textwrap import fill
 
 from util.ghmm import types
 from util.ghmm import wrapper
+from util.ghmm.cmodel import ghmm_cmodel
 from util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
+from util.ghmm.dbackground import dbackground
 from util.ghmm.dmodel import ghmm_dmodel
 from util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
 from util.ghmm.dstate import ghmm_dstate
+from util.ghmm.matrixop import ighmm_invert_det
 from util.ghmm.types import kSilentStates, kHigherOrderEmissions, kTiedEmissions, kBackgroundDistributions, kLabeledStates, kNotSpecified, kMultivariate, kContinuousHMM, kDiscreteHMM, kTransitionClasses, kPairHMM
-from util.ghmm.wrapper import ARRAY_MALLOC
+from util.ghmm.wrapper import ARRAY_MALLOC, matrix_alloc
 from util.ghmm.viterbi import ghmm_dmodel_viterbi
 from vendor.ghmm import ghmmhelper
 import modhmmer
@@ -359,7 +362,7 @@ class HMMOpenFactory(HMMFactory):
             m = HMMFromMatrices(emission_domain, distribution, A, B, pi, None, labeldom, label_list)
 
             # old xml is discrete, set appropiate flag
-            m.cmodel.addModelTypeFlags(kDiscreteHMM)
+            m.cmodel.model_type |= kDiscreteHMM
 
             if background_dist != {}:
                 ids = [-1] * m.N
@@ -622,7 +625,7 @@ class HMMFromMatricesFactory(HMMFactory):
             if cos == 1:
                 A = [A]
 
-            cmodel = wrapper.ghmm_cmodel(len(A[0]), cos)
+            cmodel = ghmm_cmodel(len(A[0]), kContinuousHMM)
             Log.note("cmodel.cos = " + str(cmodel.cos))
 
             self.constructSwitchingTransitions(cmodel, pi, A)
@@ -726,8 +729,7 @@ class HMMFromMatricesFactory(HMMFactory):
                         emission = wrapper.c_emission_array_getRef(emissions, j)
                         emission.type = densities[i][j]
                         emission.dimension = 1
-                        if (emission.type == wrapper.normal
-                        or emission.type == wrapper.normal_approx):
+                        if (emission.type == wrapper.normal    or emission.type == wrapper.normal_approx):
                             emission.mean.val = parameters[1]
                             emission.variance.val = parameters[2]
                         elif emission.type == wrapper.normal_right:
@@ -777,13 +779,13 @@ class HMMFromMatricesFactory(HMMFactory):
                 # For states with only one mixture component, a implicit weight
                 # of 1.0 is assumed
 
-                cmodel.addModelTypeFlags(kMultivariate)
+                cmodel.model_type |= kMultivariate
                 cmodel.dim = len(B[0][0]) # all states must have same dimension
 
                 #initialize states
                 for i in range(cmodel.N):
                     # set up state parameterss
-                    state = wrapper.cstate_array_getRef(cmodel.s, i)
+                    state = cmodel.s[i]
                     state.M = len(B[i]) / 2
                     if state.M > cmodel.M:
                         cmodel.M = state.M
@@ -798,21 +800,17 @@ class HMMFromMatricesFactory(HMMFactory):
                     emissions = wrapper.c_emission_array_alloc(state.M) # M emission components in this state
 
                     for em in range(state.M):
-                        emission = wrapper.c_emission_array_getRef(emissions, em)
+                        emission = emissions[em]
                         emission.dimension = len(B[0][0]) # dimension must be same in all states and emissions
                         mu = B[i][em * 2]
                         sigma = B[i][em * 2 + 1]
                         emission.mean.vec = wrapper.list2double_array(mu)
-                        emission.variance.mat = wrapper.list2double_array(sigma)
-                        emission.sigmacd = wrapper.list2double_array(sigma) # just for allocating the space
-                        emission.sigmainv = wrapper.list2double_array(sigma) # just for allocating the space
+                        emission.variance.mat = sigma
+                        emission.sigmacd = matrix_alloc(len(sigma), len(sigma[0])) # just for allocating the space
                         emission.fixed = 0  # fixing of emission deactivated by default
                         emission.setDensity(6)
                         # calculate inverse and determinant of covariance matrix
-                        determinant = wrapper.list2double_array([0.0])
-                        wrapper.ighmm_invert_det(emission.sigmainv, determinant,
-                            emission.dimension, emission.variance.mat)
-                        emission.det = wrapper.double_array_getitem(determinant, 0)
+                        emission.sigmainv, emission.det = ighmm_invert_det(emission.dimension, emission.variance.mat)
 
                     # append emissions to state
                     state.e = emissions
@@ -831,7 +829,7 @@ class HMMFromMatricesFactory(HMMFactory):
         #initialize states
         for i in range(cmodel.N):
 
-            state = wrapper.cstate_array_getRef(cmodel.s, i)
+            state = cmodel.s[i]
             state.pi = pi[i]
 
             #set out probabilities
@@ -880,12 +878,12 @@ class BackgroundDistribution(object):
 
                 wrapper.int_array_setitem(order, i, int(o))
                 # dynamic allocation, rows have different lenghts
-                b_i = wrapper.list2double_array(bgInput[i])
+                b_i = bgInput[i]
                 wrapper.double_matrix_set_col(b, i, b_i)
 
-            self.cbackground = wrapper.ghmm_dbackground(distNum, len(emissionDomain), order, b)
+            self.cbackground = dbackground(distNum, len(emissionDomain), order, b)
             self.name2id = dict()
-        elif isinstance(bgInput, wrapper.ghmm_dbackground):
+        elif isinstance(bgInput, dbackground):
             self.cbackground = bgInput
             self.emissionDomain = emissionDomain
             self.name2id = dict()
@@ -957,7 +955,7 @@ class BackgroundDistribution(object):
     def updateName2id(self):
         """adds all background names to the dictionary name2id"""
         for i in xrange(self.cbackground.n):
-            tmp = self.cbackground.getName(i)
+            tmp = self.cbackground.name[i]
             if tmp is not None:
                 self.name2id[tmp] = i
 
@@ -1757,7 +1755,7 @@ class DiscreteEmissionHMM(HMM):
         if not len(backgroundWeight) == self.N:
             Log.error("Argument 'backgroundWeight' does not match number of states.")
 
-        cweights = wrapper.list2double_array(backgroundWeight)
+        cweights = backgroundWeight
         result = self.cmodel.background_apply(cweights)
 
         wrapper.free(cweights)
@@ -1846,7 +1844,7 @@ class DiscreteEmissionHMM(HMM):
 
         if self.cmodel.tied_to is None:
             Log.note("allocating tied_to")
-            self.cmodel.tied_to = wrapper.list2int_array(tieList)
+            self.cmodel.tied_to = list(tieList)
             self.setFlags(kTiedEmissions)
         else:
             Log.note("tied_to already initialized")
@@ -2652,7 +2650,7 @@ class GaussianEmissionHMM(HMM):
             Log.error("Continuous sequence needed.")
 
         self.baumWelchSetup(trainingSequences, nrSteps, loglikelihoodCutoff)
-        wrapper.ghmm_cmodel_baum_welch(self.BWcontext)
+        self.BWcontext.baum_welch()
         likelihood = wrapper.double_array_getitem(self.BWcontext.logp, 0)
         #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
         #                                                                    loglikelihoodCutoff)
@@ -2671,8 +2669,7 @@ class GaussianEmissionHMM(HMM):
         @param loglikelihoodCutoff the least relative improvement in likelihood
         with respect to the last iteration required to continue.
         """
-        self.BWcontext = wrapper.ghmm_cmodel_baum_welch_context(
-            self.cmodel, trainingSequences.cseq)
+        self.BWcontext = wrapper.ghmm_cmodel_baum_welch_context(self.cmodel, trainingSequences.cseq)
         self.BWcontext.eps = loglikelihoodCutoff
         self.BWcontext.max_iter = nrSteps
 
@@ -2914,8 +2911,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         i = self.state(i)
         state = self.cmodel.getState(i)
         emission = state.getEmission(comp)
-        if (emission.type == wrapper.normal or
-                emission.type == wrapper.normal_approx):
+        if (emission.type == wrapper.normal or              emission.type == wrapper.normal_approx):
             return (emission.type, emission.mean.val, emission.variance.val, state.getWeight(comp))
         elif emission.type == wrapper.normal_right:
             return (emission.type, emission.mean.val, emission.variance.val,
