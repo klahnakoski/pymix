@@ -123,6 +123,7 @@ class ghmm_dmodel():
 
         self.alphabet = None #ghmm_alphabet*
 
+
     def getStateName(self, index):
         try:
             return self.s[index].desc
@@ -900,8 +901,7 @@ class ghmm_dmodel():
 
         return log_p
 
-
-    def ghmm_dmodel_update_tie_groups(self):
+    def update_tie_groups(self):
     #define CUR_PROC "ghmm_dmodel_update_tied_groups"
         nr = 0
 
@@ -961,7 +961,7 @@ class ghmm_dmodel():
                                 self.s[j].b[k] = new_emissions[k] / nr
                                 # printf("s(%d)[%d] . %f / %f = %f\n", j, k, new_emissions[k], nr,mo.s[j].b[k])   */
                 else:
-                    Log.note("The tie group with leader %d has only one non-silent state. Kind of pointlessnot ", i)
+                    Log.note("The tie group with leader {{id}} has only one non-silent state. Kind of pointless!", {"id":i})
 
     def reestimate_setlambda(self, r):
         for i in range(self.N):
@@ -1636,4 +1636,31 @@ class ghmm_dmodel():
 
         for i in range(0, self.N):
             self.s[i].pi /= pi_sum
+
+
+    def background_apply(self, background_weight):
+        if not (self.model_type & kBackgroundDistributions):
+            Log.error("Error: No background distributions")
+
+        for i in range(0, self.N):
+            if self.background_id[i] != kNoBackgroundDistribution:
+                if self.model_type & kHigherOrderEmissions:
+                    if self.order[i] != self.bp.order[self.background_id[i]]:
+                        Log.error("State (%d) and background order (%d) do not match in state %d. Background_id = %d",
+                            self.order[i],
+                            self.bp.order[self.background_id[i]],
+                            i,
+                            self.background_id[i]
+                        )
+
+                    # XXX Cache in ghmm_dbackground
+                    size = pow(self.M, self.order[i] + 1)
+                    for j in range(0, size):
+                        self.s[i].b[j] = (1.0 - background_weight[i]) * self.s[i].b[j] + background_weight[i] * self.bp.b[self.background_id[i]][j]
+                else:
+                    if self.bp.order[self.background_id[i]] != 0:
+                        Log.error("Error: State and background order do not match\n")
+
+                    for j in range(0, self.M):
+                        self.s[i].b[j] = (1.0 - background_weight[i]) * self.s[i].b[j] + background_weight[i] * self.bp.b[self.background_id[i]][j]
 

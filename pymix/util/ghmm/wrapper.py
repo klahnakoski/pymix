@@ -9,6 +9,7 @@
 #
 ################################################################################
 from math import sqrt
+from util.ghmm.emission import ghmm_c_emission
 from vendor.pyLibrary.env.logs import Log
 from vendor.pyLibrary.maths.randoms import Random
 
@@ -19,7 +20,7 @@ SMO_FILE_SUPPORT = 0
 ASCI_SEQ_FILE = 0
 SEQ_LABEL_FIELD = 0
 GHMM_MAX_SEQ_LEN = 1000000
-DBL_MIN = 0.0000001
+DBL_MIN = 1e-15
 GHMM_EPS_PREC = 1e-8
 
 normal = 0,        #< gaussian */
@@ -30,8 +31,6 @@ uniform = 4
 binormal = 5      #< two dimensional gaussian */
 multinormal = 6   #< multivariate gaussian */
 density_number = 7 #< number of density types, has to stay last */
-
-
 
 
 
@@ -53,10 +52,11 @@ def ARRAY_REALLOC(array, n):
 
 
 def ARRAY_CALLOC(n):
-    return [0]*n
+    return [0] * n
+
 
 def ARRAY_MALLOC(n):
-    return [0]*n
+    return [0] * n
 
 
 def set_pylogging(logwrapper):
@@ -78,6 +78,7 @@ def time_seed():
 def ghmm_xmlfile_validate(filename):
     pass
 
+
 def double_matrix_alloc(rows, cols):
     try:
         return [[0.0] * cols for r in range(rows)]
@@ -85,17 +86,28 @@ def double_matrix_alloc(rows, cols):
         Log.unexpected(e)
 
 
-ighmm_dmatrix_stat_alloc=double_matrix_alloc
-ighmm_cmatrix_alloc=double_matrix_alloc
+ighmm_dmatrix_stat_alloc = double_matrix_alloc
+ighmm_cmatrix_alloc = double_matrix_alloc
+
 
 def ighmm_cmatrix_stat_alloc(n, m):
     return [[0.0] * m for i in range(n)]
 
-def ighmm_dmatrix_alloc(n,m):
+
+def ighmm_dmatrix_alloc(n, m):
     return [[0.0] * m for i in range(n)]
+
+
+def matrix_alloc(n, m):
+    return [[0.0] * m for i in range(n)]
+
 
 def int_matrix_alloc_row(rows):
     return [0] * rows
+
+
+def c_emission_array_alloc(n):
+    return [ghmm_c_emission() for i in range(n)]
 
 
 def double_array_alloc(length):
@@ -113,14 +125,25 @@ def double_matrix2list(array, length, N):
 
 
 def list2double_array(array, length=None):
-    return [array]
+    return array
+
+
+def list2double_matrix(array, cols):
+    rows = len(array) / cols
+    output = matrix_alloc(rows, cols)
+    for r in range(rows):
+        for c in range(cols):
+            output[r][c] = array[r * cols + c]
+    return output
 
 
 def double_matrix2list(array, a, b):
     return array
 
+
 def ghmm_xmlfile_parse(fileName):
     pass
+
 
 def long_array_getitem(a, i):
     return a[i]
@@ -151,7 +174,7 @@ def double_array_getitem(array, index):
 
 
 def list2int_array(array):
-    return [array]
+    return array
 
 
 def dseq_ptr_array_getitem(array, index):
@@ -350,7 +373,8 @@ class ghmm_alphabet:
 
     def getSymbol(self, index):
         return self.symbols[index]
-# class ghmm_dpmodel_class_change_context:
+
+    # class ghmm_dpmodel_class_change_context:
 #
 # def __init(self):
 # # Names of class change module/function (for python callback)
@@ -389,9 +413,6 @@ class ghmm_dpseq():
         self.number_of_d_seqs = 0
         ## length of the sequence *
         self.length = 0
-
-
-
 
 
 def ighmm_cholesky_decomposition(dim, cov):
@@ -507,9 +528,10 @@ class ghmm_dsmodel():
 
         self.alphabet = None  # ghmm_alphabet*
 
+
 def ighmm_cmatrix_normalize(matrix, rows, cols):
     # Scales the row vectors of a matrix to have the sum 1
-    for i in range( 0,  rows):
+    for i in range(0, rows):
         ighmm_cvector_normalize(matrix[i], cols)
 
 
@@ -526,3 +548,33 @@ def ighmm_cvector_normalize(v, len):
         Log.error("Can't normalize vector. Sum smaller than %g\n", GHMM_EPS_PREC)
     for i in range(len):
         v[i] /= sum
+
+
+class ghmm_cmodel_baum_welch_context():
+#* Baum-Welch-Algorithm for parameter reestimation (training) in
+#    a continuous (continuous output functions) HMM. Scaled version
+#    for multiple sequences. Sequences may carry different weights
+#    For reference see:
+#    Rabiner, L.R.: "`A Tutorial on Hidden :Markov Models and Selected
+#                Applications in Speech Recognition"', Proceedings of the IEEE,
+#        77, no 2, 1989, pp 257--285
+#
+
+#* structure that combines a continuous model sequence class.
+#
+#    Is used by ghmm_cmodel_baum_welch() for parameter reestimation.
+#
+    def __init__(self, model, seq):
+        #* pointer of continuous model
+        self.smo = model
+        #* ghmm_cseq pointer
+        self.sqd = seq
+        #* calculated log likelihood
+        self.logp = 0
+        #* leave reestimation loop if diff. between successive logp values
+        #      is smaller than eps
+        self.eps = 0
+        #* max. no of iterations
+        self.max_iter = 0
+
+

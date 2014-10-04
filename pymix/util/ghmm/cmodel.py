@@ -1,21 +1,26 @@
-from util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition
+from util.ghmm.cseq import ghmm_cseq
+from util.ghmm.cstate import ghmm_cstate
+from util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal, ighmm_rand_uniform_cont, ighmm_rand_normal_right
+from util.ghmm.types import kContinuousHMM
+from util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc
 from vendor.pyLibrary.env.logs import Log
 from vendor.pyLibrary.maths.randoms import Random
 
 
 class ghmm_cmodel:
-    def __init__(self):
+    def __init__(self, N, modeltype) :
+        assert(modeltype & kContinuousHMM)
         # Number of states */
-        self.N = None  # int
+        self.N = N  # int
         # Maximun number of components in the states */
-        self.M = None  # int
+        self.M = 0  # int
         # Number of dimensions of the emission components.
         # All emissions must have the same number of dimensions */
-        self.dim = None  # int
+        self.dim = 1  # int
         # ghmm_cmodel includes continuous model with one transition matrix
         # (cos  is set to 1) and an extension for models with several matrices
         # (cos is set to a positive integer value > 1).*/
-        self.cos = None  # int
+        self.cos = 1  # int
         # prior for a priori prob. of the model. -1 means no prior specified (all
         # models have equal prob. a priori. */
         self.prior = None  # double
@@ -26,15 +31,14 @@ class ghmm_cmodel:
 
         # Contains bit flags for varios model extensions such as
         # kSilentStates (see ghmm.h for a complete list)
-        self.model_type = None  # int
+        self.model_type = modeltype
 
         # All states of the model. Transition probs are part of the states. */
-        self.s = None  # ghmm_cstate *
+        self.s = [ghmm_cstate(self.cos, None, None, None) for i in range(N)]
 
         # pointer to a ghmm_cmodel_class_change_context struct necessary for multiple transition
         # classes * /
         self.class_change = None  # ghmm_cmodel_class_change_context *
-
 
     def ghmm_cmodel_get_random_var(self, state, m):
         # PARAMETER x IS THE RETURN VALUES
@@ -46,9 +50,7 @@ class ghmm_cmodel:
             #return ighmm_rand_binormal(emission.mean.vec, emission.variance.mat, 0)*/
             pass
         elif emission.type == multinormal:
-            return ighmm_rand_multivariate_normal(emission.dimension, x,
-                emission.mean.vec,
-                emission.sigmacd, 0)
+            return ighmm_rand_multivariate_normal(emission.dimension, emission.mean.vec, emission.sigmacd, 0)
         elif emission.type == normal_right:
             return ighmm_rand_normal_right(emission.min, emission.mean.val, emission.variance.val, 0)
         elif emission.type == normal_left:
@@ -67,7 +69,7 @@ class ghmm_cmodel:
         stillbadseq = 0
         reject_os_tmp = 0
 
-        sq = ghmm_cseq()
+        sq = ghmm_cseq([[] for i in range(seq_number)])
 
         # set dimension of the sequence to match dimension of the model (multivariate) */
         sq.dim = self.dim
@@ -100,13 +102,12 @@ class ghmm_cmodel:
             for i in range(self.N):
                 for m in range(self.s[i].M):
                     self.s[i].e[m].sigmacd = ighmm_cholesky_decomposition(self.dim, self.s[i].e[m].variance.mat)
-                m = self.s[i].M
-            i=self.N
+
         while n < seq_number:
             # Test: A new seed for each sequence */
             # ghmm_rng_timeseed(RNG) */
             stillbadseq = badseq = 0
-            sq.seq[n] = [0] * ( len * (self.dim))
+            sq.seq[n] = matrix_alloc(len, self.dim)
 
             # Get a random initial state i */
             p = GHMM_RNG_UNIFORM(RNG)
@@ -137,7 +138,7 @@ class ghmm_cmodel:
                 m -= 1
 
             # Get random numbers according to the density function */
-            self.ghmm_cmodel_get_random_var(i, m, sq.seq[n])
+            sq.seq[n][0] =self.ghmm_cmodel_get_random_var(i, m)
             pos = 1
 
             # The first symbol chooses the start class */
@@ -218,8 +219,8 @@ class ghmm_cmodel:
                     while m > 0 and self.s[i].c[m] == 0.0:
                         m -= 1
 
-                # Get a random number from the corresponding density function */
-                self.ghmm_cmodel_get_random_var(i, m, sq.seq[n] + (pos * self.dim))
+                # Get a random number from the corresponding density function
+                sq.seq[n][pos] = self.ghmm_cmodel_get_random_var(i, m)
                 # Decide the clazz for the next step */
                 if self.cos == 1:
                     clazz = 0
@@ -248,7 +249,7 @@ class ghmm_cmodel:
             else:
                 if pos < len:
                     sq.seq[n] = ARRAY_REALLOC(sq.seq[n], pos)
-                sq.seq_len[n] = pos * (self.dim)
+                sq.seq_len[n] = pos * self.dim
                 # ighmm_cvector_print(stdout, sq.seq[n], sq.seq_len[n]," "," ","") */
                 n += 1
 
@@ -271,3 +272,19 @@ class ghmm_cmodel:
             # Log.error ("End of selfdel_generate_sequences.\n") */
 
         return sq
+
+
+    def getStateName(self, index):
+        try:
+            return self.s[index].desc
+        except Exception:
+            return None
+
+
+    def getState(self, index):
+        return self.s[index]
+
+    def getEmission(self, index):
+        return self.s[index].e
+
+

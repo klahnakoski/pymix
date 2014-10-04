@@ -45,6 +45,9 @@ class ghmm_dstate():
         value *= b_symb
         return value
 
+    def getOutState(self, index):
+        return self.out_id[index]
+
 
 def model_state_alloc(
     M,

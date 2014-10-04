@@ -108,6 +108,17 @@ class Math(object):
             return False
 
     @staticmethod
+    def is_finite(s):
+        try:
+            f = float(s)
+            if abs(f) == float("+inf"):
+                return False
+            return True
+        except Exception:
+            return False
+
+
+    @staticmethod
     def is_nan(s):
         return math.isnan(s)
 

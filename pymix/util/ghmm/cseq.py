@@ -1,4 +1,4 @@
-from util.ghmm.wrapper import double_array_alloc, ARRAY_CALLOC
+from util.ghmm.wrapper import double_array_alloc, ARRAY_CALLOC, matrix_alloc
 
 
 class ghmm_cseq():
@@ -11,6 +11,8 @@ class ghmm_cseq():
     """
 
     def __init__(self, seq):
+        if not isinstance(seq, list):
+            seq=matrix_alloc(seq, 0)
         # sequence array. sequence[i][j] = j-th symbol of i-th seq.
         # sequence[i][D * j] = first dimension of j-th observation of i-th sequence
         self.seq = seq # int **

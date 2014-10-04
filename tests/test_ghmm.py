@@ -790,7 +790,7 @@ class StateLabelHMMTests(FuzzyTestCase):
             sequence.append(random.choice(DNA.listOfCharacters))
         self.tSeq = EmissionSequence(DNA, sequence,
             labelDomain=self.l_domain,
-            labelInput=self.labels)
+            labelInput=[self.labels])
 
     def test__str__(self):
         # we aren't interested in the output but the function should run fine
@@ -1637,12 +1637,13 @@ class MultivariateGaussianMixtureHMMTests(FuzzyTestCase):
     def setUp(self):
         F = Float()
         self.A = [[0.0, 1.0, 0.0], [0.5, 0.0, 0.5], [0.3, 0.3, 0.4]]
-        self.B = [[[1.0, -1.0], [0.9, 0.4, 0.4, 0.3], [2.0, -1.0], [0.9, 0.4, 0.4, 0.3], [0.5, 0.5]],
-            [[2.0, 6.0], [1.0, 0.3, 0.3, 0.2], [2.0, 4.0], [1.0, 0.3, 0.3, 0.2], [0.2, 0.8]],
-            [[0.0, 1.0], [0.4, 0.3, 0.3, 1.0], [0.0, 1.0], [0.4, 0.3, 0.3, 1.0], [0.3, 0.7]]]
+        self.B = [
+            [[1.0, -1.0], [[0.9, 0.4],[ 0.4, 0.3]], [2.0, -1.0], [[0.9, 0.4],[ 0.4, 0.3]], [0.5, 0.5]],
+            [[2.0,  6.0], [[1.0, 0.3],[ 0.3, 0.2]], [2.0,  4.0], [[1.0, 0.3],[ 0.3, 0.2]], [0.2, 0.8]],
+            [[0.0,  1.0], [[0.4, 0.3],[ 0.3, 1.0]], [0.0,  1.0], [[0.4, 0.3],[ 0.3, 1.0]], [0.3, 0.7]]
+        ]
         self.pi = [0.5, 0.0, 0.5]
-        self.model = HMMFromMatrices(F, MultivariateGaussianDistribution(F),
-            self.A, self.B, self.pi)
+        self.model = HMMFromMatrices(F, MultivariateGaussianDistribution(F), self.A, self.B, self.pi)
 
     def test__str__(self):
         # we aren't interested in the output but the function should run fine

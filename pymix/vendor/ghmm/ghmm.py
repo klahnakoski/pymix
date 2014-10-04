@@ -126,6 +126,8 @@ from util.ghmm.dmodel import ghmm_dmodel
 from util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
 from util.ghmm.dstate import ghmm_dstate
 from util.ghmm.matrixop import ighmm_invert_det
+from util.ghmm.sreestimate import ghmm_cmodel_baum_welch
+from util.ghmm.sviterbi import ghmm_cmodel_viterbi
 from util.ghmm.types import kSilentStates, kHigherOrderEmissions, kTiedEmissions, kBackgroundDistributions, kLabeledStates, kNotSpecified, kMultivariate, kContinuousHMM, kDiscreteHMM, kTransitionClasses, kPairHMM
 from util.ghmm.wrapper import ARRAY_MALLOC, matrix_alloc
 from util.ghmm.viterbi import ghmm_dmodel_viterbi
@@ -2606,7 +2608,7 @@ class GaussianEmissionHMM(HMM):
             seq_len = emissionSequences.cseq.getLength(i)
 
             try:
-                viterbiPath, log_p = self.cmodel.viterbi(seq, seq_len)
+                viterbiPath, log_p = ghmm_cmodel_viterbi(self, seq, seq_len)
             except TypeError:
                 viterbiPath, log_p = (None, float("-infinity"))
 
@@ -2650,7 +2652,7 @@ class GaussianEmissionHMM(HMM):
             Log.error("Continuous sequence needed.")
 
         self.baumWelchSetup(trainingSequences, nrSteps, loglikelihoodCutoff)
-        self.BWcontext.baum_welch()
+        ghmm_cmodel_baum_welch(self.BWcontext)
         likelihood = wrapper.double_array_getitem(self.BWcontext.logp, 0)
         #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
         #                                                                    loglikelihoodCutoff)
