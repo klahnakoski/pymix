@@ -66,7 +66,10 @@ def assertAlmostEqualValue(first, second, places=None, msg=None, delta=None):
             repr(second),
             places
         )
-    raise AssertionError(msg + ": (" + standardMsg + ")")
+    if msg is None:
+        raise AssertionError(standardMsg)
+    else:
+        raise AssertionError(msg + ": (" + standardMsg + ")")
 
 
 

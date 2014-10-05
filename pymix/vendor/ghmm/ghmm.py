@@ -2610,7 +2610,7 @@ class GaussianEmissionHMM(HMM):
             viterbiPath, log_p = ghmm_cmodel_viterbi(self.cmodel, seq, seq_len)
 
             if viterbiPath != None:
-                onePath = wrapper.int_array2list(viterbiPath, seq_len / self.cmodel.dim)
+                onePath = wrapper.int_array2list(viterbiPath, seq_len)
             else:
                 onePath = []
 
