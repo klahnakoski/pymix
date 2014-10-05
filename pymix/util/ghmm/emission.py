@@ -31,7 +31,7 @@ class ghmm_c_emission:
         #       or right boundary for left-tail gaussians
         self.max = None  # double
         #* if fixed != 0 the parameters of the density are fixed
-        self.fixed = None  # int
+        self.fixed = 0  # int
 
 
     def setDensity(self, type):

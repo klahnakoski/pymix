@@ -564,7 +564,7 @@ class StructList(list):
 
     def __getitem__(self, index):
         if isinstance(index, slice):
-            # IMPLEMENT FLAT SLICES (for i not in range(0, len(self)): assert self[i]==None)
+            # IMPLEMENT FLAT SLICES (for i not in range(len(self)): assert self[i]==None)
             if index.step is not None:
                 from .env.logs import Log
                 Log.error("slice step must be None, do not know how to deal with values")

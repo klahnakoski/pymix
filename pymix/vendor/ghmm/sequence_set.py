@@ -483,7 +483,7 @@ class EmissionSequence(object):
                     strout.append(" ")
         else:
 
-            for j in range(0, 5):
+            for j in range(5):
                 strout.append(str(self.emissionDomain.external(self[j])))
                 if self.emissionDomain.CDataType == "double":
                     strout.append(" ")

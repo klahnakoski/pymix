@@ -47,7 +47,7 @@ def sdfoba_initforward(mo, alpha_1, symb, scale):
     clazz = 0
     scale[0] = 0.0
     #iterate over non-silent states
-    for i in range(0, mo.N):
+    for i in range(mo.N):
         if not (mo.silent[i]):
             if symb != mo.M:
                 alpha_1[i] = mo.s[i].pi * mo.s[i].b[symb]
@@ -62,11 +62,11 @@ def sdfoba_initforward(mo, alpha_1, symb, scale):
 
 
     #iterate over silent states
-    for i in range(0, mo.topo_order_length):
+    for i in range(mo.topo_order_length):
         id = mo.topo_order[i]
         alpha_1[id] = mo.s[id].pi
         #      printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id])
-        for j in range(0, mo.s[id].in_states):
+        for j in range(mo.s[id].in_states):
             in_id = mo.s[id].in_id[j]
             alpha_1[id] += mo.s[id].in_a[clazz][j] * alpha_1[in_id]
 
@@ -76,7 +76,7 @@ def sdfoba_initforward(mo, alpha_1, symb, scale):
     #  printf("\n%f\n",scale[0])
     if scale[0] >= GHMM_EPS_PREC:
         c_0 = 1 / scale[0]
-        for i in range(0, mo.N):
+        for i in range(mo.N):
             alpha_1[i] *= c_0
 
     return (0)                   # attention scale[0] might be 0
@@ -85,7 +85,7 @@ def sdfoba_initforward(mo, alpha_1, symb, scale):
 def sdfoba_stepforward(s, alpha_t, b_symb, clazz):
     value = 0.0
 
-    for i in range(0, s.in_states):
+    for i in range(s.in_states):
         id = s.in_id[i]
         #    printf("state:\t%s, instate:\t%d, prob:\t%f\n", s.label, id, s.in_a[clazz][i])
         value += s.in_a[clazz][i] * alpha_t[id]
@@ -116,7 +116,7 @@ def ghmm_dsmodel_forward(mo, O, len, alpha, scale):
                 clazz = mo.get_class(mo.N, t - 1)
                 #iterate over non-silent states
             #printf("\nnach clazz\n")
-            for i in range(0, mo.N):
+            for i in range(mo.N):
                 if not (mo.model_type & kSilentStates) or not (mo.silent[i]):
                     if O[t] != mo.M:
                         dblems = mo.s[i].b[O[t]]
@@ -136,7 +136,7 @@ def ghmm_dsmodel_forward(mo, O, len, alpha, scale):
             #printf("\nvor silent states\n")
             #iterate over silent state
             if mo.model_type & kSilentStates:
-                for i in range(0, mo.topo_order_length):
+                for i in range(mo.topo_order_length):
                     #printf("\nget id\n")
                     id = mo.topo_order[i]
                     #printf("\nin stepforward\n")
@@ -162,7 +162,7 @@ def ghmm_dsmodel_forward(mo, O, len, alpha, scale):
                 #break
 
             c_t = 1 / scale[t]
-            for i in range(0, mo.N):
+            for i in range(mo.N):
                 alpha[t][i] *= c_t
                 # sum log(c[t]) to get  log( P(O|lambda) )
             log_p -= log(c_t)
@@ -174,7 +174,7 @@ def sdfobau_initforward(mo, alpha_1, symb, scale):
     clazz = 0
     scale[0] = 0.0
     #iterate over non-silent states
-    for i in range(0, mo.N):
+    for i in range(mo.N):
         if not (mo.silent[i]):
             alpha_1[i] = mo.s[i].pi * mo.s[i].b[symb]
             #printf("\nalpha1[%i]=%f\n",i,alpha_1[i])
@@ -182,11 +182,11 @@ def sdfobau_initforward(mo, alpha_1, symb, scale):
 
 
     #iterate over silent states
-    for i in range(0, mo.topo_order_length):
+    for i in range(mo.topo_order_length):
         id = mo.topo_order[i]
         alpha_1[id] = mo.s[id].pi
         #printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id])
-        for j in range(0, mo.s[id].in_states):
+        for j in range(mo.s[id].in_states):
             in_id = mo.s[id].in_id[j]
             alpha_1[id] += mo.s[id].in_a[clazz][j] * alpha_1[in_id]
             #printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id])
@@ -196,7 +196,7 @@ def sdfobau_initforward(mo, alpha_1, symb, scale):
     #printf("\n%f\n",scale[0])
     if scale[0] >= EPS_PREC:
         c_0 = 1 / scale[0]
-        for i in range(0, mo.N):
+        for i in range(mo.N):
             alpha_1[i] *= c_0
 
 
@@ -218,7 +218,7 @@ def sdfobau_forward(mo, O, len, alpha, scale):
             if mo.cos > 1:
                 clazz = mo.get_class(mo.N, t - 1)
                 #iterate over non-silent states
-            for i in range(0, mo.N):
+            for i in range(mo.N):
                 if not (mo.model_type & kSilentStates) or not (mo.silent[i]):
                     alpha[t][i] = sdfoba_stepforward(mo.s[i], alpha[t - 1], mo.s[i].b[O[t]], clazz)
                     scale[t] += alpha[t][i]
@@ -226,7 +226,7 @@ def sdfobau_forward(mo, O, len, alpha, scale):
 
             #iterate over silent state
             if mo.model_type & kSilentStates:
-                for i in range(0, mo.topo_order_length):
+                for i in range(mo.topo_order_length):
                     id = mo.topo_order[i]
                     alpha[t][id] = sdfoba_stepforward(mo.s[id], alpha[t], 1, clazz)
                     #scale[t] += alpha[t][id]
@@ -237,7 +237,7 @@ def sdfobau_forward(mo, O, len, alpha, scale):
                 break
 
             c_t = 1 / scale[t]
-            for i in range(0, mo.N):
+            for i in range(mo.N):
                 alpha[t][i] *= c_t
                 # sum log(c[t]) to get  log( P(O|lambda) )
             log_p -= log(c_t)
@@ -245,25 +245,25 @@ def sdfobau_forward(mo, O, len, alpha, scale):
 
 
 def ghmm_dsmodel_forward_descale(alpha, scale, t, n, newalpha):
-    for i in range(0, t):
+    for i in range(t):
         #printf("i=%i\n",i)
-        for j in range(0, n):
+        for j in range(n):
             #printf("\tj=%i\n",j)
             newalpha[i][j] = alpha[i][j]
             #newalpha[i][j] *= scale[j]
             #printf(".")
-            for k in range(0, i):
+            for k in range(i):
                 #printf(",")
                 newalpha[i][j] *= scale[k]
 
 
 def ghmm_dsmodel_backward(mo, O, len, beta, scale):
     beta_tmp = ARRAY_CALLOC(mo.N)
-    for t in range(0, len):
+    for t in range(len):
         if not scale[t]:
             Log.error("not allowed")
         # initialize
-    for i in range(0, mo.N):
+    for i in range(mo.N):
         beta[len - 1][i] = 1
         beta_tmp[i] = 1 / scale[len - 1]
 
@@ -271,15 +271,15 @@ def ghmm_dsmodel_backward(mo, O, len, beta, scale):
     # Backward Step for t = T-2, ..., 0
     # beta_tmp: Vector for storage of scaled beta in one time step
     for t in reversed(range(len - 1)):
-        for i in range(0, mo.N):
+        for i in range(mo.N):
             sum = 0.0
-            for j in range(0, mo.s[i].out_states):
+            for j in range(mo.s[i].out_states):
                 j_id = mo.s[i].out_id[j]
                 #sum += mo.s[i].out_a[j] * mo.s[j_id].b[O[t+1]] * beta_tmp[j_id]
 
             beta[t][i] = sum
 
-        for i in range(0, mo.N):
+        for i in range(mo.N):
             beta_tmp[i] = beta[t][i] / scale[t]
 
 

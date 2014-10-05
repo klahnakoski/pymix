@@ -6,7 +6,7 @@ class dbackground:
     def __init__(self, n, m, orders, B):
         #* string ids of the background distributions
         self.name = ARRAY_CALLOC(n)
-        for i in range(0, n):
+        for i in range(n):
             self.name[i] = None
 
         #* Number of distributions
@@ -26,16 +26,16 @@ class dbackground:
         new_order = ARRAY_MALLOC(self.n)
         new_b = ARRAY_CALLOC(self.n)
 
-        for i in range(0, self.n):
+        for i in range(self.n):
             new_order[i] = self.order[i]
             b_i_len = pow(self.m, self.order[i] + 1)
             new_b[i] = ARRAY_CALLOC(b_i_len)
-            for j in range(0, b_i_len):
+            for j in range(b_i_len):
                 new_b[i][j] = self.b[i][j]
 
         tmp = dbackground(self.n, self.m, new_order, new_b)
 
-        for i in range(0, self.n):
+        for i in range(self.n):
             if self.name[i]:
                 tmp.name[i] = self.name[i]
 

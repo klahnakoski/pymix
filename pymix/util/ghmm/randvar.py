@@ -172,14 +172,14 @@ def ighmm_rand_multivariate_normal_density(length, x, mean, sigmainv, det):
     #
 
     ay = 0
-    for i in range(0, length):
+    for i in range(length):
         tempv = 0
-        for j in range(0, length):
+        for j in range(length):
             tempv += (x[j] - mean[j]) * sigmainv[j][i]
 
         ay += tempv * (x[i] - mean[i])
 
-    ay = exp(-0.5 * ay) / sqrt(pow((pi), length) * det)
+    ay = exp(-0.5 * ay) / sqrt(pow(pi, length) * det)
 
     return ay
 
@@ -202,7 +202,7 @@ def ighmm_rand_uniform_density(x, max, min):
 
 def randvar_init_pdf_stdnormal():
     x = 0.00
-    for i in range(0, PDFLEN):
+    for i in range(PDFLEN):
         pdf_stdnormal[i] = 1 / (sqrt(pi)) * exp(-1 * x * x / 2)
         x += X_STEP_PDF
 
@@ -285,9 +285,9 @@ def ighmm_rand_multivariate_normal(dim, mue, sigmacd, seed):
     x = [0.0]*dim
 
     # multivariate random numbers without gsl
-    for i in range(0, dim):
+    for i in range(dim):
         randuni = ighmm_rand_std_normal(seed)
-        for j in range(0, dim):
+        for j in range(dim):
             if i == 0:
                 x[j] = mue[j]
             x[j] += randuni * sigmacd[j][i]

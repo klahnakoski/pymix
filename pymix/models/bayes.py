@@ -1161,7 +1161,7 @@ class BayesMixtureModel(MixtureModel):
 
         comps.sort()
 
-        others = range(0, self.G)
+        others = range(self.G)
         for c in comps:
             others.remove(c)
 

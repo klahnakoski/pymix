@@ -144,7 +144,7 @@ class AlphabetTests(FuzzyTestCase):
 
 class EmissionSequenceTests(FuzzyTestCase):
     def setUp(self):
-        self.i_dom = IntegerRange(0, 5)
+        self.i_dom = Integerrange(5)
         self.d_dom = Float()
         l_domain = LabelDomain(['E', 'R', 'T'])
         self.i_seq = EmissionSequence(self.i_dom, [1, 2, 0, 0, 0, 3, 4])
@@ -241,7 +241,7 @@ class EmissionSequenceTests(FuzzyTestCase):
 class SequenceSetTests(FuzzyTestCase):
     def setUp(self):
         Log.note("SequenceSetTests.setUp()")
-        self.i_alph = IntegerRange(0, 7)
+        self.i_alph = Integerrange(7)
         self.d_alph = Float()
         self.l_domain = LabelDomain(['E', 'R', 'T'])
 
@@ -392,7 +392,7 @@ class SequenceSetTests(FuzzyTestCase):
         if not ASCI_SEQ_FILE:
             return True
         Log.note("SequenceSetTests.testfilereading")
-        dom = IntegerRange(0, 12)
+        dom = Integerrange(12)
         seqs = SequenceSetOpen(dom, 'testdata/d_seq.sqd')
         seqs = SequenceSetOpen(self.d_alph, 'testdata/test10.sqd')
         seqs = SequenceSetOpen(Float(), 'testdata/tiny.txt.sqd')
@@ -515,8 +515,8 @@ class DiscreteEmissionHMMTests(FuzzyTestCase):
         A = [[0.3, 0.6, 0.1], [0.0, 0.5, 0.5], [0.0, 0.0, 1.0]]
         B = [[0.5, 0.5], [0.5, 0.5], [1.0, 0.0]]
         pi = [1.0, 0.0, 0.0]
-        return HMMFromMatrices(IntegerRange(0, 2),
-            DiscreteDistribution(IntegerRange(0, 2)),
+        return HMMFromMatrices(Integerrange(2),
+            DiscreteDistribution(Integerrange(2)),
             A, B, pi)
 
     def testDel(self):
@@ -1688,7 +1688,7 @@ class MultivariateGaussianMixtureHMMTests(FuzzyTestCase):
             0.249347553034, 3.49106717714, 1.28552067515, -1.45207369504,
             4.15475665338, 4.74026602294, -0.520774231925, 0.8765508811,
             0.277813098043, 1.37300482684, 1.12953122842, -1.47288053263]
-        seq = EmissionSequence(Float(), rawseq)
+        seq = EmissionSequence(Float(2), rawseq)
         ss, loglik = self.model.viterbi(seq)
         truess = [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 0, 1, 2, 2, 2, 1,
             2, 2, 0, 1, 0, 1, 2, 1, 0, 1, 0, 1, 2, 0, 1, 2, 1, 0, 1, 2, 1,
@@ -1698,9 +1698,9 @@ class MultivariateGaussianMixtureHMMTests(FuzzyTestCase):
 
     def testbaumwelch(self):
         seq = self.model.sample(100, 100, seed=3586662)
-        self.model.setEmission(0, 0, ([2.0, -2.0], [1.0, 0.1, 0.1, 1.0]))
-        self.model.setEmission(1, 0, ([0.0, 4.0], [1.0, 0.1, 0.1, 1.0]))
-        self.model.setEmission(2, 0, ([0.0, 0.0], [1.0, 0.1, 0.1, 1.0]))
+        self.model.setEmission(0, 0, ([2.0, -2.0], [[1.0, 0.1], [0.1, 1.0]]))
+        self.model.setEmission(1, 0, ([0.0, 4.0], [[1.0, 0.1], [0.1, 1.0]]))
+        self.model.setEmission(2, 0, ([0.0, 0.0], [[1.0, 0.1], [0.1, 1.0]]))
         self.model.baumWelch(seq, 10, 0.000001)
 
 
@@ -1836,7 +1836,7 @@ class XMLIOTests(unittest.TestCase):
 
 class ComplexEmissionSequenceTests(FuzzyTestCase):
     def setUp(self):
-        i_alph = IntegerRange(0, 5)
+        i_alph = Integerrange(5)
         d_alph = Float()
         self.seq = ComplexEmissionSequence([i_alph, DNA, d_alph],
             [[1, 2, 0, 0, 0, 3, 4],

@@ -48,11 +48,11 @@ def ighmm_determinant(cov, n):
         return cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0]
         # matrix dimension is bigger than 2 - we have to do some work
     det = 0
-    for j1 in range(0, n):
+    for j1 in range(n):
         m = matrix_alloc(n - 1, n - 1)
         for i in range(1, n):
             jm = 0
-            for j in range(0, n):
+            for j in range(n):
                 if j == j1:
                     continue
                 m[(i - 1) * (n - 1) + jm] = cov[i * n + j]
@@ -86,16 +86,16 @@ def ighmm_inverse(cov, n, det):
         inv[1][1] = cov[0][0] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
         return inv
 
-    for i in range(0, n):
-        for j in range(0, n):
+    for i in range(n):
+        for j in range(n):
             # calculate minor i,j
             m = matrix_alloc(n - 1, n - 1)
             actrow = 0
-            for ic in range(0, n):
+            for ic in range(n):
                 if ic == i:
                     continue
                 actcol = 0
-                for jc in range(0, n):
+                for jc in range(n):
                     if jc == j:
                         continue
                     m[actrow][actcol] = cov[ic][jc]
@@ -110,11 +110,11 @@ def ighmm_inverse(cov, n, det):
 #============================================================================
 def ighmm_cholesky_decomposition(sigmacd, dim, cov):
     # copy cov to sigmacd
-    for row in range(0, dim):
-        for j in range(0, dim):
+    for row in range(dim):
+        for j in range(dim):
             sigmacd[row][j] = cov[row][j]
 
-    for row in range(0, dim):
+    for row in range(dim):
         # First compute U[row][row]
         sum = cov[row][row]
         for j in range(row - 1):
@@ -124,7 +124,7 @@ def ighmm_cholesky_decomposition(sigmacd, dim, cov):
             # Now find elements sigmacd[row*dim+k], k > row.
             for k in range(row + 1, dim):
                 sum = cov[row][k]
-                for j in range(0, (row - 1)):
+                for j in range((row - 1)):
                     sum -= sigmacd[j][row] * sigmacd[j][k]
                 sigmacd[row][k] = sum / sigmacd[row][row]
         else:  # blast off the entire row.

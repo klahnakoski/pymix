@@ -19,7 +19,7 @@ class Random(object):
     @staticmethod
     def string(length, alphabet=SIMPLE_ALPHABET):
         result = ''
-        for i in range(0, length):
+        for i in range(length):
             result += SEED.choice(alphabet)
         return result
 

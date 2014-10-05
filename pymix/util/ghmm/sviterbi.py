@@ -50,9 +50,9 @@ class local_store_t:
 
 def sviterbi_precompute(smo, O, T, v):
     # Precomputing of log(b_j(O_t))
-    for t in range(0, T):
-        for j in range(0, smo.N):
-            cb = smo.s[j].calc_b(O[t][0])
+    for t in range(T):
+        for j in range(smo.N):
+            cb = smo.s[j].calc_b(O[t])
             if cb == 0.0:
             # DBL_EPSILON ?
                 v.log_b[j][t] = -DBL_MAX
@@ -61,10 +61,6 @@ def sviterbi_precompute(smo, O, T, v):
 
 
 def ghmm_cmodel_viterbi(smo, O, T):
-    state_seq = None
-
-    # T is length of sequence divide by dimension to represent the number of time points
-    T /= smo.dim
 
     v = local_store_t(smo, T)
 
@@ -73,7 +69,7 @@ def ghmm_cmodel_viterbi(smo, O, T):
     sviterbi_precompute(smo, O, T, v)
 
     # Initialization for  t = 0
-    for j in range(0, smo.N):
+    for j in range(smo.N):
         if smo.s[j].pi == 0.0 or v.log_b[j][0] == -DBL_MAX:
             v.phi[j] = -DBL_MAX
         else:
@@ -93,35 +89,32 @@ def ghmm_cmodel_viterbi(smo, O, T):
             if osc >= smo.cos:
                 Log.error("get_class returned index %d but model has only %d classes not \n", osc, smo.cos)
 
-        for j in range(0, smo.N):
+        for j in range(smo.N):
             # find maximum
             # max_phi = phi[i] + log_in_a[j][i] ...
             max_value = -DBL_MAX
             v.psi[t][j] = -1
-            for i in range(0, smo.s[j].in_states):
-                if (v.phi[smo.s[j].in_id[i]] > -DBL_MAX and
-                        log(smo.s[j].in_a[osc][i]) > -DBL_MAX):
+            for i in range(smo.s[j].in_states):
+                if v.phi[smo.s[j].in_id[i]] > -DBL_MAX and log(smo.s[j].in_a[osc][i]) > -DBL_MAX:
                     value = v.phi[smo.s[j].in_id[i]] + log(smo.s[j].in_a[osc][i])
                     if value > max_value:
                         max_value = value
                         v.psi[t][j] = smo.s[j].in_id[i]
-
-
 
             # no maximum found (state is never reached or b(O[t]) = 0
             if max_value == -DBL_MAX or v.log_b[j][t] == -DBL_MAX:
                 v.phi_new[j] = -DBL_MAX
             else:
                 v.phi_new[j] = max_value + v.log_b[j][t]
-                # for j in range( 0,  smo.N):
-            # replace old phi with new phi
-        for j in range(0, smo.N):
+
+        # replace old phi with new phi
+        for j in range(smo.N):
             v.phi[j] = v.phi_new[j]
 
     # Termination
     max_value = -DBL_MAX
     state_seq[T - 1] = -1
-    for j in range(0, smo.N):
+    for j in range(smo.N):
         if v.phi[j] != -DBL_MAX and v.phi[j] > max_value:
             max_value = v.phi[j]
             state_seq[T - 1] = j

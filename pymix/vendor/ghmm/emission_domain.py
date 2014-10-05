@@ -252,7 +252,8 @@ class LabelDomain(Alphabet):
 class Float(EmissionDomain):
     """Continuous Alphabet"""
 
-    def __init__(self):
+    def __init__(self, dim=1):
+        self.dimension=dim
         self.CDataType = "double"  # flag indicating which C data type should be used
 
     def __eq__(self, other):

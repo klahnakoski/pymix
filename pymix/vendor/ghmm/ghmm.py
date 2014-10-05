@@ -401,7 +401,7 @@ class HMMOpenFactory(HMMFactory):
         elif h.m == 20:   # Peptide model
             emission_domain = AminoAcids
         else:   # some other model
-            emission_domain = IntegerRange(0, h.m)
+            emission_domain = Integerrange(h.m)
         distribution = DiscreteDistribution(emission_domain)
 
         # XXX TODO: Probably slow for large matrices (Rewrite for 0.9)
@@ -491,7 +491,7 @@ class HMMOpenFactory(HMMFactory):
         file.close()
         if emission_domain == 'int':
             # only integer alphabet
-            emission_domain = IntegerRange(0, M)
+            emission_domain = Integerrange(M)
             distribution = DiscreteDistribution
             hmm_class = DiscreteEmissionHMM
             return (hmm_class, emission_domain, distribution)
@@ -2607,10 +2607,7 @@ class GaussianEmissionHMM(HMM):
             seq = emissionSequences.cseq.getSequence(i)
             seq_len = emissionSequences.cseq.getLength(i)
 
-            try:
-                viterbiPath, log_p = ghmm_cmodel_viterbi(self, seq, seq_len)
-            except TypeError:
-                viterbiPath, log_p = (None, float("-infinity"))
+            viterbiPath, log_p = ghmm_cmodel_viterbi(self.cmodel, seq, seq_len)
 
             if viterbiPath != None:
                 onePath = wrapper.int_array2list(viterbiPath, seq_len / self.cmodel.dim)
@@ -2653,7 +2650,7 @@ class GaussianEmissionHMM(HMM):
 
         self.baumWelchSetup(trainingSequences, nrSteps, loglikelihoodCutoff)
         ghmm_cmodel_baum_welch(self.BWcontext)
-        likelihood = wrapper.double_array_getitem(self.BWcontext.logp, 0)
+        likelihood = self.BWcontext.logp
         #(steps_made, loglikelihood_array, scale_array) = self.baumWelchStep(nrSteps,
         #                                                                    loglikelihoodCutoff)
         self.baumWelchDelete()

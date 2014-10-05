@@ -14,22 +14,22 @@ class local_store_t():
 
 
     def reestimate_init(self, mo):
-        for i in range(0, mo.N):
+        for i in range(mo.N):
             self.pi_num[i] = 0.0
             self.a_denom[i] = 0.0
-            for j in range(0, mo.s[i].out_states):
+            for j in range(mo.s[i].out_states):
                 self.a_num[i][j] = 0.0
 
             if mo.model_type & kHigherOrderEmissions:
                 size = pow(mo.M, mo.order[i])
-                for m in range(0, size):
+                for m in range(size):
                     self.b_denom[i][m] = 0.0
                 size *= mo.M
-                for m in range(0, size):
+                for m in range(size):
                     self.b_num[i][m] = 0.0
             else:
                 self.b_denom[i][0] = 0.0
-                for m in range(0, mo.M):
+                for m in range(mo.M):
                     self.b_num[i][m] = 0.0
         return self
 
@@ -37,7 +37,7 @@ def reestimate_alloc(mo):
     self = local_store_t()
     self.pi_num = ARRAY_CALLOC(mo.N)
     self.a_num = ARRAY_CALLOC(mo.N)
-    for i in range(0, mo.N):
+    for i in range(mo.N):
         self.a_num[i] = ARRAY_CALLOC(mo.s[i].out_states)
     self.a_denom = ARRAY_CALLOC(mo.N)
 
@@ -45,12 +45,12 @@ def reestimate_alloc(mo):
     self.b_denom = ARRAY_MALLOC(mo.N)
 
     if mo.model_type & kHigherOrderEmissions:
-        for i in range(0, mo.N):
+        for i in range(mo.N):
             self.b_num[i] = ARRAY_CALLOC(pow(mo.M, mo.order[i] + 1))
             self.b_denom[i] = ARRAY_CALLOC(pow(mo.M, mo.order[i]))
 
     else:
-        for i in range(0, mo.N):
+        for i in range(mo.N):
             self.b_num[i] = ARRAY_CALLOC(mo.M)
             self.b_denom[i] = ARRAY_CALLOC(1)
     return self

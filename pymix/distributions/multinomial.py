@@ -72,7 +72,7 @@ class MultinomialDistribution(ProbDistribution):
             assert len(alphabet) == self.M, "Size of alphabet and M does not match: " + str(len(alphabet)) + " != " + str(self.M)
             self.alphabet = alphabet
         else:
-            self.alphabet = IntegerRange(0, self.M)
+            self.alphabet = Integerrange(self.M)
 
         if parFix == None:
             self.parFix = np.array([0] * self.M)

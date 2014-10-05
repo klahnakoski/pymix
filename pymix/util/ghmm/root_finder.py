@@ -70,3 +70,4 @@ def ghmm_zbrent_AB(func, x1, x2, tol, A, B, eps):
                 fb = func(b)
         else:
             #Use bisection
+            pass

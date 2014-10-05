@@ -2,14 +2,14 @@ from util.ghmm.cseq import ghmm_cseq
 from util.ghmm.cstate import ghmm_cstate
 from util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal, ighmm_rand_uniform_cont, ighmm_rand_normal_right
 from util.ghmm.types import kContinuousHMM
-from util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc
+from util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC
 from vendor.pyLibrary.env.logs import Log
 from vendor.pyLibrary.maths.randoms import Random
 
 
 class ghmm_cmodel:
-    def __init__(self, N, modeltype) :
-        assert(modeltype & kContinuousHMM)
+    def __init__(self, N, modeltype):
+        assert (modeltype & kContinuousHMM)
         # Number of states */
         self.N = N  # int
         # Maximun number of components in the states */
@@ -117,7 +117,7 @@ class ghmm_cmodel:
                 if sum >= p:
                     break
             else:
-                i=self.N
+                i = self.N
             if i == self.N:          # Can happen by a rounding error in the input */
                 i -= 1
                 while i > 0 and self.s[i].pi == 0.0:
@@ -133,12 +133,12 @@ class ghmm_cmodel:
                 if sum >= p:
                     break
             else:
-                m=self.s[i].M
+                m = self.s[i].M
             if m == self.s[i].M:
                 m -= 1
 
             # Get random numbers according to the density function */
-            sq.seq[n][0] =self.ghmm_cmodel_get_random_var(i, m)
+            sq.seq[n][0] = self.ghmm_cmodel_get_random_var(i, m)
             pos = 1
 
             # The first symbol chooses the start class */
@@ -165,7 +165,7 @@ class ghmm_cmodel:
                     if sum >= p:
                         break
                 else:
-                    j=self.s[i].out_states
+                    j = self.s[i].out_states
 
                 if j == self.s[i].out_states:  # Can happen by a rounding error */
                     j -= 1
@@ -212,7 +212,7 @@ class ghmm_cmodel:
                     if sum >= p:
                         break
                 else:
-                    m=self.s[i].M
+                    m = self.s[i].M
 
                 if m == self.s[i].M:
                     m -= 1
@@ -249,7 +249,7 @@ class ghmm_cmodel:
             else:
                 if pos < len:
                     sq.seq[n] = ARRAY_REALLOC(sq.seq[n], pos)
-                sq.seq_len[n] = pos * self.dim
+                sq.seq_len[n] = pos
                 # ighmm_cvector_print(stdout, sq.seq[n], sq.seq_len[n]," "," ","") */
                 n += 1
 
@@ -287,4 +287,43 @@ class ghmm_cmodel:
     def getEmission(self, index):
         return self.s[index].e
 
+    def check(self):
+        sum = 0.0
 
+        for i in range(self.N):
+            sum += self.s[i].pi
+
+        if abs(sum - 1.0) >= GHMM_EPS_PREC:
+            Log.error("sum Pi[i] != 1.0\n")
+
+        # only 0/1 in fix?
+        for i in range(self.N):
+            if self.s[i].fix != 0 and self.s[i].fix != 1:
+                Log.error("in vector fix_state only 0/1 values!\n")
+
+        for i in range(self.N):
+            if self.s[i].out_states == 0:
+                Log.note("out_states = 0 (state %d . final state!)\n", i)
+
+            # sum  a[i][k][j]
+            for k in range(self.cos):
+                sum = 0.0
+                for j in range(self.s[i].out_states):
+                    sum += self.s[i].out_a[k][j]
+
+                if abs(sum - 1.0) >= GHMM_EPS_PREC:
+                    Log.error("sum out_a[j] = %.4f != 1.0 (state %d, class %d)\n", sum, i, k)
+
+
+            # sum c[j]
+            sum = 0.0
+            for j in range(self.s[i].M):
+                sum += self.s[i].c[j]
+            if abs(sum - 1.0) >= GHMM_EPS_PREC:
+                Log.error("sum c[j] = %.2f != 1.0 (state %d)\n", sum, i)
+
+        # do all emissions have the same dimension as specified in smo.dim
+        for i in range(self.N):
+            for k in range(self.s[i].M):
+                if self.dim != self.s[i].e[k].dimension:
+                    Log.error("dim s[%d].e[%d] != dimension of model\n", i, k)

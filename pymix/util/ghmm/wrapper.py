@@ -428,7 +428,7 @@ def ighmm_cholesky_decomposition(dim, cov):
             # Now find elements sigmacd[row*dim+k], k > row. */
             for k in range(row + 1, dim):
                 total = cov[row][k]
-                for j in range(0, row - 1):
+                for j in range(row - 1):
                     total -= sigmacd[j][row] * sigmacd[j][k]
                 sigmacd[row][k] = total / sigmacd[row][row]
 
@@ -531,7 +531,7 @@ class ghmm_dsmodel():
 
 def ighmm_cmatrix_normalize(matrix, rows, cols):
     # Scales the row vectors of a matrix to have the sum 1
-    for i in range(0, rows):
+    for i in range(rows):
         ighmm_cvector_normalize(matrix[i], cols)
 
 

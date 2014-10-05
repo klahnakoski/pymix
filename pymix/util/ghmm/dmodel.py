@@ -1584,7 +1584,7 @@ class ghmm_dmodel():
 
     # def ghmm_cmodel_calc_b(state, omega):
     #     b=0
-    #     for m in range(0, state.M):
+    #     for m in range(state.M):
     #         b += state.c[m] * density_func[state.e[m].type](state.e + m, omega)
     #     return b
 
@@ -1596,7 +1596,7 @@ class ghmm_dmodel():
         res = 0
         size = 1
 
-        for i in range(0, self.N):
+        for i in range(self.N):
             if self.s[i].pi >= 0.0:
                 pi_sum += self.s[i].pi
             else:
@@ -1610,9 +1610,9 @@ class ghmm_dmodel():
             ighmm_cvector_normalize(self.s[i].out_a, self.s[i].out_states)
 
             # for every outgoing probability update the corrosponding incoming probability
-            for j in range(0, self.s[i].out_states):
+            for j in range(self.s[i].out_states):
                 j_id = self.s[i].out_id[j]
-                for m in range(0, self.s[j_id].in_states):
+                for m in range(self.s[j_id].in_states):
                     if i == self.s[j_id].in_id[m]:
                         i_id = m
                         break
@@ -1627,14 +1627,14 @@ class ghmm_dmodel():
                 if size == 1:
                     ighmm_cvector_normalize(self.s[i].b, self.M)
                 else:
-                    for m in range(0, size):
+                    for m in range(size):
                         #NORMALIZE THIS SUB-ARRAY
                         v = self.s[i].b[m * self.M:(m + 1) * self.M]
                         ighmm_cvector_normalize(v, self.M)
                         for i, vv in enumerate(range(m * self.M, (m + 1) * self.M)):
                             self.s[i].b[vv] = v[i]
 
-        for i in range(0, self.N):
+        for i in range(self.N):
             self.s[i].pi /= pi_sum
 
 
@@ -1642,7 +1642,7 @@ class ghmm_dmodel():
         if not (self.model_type & kBackgroundDistributions):
             Log.error("Error: No background distributions")
 
-        for i in range(0, self.N):
+        for i in range(self.N):
             if self.background_id[i] != kNoBackgroundDistribution:
                 if self.model_type & kHigherOrderEmissions:
                     if self.order[i] != self.bp.order[self.background_id[i]]:
@@ -1655,12 +1655,12 @@ class ghmm_dmodel():
 
                     # XXX Cache in ghmm_dbackground
                     size = pow(self.M, self.order[i] + 1)
-                    for j in range(0, size):
+                    for j in range(size):
                         self.s[i].b[j] = (1.0 - background_weight[i]) * self.s[i].b[j] + background_weight[i] * self.bp.b[self.background_id[i]][j]
                 else:
                     if self.bp.order[self.background_id[i]] != 0:
                         Log.error("Error: State and background order do not match\n")
 
-                    for j in range(0, self.M):
+                    for j in range(self.M):
                         self.s[i].b[j] = (1.0 - background_weight[i]) * self.s[i].b[j] + background_weight[i] * self.bp.b[self.background_id[i]][j]
 

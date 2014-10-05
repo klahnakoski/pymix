@@ -37,11 +37,13 @@ from math import sqrt
 from util.ghmm.gauss_tail import ighmm_gtail_pmue_umin
 from util.ghmm.matrixop import ighmm_invert_det
 from util.ghmm.randvar import GHMM_EPS_NDT, ighmm_rand_normal_density_pos, ighmm_rand_get_xPHIless1
+from util.ghmm.root_finder import ghmm_zbrent_AB
 from util.ghmm.sdfoba import ghmm_dsmodel_forward
 from util.ghmm.sfoba import ghmm_cmodel_forward, ghmm_cmodel_backward
 from util.ghmm.types import kMultivariate
-from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, DBL_MIN, GHMM_EPS_PREC, DBL_MAX, normal_right
+from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, DBL_MIN, GHMM_EPS_PREC, DBL_MAX, normal_right, matrix_alloc
 from vendor.pyLibrary.env.logs import Log
+from vendor.pyLibrary.maths import Math
 
 MCI = 0
 GHMM_MAX_ITER_BW = 500
@@ -73,7 +75,7 @@ def sreestimate_alloc(smo):
     r.cos = smo.cos
     r.pi_num = ARRAY_CALLOC(smo.N)
     r.a_num = ARRAY_CALLOC(smo.N)
-    for i in range(0, smo.N):
+    for i in range(smo.N):
         r.a_num[i] = ighmm_cmatrix_stat_alloc(smo.cos, smo.s[i].out_states)
 
     r.a_denom = ighmm_cmatrix_stat_alloc(smo.N, smo.cos)
@@ -84,13 +86,14 @@ def sreestimate_alloc(smo):
     r.c_num = ighmm_cmatrix_stat_alloc(smo.N, smo.M)
     r.mue_num = ARRAY_CALLOC(smo.N)
 
-    for i in range(0, smo.N):
+    for i in range(smo.N):
         r.mue_num[i] = ighmm_cmatrix_stat_alloc(smo.s[i].M, smo.dim)
 
     r.u_num = ARRAY_CALLOC(smo.N)
-
-    for i in range(0, smo.N):
-        r.u_num[i] = ighmm_cmatrix_stat_alloc(smo.s[i].M, smo.dim * smo.dim)
+    for i in range(smo.N):
+        r.u_num[i] = ARRAY_CALLOC(smo.s[i].M)
+        for j in range(smo.s[i].M):
+            r.u_num[i][j] = matrix_alloc(smo.dim, smo.dim)
 
     r.mue_u_denom = ighmm_cmatrix_stat_alloc(smo.N, smo.M)
     r.sum_gt_otot = ighmm_cmatrix_stat_alloc(smo.N, smo.M)
@@ -102,22 +105,22 @@ def sreestimate_free(r, N):
 
 
 def sreestimate_init(r, smo):
-    dim_2 = smo.dim * smo.dim
     r.pi_denom = 0.0
-    for i in range(0, smo.N):
+    for i in range(smo.N):
         r.pi_num[i] = 0.0
-        for osc in range(0, smo.cos):
+        for osc in range(smo.cos):
             r.a_denom[i][osc] = 0.0
-            for j in range(0, smo.s[i].out_states):
+            for j in range(smo.s[i].out_states):
                 r.a_num[i][osc][j] = 0.0
 
         r.c_denom[i] = 0.0
-        for m in range(0, smo.s[i].M):
-            for j in range(0, smo.dim):
+        for m in range(smo.s[i].M):
+            for j in range(smo.dim):
                 r.mue_num[i][m][j] = 0.0
 
-            for j in range(0, dim_2):
-                r.u_num[i][m][j] = 0.0
+            for j in range(smo.dim):
+                for k in range(smo.dim):
+                    r.u_num[i][m][j][k] = 0.0
 
             r.c_num[i][m] = 0.0
             r.mue_u_denom[i][m] = 0.0
@@ -131,7 +134,7 @@ def sreestimate_alloc_matvek( T, N, M):
     scale = ARRAY_CALLOC(T)
     # 3-dim. matrix for b[t][i][m] with m = 1..M(not ):
     b = ARRAY_CALLOC(T)
-    for t in range(0, T):
+    for t in range(T):
         b[t] = ighmm_cmatrix_stat_alloc(N, M + 1)
 
     return alpha, beta, scale, b
@@ -143,14 +146,14 @@ def sreestimate_free_matvec(alpha, beta, scale, b, T, N):
 def sreestimate_precompute_b(smo, O, T, b):
 # define CUR_PROC "sreestimate_precompute_b"
     # save sum (c_im * b_im(O_t))  in b[t][i][smo.M]
-    for t in range(0, T):
-        for i in range(0, smo.N):
+    for t in range(T):
+        for i in range(smo.N):
             b[t][i][smo.M] = 0.0
     # save c_im * b_im(O_t)  directly in  b[t][i][m]
-    for t in range(0, T):
+    for t in range(T):
         pos = t * smo.dim
-        for i in range(0, smo.N):
-            for m in range(0, smo.s[i].M):
+        for i in range(smo.N):
+            for m in range(smo.s[i].M):
                 b[t][i][m] = smo.s[i].calc_cmbm(m, O[t])
                 b[t][i][smo.s[i].M] += b[t][i][m]
 
@@ -162,12 +165,12 @@ def sreestimate_setlambda(r, smo):
         Log.error("pi: denominator == 0.0not \n")
     pi_factor = 1 / r.pi_denom
 
-    for i in range(0, smo.N):
+    for i in range(smo.N):
         # Pi
         smo.s[i].pi = r.pi_num[i] * pi_factor
 
         # A
-        for osc in range(0, smo.cos):
+        for osc in range(smo.cos):
             # note: denom. might be 0 never reached state?
             a_denom_pos = 1
 
@@ -178,7 +181,7 @@ def sreestimate_setlambda(r, smo):
 
             a_num_pos = 0
 
-            for j in range(0, smo.s[i].out_states):
+            for j in range(smo.s[i].out_states):
                 j_id = smo.s[i].out_id[j]
                 # TEST: denom. < numerator
                 if (r.a_denom[i][osc] - r.a_num[i][osc][j]) < -GHMM_EPS_PREC:
@@ -229,7 +232,7 @@ def sreestimate_setlambda(r, smo):
         unfix_w = 0.0
         fix_flag = 0
 
-        for m in range(0, smo.s[i].M):
+        for m in range(smo.s[i].M):
             # if fixed continue to next component
             if smo.s[i].e[m].fixed:
                 #printf("state %d, component %d is fixed not \n",i,m)
@@ -256,12 +259,10 @@ def sreestimate_setlambda(r, smo):
             else:
                 # set mue_im
                 if smo.model_type & kMultivariate:
-                    for d in range(0, smo.s[i].e[m].dimension):
+                    for d in range(smo.s[i].e[m].dimension):
                         smo.s[i].e[m].mean.vec[d] = r.mue_num[i][m][d] / r.mue_u_denom[i][m]
                 else:
                     smo.s[i].e[m].mean.val = r.mue_num[i][m][0] / r.mue_u_denom[i][m]
-
-
 
             # TEST: u_denom == 0.0 ?
             if abs(r.mue_u_denom[i][m]) <= DBL_MIN:     # < EPS_PREC ?
@@ -270,21 +271,22 @@ def sreestimate_setlambda(r, smo):
 
             else:
                 if smo.model_type & kMultivariate:
-                    for d in range(0, (smo.s[i].e[m].dimension * smo.s[i].e[m].dimension)):
-                        u_im = r.u_num[i][m][d] / r.mue_u_denom[i][m]
-                        if abs(u_im) <= GHMM_EPS_U:
-                            if u_im < 0:
-                                u_im = -1.0 * GHMM_EPS_U
-                            else:
-                                u_im = GHMM_EPS_U
+                    for d1 in range(smo.s[i].e[m].dimension ):
+                        for d2 in range(smo.s[i].e[m].dimension):
+                            u_im = r.u_num[i][m][d1][d2] / r.mue_u_denom[i][m]
+                            if abs(u_im) <= GHMM_EPS_U:
+                                if u_im < 0:
+                                    u_im = -1.0 * GHMM_EPS_U
+                                else:
+                                    u_im = GHMM_EPS_U
 
-                        smo.s[i].e[m].variance.mat[d] = u_im
+                            smo.s[i].e[m].variance.mat[d1][d2] = u_im
 
                     # update the inverse and the determinant of covariance matrix
                     smo.s[i].e[m].sigmainv, smo.s[i].e[m].det = ighmm_invert_det(smo.dim, smo.s[i].e[m].variance.mat)
 
                 else:
-                    u_im = r.u_num[i][m][0] / r.mue_u_denom[i][m]
+                    u_im = r.u_num[i][m][0][0] / r.mue_u_denom[i][m]
                     if u_im <= GHMM_EPS_U:
                         u_im = GHMM_EPS_U
                     smo.s[i].e[m].variance.val = u_im
@@ -336,7 +338,7 @@ def sreestimate_setlambda(r, smo):
                 # for (m ..)
                 # adjusting weights for fixed mixture components if necessary
         if fix_flag == 1:
-            for m in range(0, smo.s[i].M):
+            for m in range(smo.s[i].M):
                 if smo.s[i].e[m].fixed == 0:
                     smo.s[i].c[m] = (smo.s[i].c[m] * fix_w) / unfix_w
                     # for (i = 0 .. < smo.N)
@@ -349,14 +351,11 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
     valid_parameter = valid_logp = 0
 
     #scan for max T_k: alloc of alpha, beta, scale and b only once
-    T_k_max = T[0] / smo.dim
-    for k in range(1, seq_number):
-        if T[k] > T_k_max * smo.dim:
-            T_k_max = T[k] / smo.dim
+    T_k_max = Math.max(*T)
     alpha, beta, scale, b = sreestimate_alloc_matvek(T_k_max, smo.N, smo.M)
 
     # loop over all sequences
-    for k in range(0, seq_number):
+    for k in range(seq_number):
         # Test: ignore sequences with very small weights
         # if seq_w[k] < 0.0001:
         #       continue
@@ -385,7 +384,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
         valid_parameter += 1
 
         # loop over all states
-        for i in range(0, smo.N):
+        for i in range(smo.N):
 
             state = smo.s[i]
 
@@ -394,7 +393,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
             r.pi_denom += seq_w[k] * alpha[0][i] * beta[0][i]       # sum over all i
 
             # loop over t (time steps of seq.)
-            for t in range(0, T_k):
+            for t in range(T_k):
                 c_t = 1 / scale[t]
                 if t > 0:
                     if smo.cos == 1:
@@ -410,7 +409,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
                                       "but model has only %d classesnot ", osc, smo.cos)
 
                     # A: starts at t=1 not !not
-                    for j in range(0, state.out_states):
+                    for j in range(state.out_states):
                         j_id = state.out_id[j]
 
                         contrib_t = (seq_w[k] * alpha[t - 1][i] * state.out_a[osc][j] * b[t][j_id][state.M] * beta[t][j_id] * c_t)
@@ -420,7 +419,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
 
                     # calculate sum (j=1..N):alp[t-1][j]*a_jc(t-1)i
                     sum_alpha_a_ji = 0.0
-                    for j in range(0, state.in_states):
+                    for j in range(state.in_states):
                         j_id = state.in_id[j]
                         sum_alpha_a_ji += alpha[t - 1][j_id] * state.in_a[osc][j]
 
@@ -440,7 +439,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
                     continue             # next t
 
                 # loop over no of density functions for C-numer., mue and u
-                for m in range(0, state.M):
+                for m in range(state.M):
                     #  c_im * b_im
                     f_im = b[t][i][m]
                     gamma = seq_w[k] * sum_alpha_a_ji * f_im * beta[t][i]
@@ -459,11 +458,11 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
                     r.mue_u_denom[i][m] += gamma_ct
                     # numerator U:
                     if smo.model_type & kMultivariate:
-                        for di in range(0, state.e[m].dimension):
-                            for dj in range(0, state.e[m].dimension):
-                                r.u_num[i][m][di * state.e[m].dimension + dj] += (gamma_ct * (O[k][t][di] - state.e[m].mean.vec[di]) * (O[k][t][dj] - state.e[m].mean.vec[dj]))
+                        for di in range(state.e[m].dimension):
+                            for dj in range(state.e[m].dimension):
+                                r.u_num[i][m][di][dj] += (gamma_ct * (O[k][t][di] - state.e[m].mean.vec[di]) * (O[k][t][dj] - state.e[m].mean.vec[dj]))
                     else:
-                        r.u_num[i][m][0] += (gamma_ct * sqrt(O[k][t] - state.e[m].mean.val))
+                        r.u_num[i][m][0][0] += (gamma_ct * sqrt(O[k][t] - state.e[m].mean.val))
 
                     # sum gamma_ct * O[k][t] * O[k][t] (truncated normal density):
                     temp=0.0
@@ -474,30 +473,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
         smo.class_change.k = -1
 
     if valid_parameter:
-        # new parameter lambda: set directly in model
         sreestimate_setlambda(r, smo)
-
-        # only test :
-
-
-        # printf("scale:\n")
-        #     for t in range(0, T[0]):
-        #         printf("%f, ",scale[t])
-        #
-        #     printf("\n\n")
-        #
-        #     for osc in range(0, smo.cos):
-        #         for i in range(0, smo.N):
-        #           for j in range(0, smo.N):
-        #              printf("osc= %d, i = %d, j= %d : %f / %f = %f\n",osc,i,j,r.a_num[i][osc][j],
-        #                      r.a_denom[i][osc],(r.a_num[i][osc][j] / r.a_denom[i][osc]))
-        #
-        #
-        #
-        #
-        #    ghmm_cmodel_print(stdout,smo)
-
-
         smo.check()
     else:                        # NO sequence can be build from smodel smonot
         # diskret:  *log_p = +1
@@ -505,15 +481,15 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
 
     sreestimate_free_matvec(alpha, beta, scale, b, T_k_max, smo.N)
 
-    return valid_logp
+    return valid_logp, log_p
 
 #============================================================================
 # int ghmm_cmodel_baum_welch(smo, sqd) :
 def ghmm_cmodel_baum_welch(cs):
     # truncated normal density needs  varialbles C_PHI and
     #     CC_PHI
-    for i in range(0, cs.smo.N):
-        for j in range(0, cs.smo.s[i].M):
+    for i in range(cs.smo.N):
+        for j in range(cs.smo.s[i].M):
             if cs.smo.s[i].e[j].type == normal_right:
                 globals()["C_PHI"] = ighmm_rand_get_xPHIless1()
                 globals()["CC_PHI"] = sqrt(C_PHI)
@@ -531,9 +507,9 @@ def ghmm_cmodel_baum_welch(cs):
     eps_iter_bw = max(GHMM_EPS_ITER_BW, cs.eps)
 
     while n <= max_iter_bw:
-        log_p = sreestimate_one_step(cs.smo, r, cs.sqd.seq_number, cs.sqd.seq_len, cs.sqd.seq, cs.sqd.seq_w)
+        valid, log_p = sreestimate_one_step(cs.smo, r, cs.sqd.seq_number, cs.sqd.seq_len, cs.sqd.seq, cs.sqd.seq_w)
         # to follow convergence of bw: uncomment next line
-        Log.note("\tBW Iter %d\t log(p) %.4f", n, log_p)
+        # Log.note("\tBW Iter %d\t log(p) %.4f", n, log_p)
         diff = log_p - log_p_old
 
         if diff < -GHMM_EPS_PREC:

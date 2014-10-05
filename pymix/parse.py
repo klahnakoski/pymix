@@ -314,7 +314,7 @@ def atom(next, token):
     elif token[1] == "{":
         seq = sequence(next, token, "}")
         res = {}
-        for i in range(0, len(seq), 2):
+        for i in range(len(seq), 2):
             res[seq[i]] = seq[i + 1]
         return res
     elif token[0] in (tokenize.STRING, tokenize.NUMBER):

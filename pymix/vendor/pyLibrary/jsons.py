@@ -350,7 +350,7 @@ def pretty_json(value):
 
                 content = ",\n".join(
                     ", ".join(j.rjust(max_len) for j in js[r:r+num_columns])
-                    for r in xrange(0, len(js), num_columns)
+                    for r in xrange(len(js), num_columns)
                 )
                 return "[\n" + indent(content) + "\n]"
 

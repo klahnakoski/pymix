@@ -43,7 +43,7 @@ class viterbi_alloc:
     def __init__(self, mo, len):
         # Allocate the log_in_a's . individal lenghts
         self.log_in_a = ARRAY_CALLOC(mo.N)
-        for j in range(0, mo.N):
+        for j in range(mo.N):
             self.log_in_a[j] = ARRAY_CALLOC(mo.s[j].in_states)
 
         self.log_b = ighmm_cmatrix_alloc(mo.N, mo.M)
@@ -57,8 +57,8 @@ class viterbi_alloc:
 
 def Viterbi_precompute(mo, o, len, v):
     # Precomputing the log(a_ij)
-    for j in range(0, mo.N):
-        for i in range(0, mo.s[j].in_states):
+    for j in range(mo.N):
+        for i in range(mo.s[j].in_states):
             if mo.s[j].in_a[i] == 0.0:        # DBL_EPSILON ?
                 v.log_in_a[j][i] = +1 # Not used any further in the calculations
             else:
@@ -67,8 +67,8 @@ def Viterbi_precompute(mo, o, len, v):
 
 
     # Precomputing the log(bj(ot))
-    for j in range(0, mo.N):
-        for t in range(0, mo.M):
+    for j in range(mo.N):
+        for t in range(mo.M):
             if mo.s[j].b[t] == 0.0:    # DBL_EPSILON ?
                 v.log_b[j][t] = +1
             else:
@@ -76,14 +76,14 @@ def Viterbi_precompute(mo, o, len, v):
 
 
 def viterbi_silent(mo, t, v):
-    for topocount in range(0, mo.topo_order_length):
+    for topocount in range(mo.topo_order_length):
         St = mo.topo_order[topocount]
         if mo.silent[St]:    # Silent states
             # Determine the maximum
             # max_phi = phi[i] + log_in_a[j][i] ...
             max_value = -DBL_MAX
             max_id = -1
-            for i in range(0, mo.s[St].in_states):
+            for i in range(mo.s[St].in_states):
                 i_id = mo.s[St].in_id[i]
                 if v.phi[i_id] != +1 and v.log_in_a[St][i] != +1:
                     value = v.phi[i_id] + v.log_in_a[St][i]
@@ -121,7 +121,7 @@ def ghmm_dmodel_viterbi(mo, o, len):
     Viterbi_precompute(mo, o, len, v)
 
     # Initialization, that is t = 0
-    for j in range(0, mo.N):
+    for j in range(mo.N):
         if mo.s[j].pi == 0.0 or v.log_b[j][o[0]] == +1: # instead of 0, DBL_EPS.?
             v.phi[j] = +1
         else:
@@ -134,18 +134,18 @@ def ghmm_dmodel_viterbi(mo, o, len):
 
     # t > 0
     for t in range(1, len):
-        for j in range(0, mo.N):
+        for j in range(mo.N):
             # initialization of phi, psi
             v.phi_new[j] = +1
             v.psi[t][j] = -1
 
-        for St in range(0, mo.N):
+        for St in range(mo.N):
             # Determine the maximum
             # max_phi = phi[i] + log_in_a[j][i] ...
             if not (mo.model_type & kSilentStates) or not mo.silent[St]:
                 max_value = -DBL_MAX
                 max_id = -1
-                for i in range(0, mo.s[St].in_states):
+                for i in range(mo.s[St].in_states):
                     i_id = mo.s[St].in_id[i]
                     if v.phi[i_id] != +1 and v.log_in_a[St][i] != +1:
                         value = v.phi[i_id] + v.log_in_a[St][i]
@@ -177,7 +177,7 @@ def ghmm_dmodel_viterbi(mo, o, len):
     # Termination - find end state
     max_value = -DBL_MAX
     end_state = -1
-    for j in range(0, mo.N):
+    for j in range(mo.N):
         if v.phi[j] != +1 and v.phi[j] > max_value:
             max_value = v.phi[j]
             end_state = j
@@ -199,7 +199,7 @@ def ghmm_dmodel_viterbi(mo, o, len):
     prev_state = end_state
 
     # backtrace is simple if the path length is known
-    for state_seq_index in reversed(range(0, len_path - 1)):
+    for state_seq_index in reversed(range(len_path - 1)):
         next_state = v.psi[t][prev_state]
         state_seq[state_seq_index] = prev_state = next_state
         if not (mo.model_type & kSilentStates) or not mo.silent[next_state]:

@@ -39,7 +39,7 @@ class ghmm_cstate:
 
         #* flag for fixation of parameter. If fix = 1 do not change parameters of
         #      output functions, if fix = 0 do normal training. Default is 0.
-        self.fix = None  # int
+        self.fix = 0  # int
         #* vector of ghmm_c_emission
         #      (type and parameters of output function components)
         self.e = ARRAY_CALLOC(M)  # ghmm_c_emission *
@@ -74,3 +74,12 @@ class ghmm_cstate:
         emission = self.e[m]
         return self.c[m] * density_func[emission.type](emission, omega)
 
+
+    #============================================================================
+    # PDF(omega) in a given state
+    def calc_b(self, omega):
+        b = 0.0
+
+        for m in range(self.M):
+            b += self.c[m] * density_func[self.e[m].type](self.e[m], omega)
+        return b

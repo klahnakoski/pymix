@@ -11,7 +11,7 @@ DIAG = Alphabet(['.', '0', '8', '1'])
 A = [[0.3, 0.6, 0.1], [0.0, 0.5, 0.5], [0.4, 0.2, 0.4]]
 B = [[0.5, 0.2, 0.1, 0.2], [0.5, 0.4, 0.05, 0.05], [0.8, 0.1, 0.05, 0.05]]
 pi = [1.0, 0.0, 0.0]
-h1 = mixtureHMM.getHMM(mixtureHMM.ghmm.IntegerRange(0, 4), mixtureHMM.ghmm.DiscreteDistribution(mixtureHMM.ghmm.IntegerRange(0, 4)), A, B, pi)
+h1 = mixtureHMM.getHMM(mixtureHMM.ghmm.Integerrange(4), mixtureHMM.ghmm.DiscreteDistribution(mixtureHMM.ghmm.Integerrange(4)), A, B, pi)
 
 #seq = h1.hmm.sample(10,50)
 #print seq
@@ -19,7 +19,7 @@ h1 = mixtureHMM.getHMM(mixtureHMM.ghmm.IntegerRange(0, 4), mixtureHMM.ghmm.Discr
 A2 = [[0.5, 0.4, 0.1], [0.3, 0.2, 0.5], [0.3, 0.2, 0.5]]
 B2 = [[0.1, 0.1, 0.4, 0.4], [0.1, 0.1, 0.4, 0.5], [0.2, 0.2, 0.3, 0.3]]
 pi2 = [0.6, 0.4, 0.0]
-h2 = mixtureHMM.getHMM(mixtureHMM.ghmm.IntegerRange(0, 4), mixtureHMM.ghmm.DiscreteDistribution(mixtureHMM.ghmm.IntegerRange(0, 4)), A2, B2, pi2)
+h2 = mixtureHMM.getHMM(mixtureHMM.ghmm.Integerrange(4), mixtureHMM.ghmm.DiscreteDistribution(mixtureHMM.ghmm.Integerrange(4)), A2, B2, pi2)
 
 n1 = NormalDistribution(2.5, 0.5)
 n2 = NormalDistribution(6.0, 0.8)
@@ -72,7 +72,7 @@ data.internalInit(m)
 tA = [[0.5, 0.2, 0.3], [0.2, 0.3, 0.5], [0.1, 0.5, 0.4]]
 tB = [[0.2, 0.4, 0.1, 0.3], [0.5, 0.1, 0.2, 0.2], [0.4, 0.3, 0.15, 0.15]]
 tpi = [0.3, 0.3, 0.4]
-th1 = mixtureHMM.getHMM(mixtureHMM.ghmm.IntegerRange(0, 4), mixtureHMM.ghmm.DiscreteDistribution(mixtureHMM.ghmm.IntegerRange(0, 4)), tA, tB, tpi)
+th1 = mixtureHMM.getHMM(mixtureHMM.ghmm.Integerrange(4), mixtureHMM.ghmm.DiscreteDistribution(mixtureHMM.ghmm.Integerrange(4)), tA, tB, tpi)
 
 seq = h1.hmm.sample(10, 50)
 #print seq
@@ -80,7 +80,7 @@ seq = h1.hmm.sample(10, 50)
 tA2 = [[0.5, 0.4, 0.1], [0.3, 0.2, 0.5], [0.3, 0.2, 0.5]]
 tB2 = [[0.1, 0.1, 0.4, 0.4], [0.1, 0.1, 0.4, 0.4], [0.2, 0.1, 0.6, 0.1]]
 tpi2 = [0.3, 0.4, 0.3]
-th2 = mixtureHMM.getHMM(mixtureHMM.ghmm.IntegerRange(0, 4), mixtureHMM.ghmm.DiscreteDistribution(mixtureHMM.ghmm.IntegerRange(0, 4)), tA2, tB2, tpi2)
+th2 = mixtureHMM.getHMM(mixtureHMM.ghmm.Integerrange(4), mixtureHMM.ghmm.DiscreteDistribution(mixtureHMM.ghmm.Integerrange(4)), tA2, tB2, tpi2)
 
 tn1 = NormalDistribution(-1.5, 1.5)
 tn2 = NormalDistribution(9.0, 1.2)

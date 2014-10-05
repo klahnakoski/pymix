@@ -153,7 +153,7 @@ class ConditionalGaussPrior(PriorDistribution):
         # update component-specific hyperparameters
         for i in range(self.nr_comps):
             self.post_sums[i] = np.sum(posterior[i, :])
-            for j in range(0, self.p):
+            for j in range(self.p):
                 #  var_j = np.dot(posterior, (data[:,j] - dist.mu[j])**2 ) / post_sum
                 self.var[i, j] = np.dot(posterior[i, :], (data[:, j] - dists[i].mu[j]) ** 2) / self.post_sums[i]
 

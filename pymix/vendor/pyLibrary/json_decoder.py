@@ -293,7 +293,7 @@ class JSONList(object):
     def __getitem__(self, index):
         self._convert()
         if isinstance(index, slice):
-            # IMPLEMENT FLAT SLICES (for i not in range(0, len(self)): assert self[i]==None)
+            # IMPLEMENT FLAT SLICES (for i not in range(len(self)): assert self[i]==None)
             if index.step is not None:
                 from .env.logs import Log
 
