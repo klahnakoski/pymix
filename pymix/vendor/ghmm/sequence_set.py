@@ -547,7 +547,8 @@ class EmissionSequence(object):
         # checking for state labels in the source C sequence struct
         if self.emissionDomain.CDataType == "int" and self.cseq.state_labels is not None:
             Log.note("EmissionSequence.asSequenceSet() -- found labels !")
-            seq.calloc_state_labels()
+            seq.state_labels_len = list(self.cseq.state_labels_len)
+            seq.state_labels = [None]*len(seq.state_labels_len)
             self.cseq.copyStateLabel(0, seq, 0)
 
         seq.seq_len[0] = self.cseq.getLength(0)
@@ -602,9 +603,11 @@ class ComplexEmissionSequence(object):
                 self.continuousDomains.append(emissionDomains[i])
                 self.continuousInputs.append(sequenceInputs[i])
 
-        self.cseq = wrapper.ghmm_dpseq(self.length,
+        self.cseq = wrapper.ghmm_dpseq(
+            self.length,
             len(self.discreteDomains),
-            len(self.continuousDomains))
+            len(self.continuousDomains)
+        )
 
         for i in range(len(self.discreteInputs)):
             internalInput = []

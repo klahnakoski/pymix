@@ -17,7 +17,7 @@ from ..cnv import CNV
 from .. import strings
 from ..collections import COUNT
 from ..maths import stats
-from ..env.elasticsearch import ElasticSearch
+from ..env.elasticsearch import Index
 from ..env.logs import Log
 from ..maths import Math
 from ..queries import domains, MVEL, filters
@@ -61,7 +61,7 @@ def loadColumns(es, frum):
         if k != "name" and v != frum[k]:
             diff = True
     if diff:
-        es = ElasticSearch(frum)
+        es = Index(frum)
 
     output = wrap(frum).copy()
     schema = es.get_schema()

@@ -2233,11 +2233,9 @@ class StateLabelHMM(DiscreteEmissionHMM):
         seq = emissionSequence.cseq.getSequence(0)
         label = wrapper.list2int_array(self.internalLabel(labelSequence))
 
-        error, logp = self.cmodel.label_forward(seq, label, t, calpha, cscale)
-        if error == -1:
-            Log.error("Forward finished with -1: Sequence cannot be build.")
+        logp = self.cmodel.label_forward(seq, label, t, calpha, cscale)
 
-        # translate alpha / scale to python lists
+       # translate alpha / scale to python lists
         pyscale = wrapper.double_array2list(cscale, t)
         pyalpha = ghmmhelper.double_matrix2list(calpha, t, n_states)
 
@@ -2266,10 +2264,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         # alllocating beta matrix
         cbeta = wrapper.double_matrix_alloc(t, self.cmodel.N)
-
-        error, logp = self.cmodel.label_backward(seq, label, t, cbeta, cscale)
-        if error == -1:
-            Log.error("backward finished with -1: EmissionSequence cannot be build.")
+        logp = self.cmodel.label_backward(seq, label, t, cbeta, cscale)
 
         pybeta = ghmmhelper.double_matrix2list(cbeta, t, self.cmodel.N)
 
@@ -2277,7 +2272,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         wrapper.free(cscale)
         wrapper.free(label)
         wrapper.double_matrix_free(cbeta, t)
-        return (logp, pybeta)
+        return logp, pybeta
 
     def labeledBaumWelch(self, trainingSequences, nrSteps=wrapper.MAX_ITER_BW,
         loglikelihoodCutoff=wrapper.EPS_ITER_BW):

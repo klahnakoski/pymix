@@ -80,10 +80,10 @@ def ighmm_inverse(cov, n, det):
         return inv
 
     if n == 2:
-        inv[0][0] = cov[1][1] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
-        inv[0][1] = (- cov[0][1]) / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
-        inv[1][0] = (- cov[1][0]) / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
-        inv[1][1] = cov[0][0] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
+        inv[0][0] =   cov[1][1] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
+        inv[0][1] = - cov[0][1] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
+        inv[1][0] = - cov[1][0] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
+        inv[1][1] =   cov[0][0] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
         return inv
 
     for i in range(n):

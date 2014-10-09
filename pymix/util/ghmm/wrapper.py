@@ -402,17 +402,24 @@ class threshold_user_data():
 
 
 class ghmm_dpseq():
-    def __init__(self):
+    def __init__(self, length, number_of_alphabets, number_of_d_seqs):
         ## for each alphabet in model.number_of_alphabets there is one int seq *
-        self.seq = None #int**
+        self.seq = ighmm_dmatrix_alloc(number_of_alphabets, length) #int**
         ## number of alphabets (same as in model) *
-        self.number_of_alphabets = 0
+        self.number_of_alphabets = number_of_alphabets
         ## for each sequence position there are also double values (e.g) Ka *
-        self.d_value = None #double**
+        self.d_value = self.d_value = ighmm_cmatrix_alloc(number_of_d_seqs, length) #double**
         ## number of continous sequences *
-        self.number_of_d_seqs = 0
+        self.number_of_d_seqs = number_of_d_seqs
         ## length of the sequence *
-        self.length = 0
+        self.length = length
+
+    def get_discrete(self, index):
+        return self.seq[index]
+
+
+    def get_continuous(self, index):
+        return self.d_value[index]
 
 
 def ighmm_cholesky_decomposition(dim, cov):

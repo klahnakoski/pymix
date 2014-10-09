@@ -33,6 +33,8 @@ from ..env.files import File
 # help - A brief description of what the argument does.
 # metavar - A name for the argument in usage messages.
 # dest - The name of the attribute to be added to the object returned by parse_args().
+from util.struct import Struct
+
 
 def _argparse(defs):
     parser = argparse.ArgumentParser()
@@ -72,11 +74,14 @@ def read_settings(filename=None, defs=None):
         args = _argparse(defs)
         settings_file = File(args.filename)
         if not settings_file.exists:
-            Log.error("Can not read settings file {{filename}}", {
+            Log.warning("Can not read settings file {{filename}}", {
                 "filename": settings_file.abspath
             })
-        json = settings_file.read()
-        settings = CNV.JSON2object(json, flexible=True)
+            settings = Struct()
+        else:
+            json = settings_file.read()
+            settings = CNV.JSON2object(json, flexible=True)
+
         settings.args = args
         return settings
 

@@ -458,6 +458,12 @@ class NullType(object):
     def __rdiv__(self, other):
         return Null
 
+    def __truediv__(self, other):
+        return Null
+
+    def __rtruediv__(self, other):
+        return Null
+
     def __gt__(self, other):
         return False
 

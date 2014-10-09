@@ -7,8 +7,10 @@
 #
 # Author: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
+from math import log10
 
 import unittest
+from ..struct import nvl
 from ..maths import Math
 from ..structs.wraps import wrap
 
@@ -35,15 +37,17 @@ def assertAlmostEqual(first, second, places=None, msg=None, delta=None):
         assertAlmostEqualValue(first, second, places=places, msg=msg, delta=delta)
 
 
-def assertAlmostEqualValue(first, second, places=None, msg=None, delta=None):
+def assertAlmostEqualValue(first, second, digits=None, places=None, msg=None, delta=None):
     """
     Snagged from unittest/case.py, then modified (Aug2014)
     """
     if first == second:
         # shortcut
         return
+
+    places = places if places is not None else digits
     if delta is not None and places is not None:
-        Log.error("specify delta or places not both")
+        raise TypeError("specify delta or places not both")
 
     if delta is not None:
         if abs(first - second) <= delta:
@@ -58,7 +62,8 @@ def assertAlmostEqualValue(first, second, places=None, msg=None, delta=None):
         if places is None:
             places = 18
 
-        if Math.round(first, digits=places) == Math.round(second, digits=places):
+        diff = log10(abs(first-second))
+        if diff < Math.ceiling(log10(first))-places:
             return
 
         standardMsg = '%s != %s within %r places' % (
@@ -66,10 +71,10 @@ def assertAlmostEqualValue(first, second, places=None, msg=None, delta=None):
             repr(second),
             places
         )
-    if msg is None:
-        raise AssertionError(standardMsg)
-    else:
-        raise AssertionError(msg + ": (" + standardMsg + ")")
+
+    r_first = Math.round(first, digits=places)
+    r_second = Math.round(second, digits=places)
+    raise AssertionError(nvl(msg, "") + ": (" + standardMsg + ")")
 
 
 

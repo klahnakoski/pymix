@@ -14,7 +14,7 @@ from __future__ import division
 from ..collections import PRODUCT, reverse, MAX, MIN, OR
 from ..cnv import CNV
 from ..env.logs import Log
-from ..struct import Null, Struct
+from ..struct import Null, Struct, nvl
 from ..structs.wraps import wrap
 
 
@@ -29,19 +29,19 @@ class Matrix(object):
         list = kwargs.list
         if list:
             self.num = 1
-            self.dims = (len(list), )
+            self.shape = (len(list), )
             self.cube = list
             return
 
         value = kwargs.value
         if value != None:
             self.num = 0
-            self.dims = tuple()
+            self.shape = tuple()
             self.cube = value
             return
 
         self.num = len(dims)
-        self.dims = tuple(dims)
+        self.shape = tuple(dims)
         if self.num == 0 or OR(d == 0 for d in dims):  #NO DIMS, OR HAS A ZERO DIM, THEN IT IS A NULL CUBE
             self.cube = Null
         else:
@@ -51,7 +51,7 @@ class Matrix(object):
     def wrap(array):
         output = Matrix()
         output.num = 1
-        output.dims = (len(array), )
+        output.shape = (len(array), )
         output.cube = array
         return output
 
@@ -61,7 +61,7 @@ class Matrix(object):
                 sub = self.cube[index]
                 output = Matrix()
                 output.num = 1
-                output.dims = (len(sub), )
+                output.shape = (len(sub), )
                 output.cube = sub
                 return output
             else:
@@ -96,7 +96,7 @@ class Matrix(object):
 
         output = Matrix()
         output.num = len(dims)
-        output.dims = dims
+        output.shape = dims
         output.cube = cube
         return output
 
@@ -121,7 +121,7 @@ class Matrix(object):
     def __len__(self):
         if self.num == 0:
             return 0
-        return PRODUCT(self.dims)
+        return PRODUCT(self.shape)
 
     @property
     def value(self):
@@ -164,6 +164,12 @@ class Matrix(object):
     def __rdiv__(self, other):
         return other / self.value
 
+    def __truediv__(self, other):
+        return self.value / other
+
+    def __rtruediv__(self, other):
+        return other / self.value
+
     def __iter__(self):
         # TODO: MAKE THIS FASTER BY NOT CALLING __getitem__ (MAKES CUBE OBJECTS)
         return (self[c] for c in self._all_combos())
@@ -180,7 +186,7 @@ class Matrix(object):
         offsets = []
         new_dim = []
         acc = 1
-        for i, d in reverse(enumerate(self.dims)):
+        for i, d in reverse(enumerate(self.shape)):
             if not io_select[i]:
                 new_dim.insert(0, d)
             offsets.insert(0, acc * io_select[i])
@@ -222,14 +228,20 @@ class Matrix(object):
         RETURN AN ITERATOR OF ALL COORDINATES
         """
         num = self.num
-        dim = self.dims
+        dim = self.shape
 
         combos = PRODUCT(dim)
         if not combos:
             return
 
+        test = self._all_combos2()
+
         c = [0]*num  # THE CORRECT SIZE
         while True:
+            t = test.next()
+            if list(t) != c:
+                Log.error("problem with new all_combo()")
+
             yield c
 
             for i in range(num-1, -1, -1):
@@ -240,9 +252,22 @@ class Matrix(object):
             else:
                 break
 
+    def _all_combos2(self):
+        """
+        RETURN AN ITERATOR OF ALL COORDINATES
+        """
+        combos = PRODUCT(self.shape)
+        if not combos:
+            return
+
+        calc = [(nvl(PRODUCT(self.shape[i+1:]), 1), mm) for i, mm in enumerate(self.shape)]
+
+        for c in xrange(combos):
+            yield tuple(int(c / dd) % mm for dd, mm in calc)
+
 
     def __str__(self):
-        return "Matrix " + CNV.object2JSON(self.dims) + ": " + str(self.cube)
+        return "Matrix " + CNV.object2JSON(self.shape) + ": " + str(self.cube)
 
     def __json__(self):
         return CNV.object2JSON(self.cube)

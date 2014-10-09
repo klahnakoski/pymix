@@ -10,9 +10,11 @@
 
 from __future__ import unicode_literals
 from __future__ import division
+
+import functools
 from ..collections import MIN
 from ..env.logs import Log
-from ..struct import nvl, split_field, StructList
+from ..struct import nvl, split_field, StructList, Struct
 from ..structs.wraps import wrap
 
 
@@ -48,27 +50,74 @@ class FlatList(list):
                 r = temp
             yield r
 
-    def select(self, field_name):
-        if isinstance(field_name, dict):
-            field_name=field_name.value
+    def select(self, fields):
+        if isinstance(fields, dict):
+            fields=fields.value
 
-        if isinstance(field_name, basestring):
+        if isinstance(fields, basestring):
             # RETURN LIST OF VALUES
-            if len(split_field(field_name)) == 1:
-                if self.path[0] == field_name:
+            if len(split_field(fields)) == 1:
+                if self.path[0] == fields:
                     return [d[1] for d in self.data]
                 else:
-                    return [d[0][field_name] for d in self.data]
+                    return [d[0][fields] for d in self.data]
             else:
-                keys = split_field(field_name)
+                keys = split_field(fields)
                 depth = nvl(MIN([i for i, (k, p) in enumerate(zip(keys, self.path)) if k != p]), len(self.path))  # LENGTH OF COMMON PREFIX
-                short_keys = keys[depth:]
+                short_key = keys[depth:]
 
                 output = StructList()
-                _select1((wrap(d[depth]) for d in self.data), short_keys, 0, output)
+                _select1((wrap(d[depth]) for d in self.data), short_key, 0, output)
                 return output
 
+        if isinstance(fields, list):
+            output = StructList()
+
+            meta = []
+            for f in fields:
+                if hasattr(f.value, "__call__"):
+                    meta.append((f.name, f.value))
+                else:
+                    meta.append((f.name, functools.partial(lambda v, d: d[v], f.value)))
+
+            for row in self._values():
+                agg = Struct()
+                for name, f in meta:
+                    agg[name] = f(row)
+
+                output.append(agg)
+
+            return output
+
+            # meta = []
+            # for f in fields:
+            #     keys = split_field(f.value)
+            #     depth = nvl(MIN([i for i, (k, p) in enumerate(zip(keys, self.path)) if k != p]), len(self.path))  # LENGTH OF COMMON PREFIX
+            #     short_key = join_field(keys[depth:])
+            #
+            #     meta.append((f.name, depth, short_key))
+            #
+            # for row in self._data:
+            #     agg = Struct()
+            #     for name, depth, short_key in meta:
+            #         if short_key:
+            #             agg[name] = row[depth][short_key]
+            #         else:
+            #             agg[name] = row[depth]
+            #     output.append(agg)
+            # return output
+
         Log.error("multiselect over FlatList not supported")
+
+    def _values(self):
+        temp = [[]] * len(self.path)
+        for d in self.data:
+            for i, p in enumerate(self.path):
+                temp[i] = d[i][p]    # REMEMBER THE LIST THAT IS HERE
+                d[i][p] = d[i + 1]   # REPLACE WITH INSTANCE
+            yield d[0]               # DO THE WORK
+            for i, p in enumerate(self.path):
+                d[i][p] = temp[i]    # RETURN LIST BACK TO PLACE
 
 
 def _select1(data, field, depth, output):

@@ -182,7 +182,7 @@ class ESQuery(object):
                 command.append({"update": {"_id": id}})
                 command.append({"script": script})
             content = ("\n".join(CNV.object2JSON(c) for c in command)+"\n").encode('utf-8')
-            self.es._post(
+            self.es.cluster._post(
                 self.es.path + "/_bulk",
                 data=content,
                 headers={"Content-Type": "application/json"}

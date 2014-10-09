@@ -14,11 +14,10 @@ from .dimensions import Dimension
 from .domains import Domain
 from ..collections import AND, reverse
 from ..env.logs import Log
-from ..queries import MVEL
+from ..queries import MVEL, _normalize_select, INDEX_CACHE
 from ..queries.filters import TRUE_FILTER, simplify
-from ..struct import nvl, Struct, EmptyList, split_field, join_field, StructList
+from ..struct import nvl, Struct, EmptyList, split_field, join_field, StructList, Null
 from ..structs.wraps import wrap, unwrap, listwrap
-from .es_query_util import INDEX_CACHE
 
 
 class Query(object):
@@ -86,24 +85,6 @@ def _normalize_selects(selects, schema=None):
         return _normalize_select(selects, schema=schema)
 
 
-def _normalize_select(select, schema=None):
-    if isinstance(select, basestring):
-        if schema:
-            s = schema[select]
-            if s:
-                return s.getSelect()
-        return Struct(
-            name=select.rstrip("."),  # TRAILING DOT INDICATES THE VALUE, BUT IS INVALID FOR THE NAME
-            value=select,
-            aggregate="none"
-        )
-    else:
-        if not select.name:
-            select = select.copy()
-            select.name = nvl(select.value, select.aggregate)
-
-        select.aggregate = nvl(select.aggregate, "none")
-        return select
 
 
 def _normalize_edges(edges, schema=None):
@@ -362,5 +343,7 @@ sort_direction = {
     "none": 0,
     1: 1,
     0: 0,
-    -1: -1
+    -1: -1,
+    None: 1,
+    Null: 1
 }

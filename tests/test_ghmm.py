@@ -144,7 +144,7 @@ class AlphabetTests(FuzzyTestCase):
 
 class EmissionSequenceTests(FuzzyTestCase):
     def setUp(self):
-        self.i_dom = Integerrange(5)
+        self.i_dom = IntegerRange(0, 5)
         self.d_dom = Float()
         l_domain = LabelDomain(['E', 'R', 'T'])
         self.i_seq = EmissionSequence(self.i_dom, [1, 2, 0, 0, 0, 3, 4])
@@ -241,7 +241,7 @@ class EmissionSequenceTests(FuzzyTestCase):
 class SequenceSetTests(FuzzyTestCase):
     def setUp(self):
         Log.note("SequenceSetTests.setUp()")
-        self.i_alph = Integerrange(7)
+        self.i_alph = IntegerRange(0, 7)
         self.d_alph = Float()
         self.l_domain = LabelDomain(['E', 'R', 'T'])
 
@@ -788,9 +788,12 @@ class StateLabelHMMTests(FuzzyTestCase):
         sequence = []
         for i in range(slength):
             sequence.append(random.choice(DNA.listOfCharacters))
-        self.tSeq = EmissionSequence(DNA, sequence,
+        self.tSeq = EmissionSequence(
+            DNA,
+            sequence,
             labelDomain=self.l_domain,
-            labelInput=[self.labels])
+            labelInput=self.labels
+        )
 
     def test__str__(self):
         # we aren't interested in the output but the function should run fine
@@ -1842,12 +1845,16 @@ class XMLIOTests(unittest.TestCase):
 
 class ComplexEmissionSequenceTests(FuzzyTestCase):
     def setUp(self):
-        i_alph = Integerrange(5)
+        i_alph = IntegerRange(0, 5)
         d_alph = Float()
-        self.seq = ComplexEmissionSequence([i_alph, DNA, d_alph],
-            [[1, 2, 0, 0, 0, 3, 4],
+        self.seq = ComplexEmissionSequence(
+            [i_alph, DNA, d_alph],
+            [
+                [1, 2, 0, 0, 0, 3, 4],
                 ['a', 't', 'g', 'c', 't', 'g', 'c'],
-                [1.3, 2.1, 0.8, 0.1, 0.03, 3.6, 43.3]])
+                [1.3, 2.1, 0.8, 0.1, 0.03, 3.6, 43.3]
+            ]
+        )
 
     def testprint(self):
         Log.note("ComplexEmissionSequenceTests.testprint")

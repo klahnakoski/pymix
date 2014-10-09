@@ -12,7 +12,7 @@ from __future__ import division
 
 from datetime import timedelta, datetime
 from ..cnv import CNV
-from .elasticsearch import ElasticSearch
+from .elasticsearch import Cluster
 from ..structs.wraps import wrap
 from ..thread.threads import Thread, Queue
 from .logs import BaseLog, Log
@@ -21,15 +21,10 @@ from .logs import BaseLog, Log
 class Log_usingElasticSearch(BaseLog):
     def __init__(self, settings):
         settings = wrap(settings)
-        self.es = ElasticSearch(settings)
 
-        aliases = self.es.get_aliases()
-        if settings.index not in [a.index for a in aliases]:
-            schema = CNV.JSON2object(CNV.object2JSON(SCHEMA), paths=True)
-            self.es = ElasticSearch.create_index(settings, schema, limit_replicas=True)
-
+        self.es = Cluster(settings).get_or_create_index(settings, schema=CNV.JSON2object(CNV.object2JSON(SCHEMA), paths=True))
         self.queue = Queue()
-        self.thread = Thread("log to " + settings.index, time_delta_pusher, es=self.es, queue=self.queue, interval=timedelta(seconds=1))
+        self.thread = Thread("log to " + settings.index, time_delta_pusher, es_sink=self.es, queue=self.queue, interval=timedelta(seconds=1))
         self.thread.start()
 
     def write(self, template, params):
@@ -56,11 +51,11 @@ class Log_usingElasticSearch(BaseLog):
             pass
 
 
-def time_delta_pusher(please_stop, es, queue, interval):
+def time_delta_pusher(please_stop, es_sink, queue, interval):
     """
-    appender - THE FUNCTION THAT ACCEPTS A STRING
+    sink - ES DESTINATION
     queue - FILLED WITH LOG ENTRIES {"template":template, "params":params} TO WRITE
-    interval - timedelta
+    interval - ONLY RUN ONCE EVERY timedelta
     USE IN A THREAD TO BATCH LOGS BY TIME INTERVAL
     """
     if not isinstance(interval, timedelta):
@@ -70,7 +65,7 @@ def time_delta_pusher(please_stop, es, queue, interval):
 
     while not please_stop:
         Thread.sleep(till=next_run)
-        next_run = datetime.utcnow() + interval
+        next_run += interval
         logs = queue.pop_all()
         if logs:
             try:
@@ -81,7 +76,7 @@ def time_delta_pusher(please_stop, es, queue, interval):
                         last = i
                         next_run = datetime.utcnow()
                 if last > 0:
-                    es.extend([{"value": v} for v in logs[0:last]])
+                    es_sink.extend([{"value": v} for v in logs[0:last]])
             except Exception, e:
                 # DO NOT KILL THREAD, WE MUST CONTINUE TO CONSUME MESSAGES
                 Log.warning("problem logging to es", e)

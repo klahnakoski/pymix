@@ -1,6 +1,5 @@
 import types
 import math
-import numpy as np
 from ..collections.multiset import Multiset
 from ..struct import Null
 

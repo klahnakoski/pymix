@@ -12,10 +12,10 @@ from __future__ import division
 import re
 from ..cnv import CNV
 from ..collections import UNION
-from .index import UniqueIndex
 from ..env.logs import Log
 from ..struct import Struct, nvl, StructList
 from ..structs.wraps import wrap, unwrap
+from .index import UniqueIndex
 
 ALGEBRAIC = {"time", "duration", "numeric", "count", "datetime"}  # DOMAINS THAT HAVE ALGEBRAIC OPERATIONS DEFINED
 KNOWN = {"set", "boolean", "duration", "time", "numeric"}    # DOMAINS THAT HAVE A KNOWN NUMBER FOR PARTS AT QUERY TIME
@@ -30,8 +30,6 @@ class Domain(object):
         elif desc.type == "default":
             return DefaultDomain(**unwrap(desc))
         elif desc.type == "set":
-            if isinstance(desc.key, (list, tuple)):
-                Log.error("multi key not supported yet")
             return SetDomain(**unwrap(desc))
         elif desc.type == "uid":
             return DefaultDomain(**unwrap(desc))
@@ -153,37 +151,44 @@ class SetDomain(Domain):
 
         self.NULL = Struct(value=None)
         self.partitions = StructList()
-        if desc.partitions and desc.dimension.fields and len(desc.dimension.fields)>1:
-            self.map = UniqueIndex(keys=desc.dimension.fields)
-        elif desc.partitions and isinstance(desc.partitions[0][desc.key], dict):
-            keys = UNION(set(d[desc.key].keys()) for d in desc.partitions)
-            self.map = UniqueIndex(keys=keys)
-        else:
-            self.map = dict()
-            self.map[None] = self.NULL
 
-        self.label = nvl(self.label, "name")
-
-        if not isinstance(desc.partitions, list):
-            Log.error("expecting a list of partitions")
+        if isinstance(desc.key, set):
+            Log.error("problem")
 
         if isinstance(desc.partitions[0], basestring):
             # ASSMUE PARTS ARE STRINGS, CONVERT TO REAL PART OBJECTS
+            self.key = ("value", )
             for p in desc.partitions:
                 part = {"name": p, "value": p}
                 self.partitions.append(part)
                 self.map[p] = part
-            self.key = ("value", )
-        else:
-            if desc.key == None:
-                Log.error("Domains must have keys")
-            if not is_keyword(desc.key):
-                Log.error("scripts not supported yet")
+        elif desc.partitions and desc.dimension.fields and len(desc.dimension.fields) > 1:
             self.key = desc.key
-
-            self.partitions = desc.partitions.copy()
+            self.map = UniqueIndex(keys=desc.dimension.fields)
+        elif desc.partitions and isinstance(desc.key, (list, set)):
+            # TODO: desc.key CAN BE MUCH LIKE A SELECT, WHICH UniqueIndex CAN NOT HANDLE
+            self.key = desc.key
+            self.map = UniqueIndex(keys=desc.key)
+        elif desc.partitions and isinstance(desc.partitions[0][desc.key], dict):
+            self.key = desc.key
+            self.map = UniqueIndex(keys=desc.key)
+            # self.key = UNION(set(d[desc.key].keys()) for d in desc.partitions)
+            # self.map = UniqueIndex(keys=self.key)
+        elif desc.key == None:
+            Log.error("Domains must have keys")
+        else:
+            self.key = desc.key
+            self.map = dict()
+            self.map[None] = self.NULL
             for p in desc.partitions:
                 self.map[p[self.key]] = p
+
+        self.label = nvl(self.label, "name")
+
+        if isinstance(desc.partitions, list):
+            self.partitions = desc.partitions.copy()
+        else:
+            Log.error("expecting a list of partitions")
 
     def compare(self, a, b):
         return value_compare(self.getKey(a), self.getKey(b))
@@ -236,3 +241,5 @@ def is_keyword(value):
     if value == None:
         return False
     return True if keyword_pattern.match(value) else False
+
+

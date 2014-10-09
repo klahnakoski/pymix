@@ -19,10 +19,18 @@ class Index(object):
     USING DATABASE TERMINOLOGY, THIS IS A NON-UNIQUE INDEX
     """
 
-    def __init__(self, keys):
+    def __init__(self, data, keys=None):
+        if keys is None:
+            keys=data
+            data=None
+
         self._data = {}
         self._keys = tuplewrap(keys)
         self.count = 0
+
+        if data:
+            for i, d in enumerate(data):
+                self.add(d)
 
     def __getitem__(self, key):
         try:

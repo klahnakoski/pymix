@@ -18,11 +18,17 @@ FALSE_FILTER = False
 
 
 def simplify(esfilter):
-    output = normalize(esfilter)
-    if output is TRUE_FILTER:
-        return {"match_all": {}}
-    output.isNormal = None
-    return output
+    try:
+        output = normalize(esfilter)
+        if output is TRUE_FILTER:
+            return {"match_all": {}}
+        output.isNormal = None
+        return output
+    except Exception, e:
+        from ..env.logs import Log
+
+        raise Log.unexpected("programmer error")
+
 
 
 def removeOr(esfilter):
@@ -63,7 +69,7 @@ def _normalize(esfilter):
             output = []
             for a in esfilter["and"]:
                 if isinstance(a, (list, set)):
-                    from dzAlerts.util.env.logs import Log
+                    from ..env.logs import Log
                     Log.error("and clause is not allowed a list inside a list")
                 a_ = normalize(a)
                 if a_ is not a:

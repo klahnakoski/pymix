@@ -104,6 +104,11 @@ class Duration(object):
         else:
             return self.milli / amount.milli
 
+    def __truediv__(self, other):
+        return self.__div__(other)
+
+    def __rtruediv__(self, other):
+        return self.__rdiv__(other)
 
     def __sub__(self, duration):
             output = Duration(0)

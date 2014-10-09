@@ -113,6 +113,10 @@ class ghmm_dseq():
         pass
 
 
+    def copyStateLabel(self, index, target, no):
+        target.state_labels_len[no] = self.state_labels_len[index]
+        target.state_labels[no]=list(self.state_labels[index])
+
 
 def ghmm_dseq_read():
     pass

@@ -142,6 +142,17 @@ def right(value, len):
         return u""
     return value[-len:]
 
+
+def right_align(value, len):
+    if len <= 0:
+        return u""
+
+    if len(value) < len:
+        return " " * (len - len(value)) + value
+    else:
+        return value[-len:]
+
+
 def left(value, len):
     if len <= 0:
         return u""

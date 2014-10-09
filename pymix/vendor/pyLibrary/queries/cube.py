@@ -49,7 +49,7 @@ class Cube(object):
                 # EXPECTING NO MORE THAN ONE rownum EDGE IN THE DATA
                 length = MAX([len(v) for v in data.values()])
                 if length >= 1:
-                    self.edges = [{"name": "rownum", "domain": {"type": "index"}}]
+                    self.edges = wrap([{"name": "rownum", "domain": {"type": "index"}}])
                 else:
                     self.edges = StructList.EMPTY
             elif isinstance(data, list):
@@ -57,7 +57,7 @@ class Cube(object):
                     Log.error("not expecting a list of records")
 
                 data = {select.name: Matrix.wrap(data)}
-                self.edges = [{"name": "rownum", "domain": {"type": "index"}}]
+                self.edges = wrap([{"name": "rownum", "domain": {"type": "index"}}])
             elif isinstance(data, Matrix):
                 if isinstance(select, list):
                     Log.error("not expecting a list of records")
@@ -148,6 +148,12 @@ class Cube(object):
     def __rdiv__(self, other):
         return other / self.value
 
+    def __truediv__(self, other):
+        return self.value / other
+
+    def __rtruediv__(self, other):
+        return other / self.value
+
     def __getitem__(self, item):
         # TODO: SOLVE FUNDAMENTAL QUESTION OF IF SELECTING A PART OF AN
         # EDGE REMOVES THAT EDGE FROM THIS RESULT, OR ADDS THE PART
@@ -236,6 +242,16 @@ class Cube(object):
             values = {s.name: self.data[s.value] for s in selects}
             return Cube(select, self.edges, values)
 
+    def filter(self, where):
+        if len(self.edges)==1 and self.edges[0].domain.type=="index":
+            # USE THE STANDARD LIST FILTER
+            from ..queries import Q
+            return Q.filter(where, self.data.values()[0].cube)
+        else:
+            # FILTER DOES NOT ALTER DIMESIONS, JUST WHETHER THERE ARE VALUES IN THE CELLS
+            Log.unexpected("Incomplete")
+
+
     def groupby(self, edges):
         """
         SLICE THIS CUBE IN TO ONES WITH LESS DIMENSIONALITY
@@ -250,7 +266,7 @@ class Cube(object):
         if len(stacked) + len(remainder) != len(self.edges):
             Log.error("can not find some edges to group by")
         # CACHE SOME RESULTS
-        keys = [e.name for e in self.edges]
+        keys = edges.name
         getKey = [e.domain.getKey for e in self.edges]
         lookup = [[getKey[i](p) for p in e.domain.partitions+([None] if e.allowNulls else [])] for i, e in enumerate(self.edges)]
 
@@ -304,7 +320,11 @@ class Cube(object):
 
     def __float__(self):
         if self.is_value:
-            return float(self.value)
+            v = self.value
+            if v == None:
+                return v
+            else:
+                return float(v)
         else:
             return float(self.data)
 

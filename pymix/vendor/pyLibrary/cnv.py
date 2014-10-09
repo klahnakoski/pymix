@@ -52,10 +52,12 @@ class CNV:
     def JSON2object(json_string, params=None, flexible=False, paths=False):
         with Profiler("JSON2Object"):
             try:
-                # REMOVE """COMMENTS""", # COMMENTS, //COMMENTS, AND \n \r
                 if flexible:
+                    # REMOVE """COMMENTS""", # COMMENTS, //COMMENTS, AND \n \r
                     # DERIVED FROM https://github.com/jeads/datasource/blob/master/datasource/bases/BaseHub.py# L58
                     json_string = re.sub(r"\"\"\".*?\"\"\"|[ \t]+//.*\n|^//.*\n|#.*?\n", r"\n", json_string, flags=re.MULTILINE)
+                    # ALLOW DICTIONARY'S NAME:VALUE LIST TO END WITH COMMA
+                    json_string = re.sub(r",\s*\}", r"}", json_string)
                 if params:
                     params = dict([(k, CNV.value2quote(v)) for k, v in params.items()])
                     json_string = expand_template(json_string, params)
@@ -191,6 +193,9 @@ class CNV:
 
     @staticmethod
     def value2url(value):
+        if value == None:
+            Log.error("")
+
         if isinstance(value, dict):
             output = "&".join([CNV.value2url(k)+"="+CNV.value2url(v) for k, v in value.items()])
         elif isinstance(value, unicode):
