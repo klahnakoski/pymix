@@ -62,7 +62,7 @@ from vendor.ghmm.distribution import MultivariateGaussianDistribution, Continuou
 from vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphabet, DNA
 from vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
 from vendor.ghmm.sequence_set import EmissionSequence, SequenceSet, ComplexEmissionSequence
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 from vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
@@ -515,9 +515,7 @@ class DiscreteEmissionHMMTests(FuzzyTestCase):
         A = [[0.3, 0.6, 0.1], [0.0, 0.5, 0.5], [0.0, 0.0, 1.0]]
         B = [[0.5, 0.5], [0.5, 0.5], [1.0, 0.0]]
         pi = [1.0, 0.0, 0.0]
-        return HMMFromMatrices(Integerrange(2),
-            DiscreteDistribution(Integerrange(2)),
-            A, B, pi)
+        return HMMFromMatrices(IntegerRange(0, 2), DiscreteDistribution(IntegerRange(0, 2)), A, B, pi)
 
     def testDel(self):
         """  test for explicit construction and destruction """
@@ -783,7 +781,8 @@ class StateLabelHMMTests(FuzzyTestCase):
         self.model = HMMFromMatrices(DNA, DiscreteDistribution(DNA),
             self.A, self.B, self.pi,
             labelDomain=self.l_domain2,
-            labelList=['fst', 'scd', 'thr'])
+            labelList=['fst', 'scd', 'thr']
+        )
 
         sequence = []
         for i in range(slength):

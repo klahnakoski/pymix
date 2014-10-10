@@ -33,9 +33,12 @@
 #*             last change by $Author: ejb177 $.
 #*
 #******************************************************************************
-from util.ghmm.types import kDiscreteHMM, kBackgroundDistributions, kSilentStates, kNoBackgroundDistribution, kTiedEmissions, kUntied, kHigherOrderEmissions, kLabeledStates
-from util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC
-from vendor.pyLibrary.env.logs import Log
+from util.ghmm.dmodel import ghmm_dmodel
+from util.ghmm.dseq import ghmm_dseq
+from util.ghmm.dstate import ghmm_dstate
+from util.ghmm.types import kDiscreteHMM, kBackgroundDistributions, kSilentStates, kNoBackgroundDistribution, kTiedEmissions, kUntied, kHigherOrderEmissions, kLabeledStates, kLeftRight
+from util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, ghmm_dseq_max_symbol, RNG, GHMM_RNG_UNIFORM, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN
+from util.logs import Log
 
 DONE=0
 NOTVISITED=1
@@ -119,219 +122,10 @@ def model_copy_vectors(mo, index, a_matrix, b_matrix, pi, fix):
       cnt_in+=1
 
 def ghmm_dmodel_read(filename):
-  new_models = 0
-  mo_number = 0
-  s = ighmm_scanner_alloc (filename)
-
-  while not s.err and not s.eof:
-    ighmm_scanner_get_name (s)
-    ighmm_scanner_consume (s, '=')
-    if s.err:
-        Log.error(s.err)
-    if s.id == "HMM") or s.id == "hmm"):
-      (mo_number)+=1
-      # more mem
-      mo=ARRAY_REALLOC (mo, mo_number)
-      mo[mo_number - 1] = ghmm_dmodel_direct_read (s, (int *) &new_models)
-      if not mo[mo_number - 1]:
-        Log.error("")
-
-      # Copies the model, that has already been read.
-      if new_models > 1:
-        # "-1" because mo_number++ has already been done.
-        mo = ARRAY_REALLOC (mo, mo_number - 1 + new_models)
-        for j in range( 1,  new_models):
-          mo[mo_number] = ghmm_dmodel_copy (mo[mo_number - 1])
-          if not mo[mo_number]:
-            Log.error("")
-
-          (mo_number)+=1
-    elif s.id == "HMM_SEQ"):
-      ghmm_dmodel **tmp_mo = None
-      tmp_mo = ghmm_dmodel_from_sequence_ascii (s, &new_models)
-      mo = ARRAY_REALLOC (mo, (mo_number + new_models))
-      for j in range( 0,  new_models):
-        if not tmp_mo[j]:
-          Log.error("")
-
-        mo[mo_number] = tmp_mo[j]
-        (mo_number)+=1
-
-
-    else:
-      Log.error("")
-
-    ighmm_scanner_consume (s, '')
-    if s.err:
-      Log.error("")
-                               # while not s.err and not s.eof:
-  return mo, mo_number
-
+  pass
 
 def ghmm_dmodel_direct_read(s, multip):
-#define CUR_PROC "ghmm_dmodel_direct_read"
-  mt_read=0
-  multip = 1                  # default
-  mo=ARRAY_CALLOC( 1)
-
-  ighmm_scanner_consume (s, ':')
-
-  while not s.err and not s.eof and s.c - '':
-    ighmm_scanner_get_name(s)
-    if s.id!="M" and s.id!="N" and s.id!="Pi"     and s.id!="A" and s.id!="B" and s.id!="multip"        and s.id!="prior" and s.id!="fix_state" and s.id!="ModelType" :
-      Log.error()
-
-    ighmm_scanner_consume (s, '=')
-    if s.err:
-      Log.error()
-    if s.id=="multip":
-      multip = ighmm_scanner_get_int (s)
-      if multip < 1:        #
-        Log.error("Doesn't make any sense!")
-
-
-    elif s.id=="M":    #Number of output values
-      if m_read:
-        Log.error("identifier M twice")
-
-      mo.M = ighmm_scanner_get_int (s)
-      m_read = 1
-
-    elif s.id=="N":
-      if n_read:
-        Log.error("identifier N twice")
-
-      mo.N = ighmm_scanner_get_int (s)
-      mo.s=ARRAY_CALLOC( mo.N)
-      n_read = 1
-
-    elif s.id=="A":    #Transition probability
-      if not n_read:
-        Log.error("need N as a range for A")
-
-      if a_read:
-        Log.error("identifier A twice")
-
-      a_matrix=ARRAY_CALLOC( mo.N)
-      ighmm_scanner_get_name (s)
-      if s.id == "matrix"):
-        if ighmm_cmatrix_read(s, a_matrix, mo.N, mo.N):
-          Log.error("unable to read matrix A")
-
-        a_read = 1
-
-      else:
-        Log.error("unknown identifier")
-
-    elif s.id=="B":    #Output probability
-      if (not n_read) or (not m_read):
-        Log.error("need M and N as a range for B")
-
-      if b_read:
-        Log.error("identifier B twice")
-
-      b_matrix=ARRAY_CALLOC( mo.N)
-      ighmm_scanner_get_name (s)
-      if s.id=="matrix":
-        ighmm_cmatrix_read(s, b_matrix, mo.N, mo.M)
-        b_read = 1
-
-      else:
-        Log.error("unknown identifier")
-
-    elif s.id=="prior":        #A prior model
-      if prior_read:
-        Log.error("identifier prior twice")
-
-      mo.prior = ighmm_scanner_get_edouble (s)
-      if (mo.prior < 0 or mo.prior > 1) and mo.prior != -1:
-        Log.error("invalid model prior")
-      prior_read = 1
-
-    elif s.id=="ModelType" :    # Model type
-      if mt_read:
-        Log.error("identifier ModelType twice")
-      mo.model_type = ighmm_scanner_get_int(s)
-      if mo.model_type & (kLabeledStates + kHigherOrderEmissions):
-        Log.error("unsupported Model Type")
-      mt_read = 1
-
-    elif s.id == "Pi":
-     #Initial state probabilty
-      if not n_read:
-        Log.error("need N as a range for Pi")
-      if pi_read:
-        Log.error("identifier Pi twice")
-
-      ighmm_scanner_get_name (s)
-      if s.id=="vector":
-        ighmm_scanner_consume (s, ':')
-        pi_vector = scanner_get_double_earray (s, &len)
-        if len != mo.N:
-          Log.error("wrong number of elements in PI")
-
-        ighmm_scanner_consume (s, '')
-        ighmm_scanner_consume (s, '')
-        pi_read = 1
-
-      else:
-        Log.error("unknown identifier")
-
-    elif s.id == "fix_state":
-      if not n_read:
-        Log.error("need N as a range for fix_state")
-
-      if fix_read:
-        Log.error("identifier fix_state twice")
-
-      ighmm_scanner_get_name (s)
-      if s.id == "vector":
-        ighmm_scanner_consume (s, ':')
-        fix_vector = scanner_get_int_array (s, &len)
-        if len != mo.N:
-          Log.error("wrong number of elements in fix_state")
-        ighmm_scanner_consume (s, '')
-        ighmm_scanner_consume (s, '')
-        fix_read = 1
-      else:
-        Log.error("unknown identifier")
-    else:
-      Log.error("unknown identifier")
-    ighmm_scanner_consume (s, '')
-                               # while ..s.c-'':
-  ighmm_scanner_consume (s, '')
-
-  # No prior read -. give it the value -1
-  if prior_read == 0:
-    mo.prior = -1
-  # Allocate memory for the model
-  for i in range( 0,  mo.N):
-    mo.s[i].out_states = ighmm_cmatrix_notzero_columns (a_matrix, i, mo.N)
-    mo.s[i].in_states = ighmm_cmatrix_notzero_rows (a_matrix, i, mo.N)
-    if (model_state_alloc (mo.s + i, mo.M, mo.s[i].in_states,  mo.s[i].out_states)) :
-      Log.error()
-
-    # Assign the parameters to the model
-    if not a_matrix:
-      Log.error("no A matrix specified in filenot \n")
-      exit (1)
-
-    if not b_matrix:
-      Log.error("no B matrix specified in filenot \n")
-      exit (1)
-
-    if not fix_vector:
-      Log.error("no fix_state vector specified in filenot \n")
-      exit (1)
-
-    if not pi_vector:
-      Log.error("no Pi vector specified in filenot \n")
-      exit (1)
-
-
-    if model_copy_vectors(mo, i, a_matrix, b_matrix, pi_vector, fix_vector):
-        Log.error()
-
+    pass
 
 #============================================================================
 # Produces models from given sequences
@@ -346,30 +140,7 @@ def ghmm_dmodel_from_sequence(sq):
 #============================================================================
 # Produces models form given sequences
 def ghmm_dmodel_from_sequence_ascii(s, mo_number):
-  ighmm_scanner_consume (s, ':')
-  while not s.err and not s.eof and s.c - '':
-    ighmm_scanner_get_name (s)
-    ighmm_scanner_consume (s, '=')
-    # Reads sequences on normal format
-    if s.id == "SEQ"):
-      sq = ghmm_dseq_read_alloc (s)
-      if not sq:
-        Log.error()
-    else:
-      Log.error("unknown identifier")
-
-    ighmm_scanner_consume (s, '')
-  ighmm_scanner_consume (s, '')
-  mo=ARRAY_CALLOC( sq.seq_number)
-  # The biggest symbol that occurs
-  max_symb = ghmm_dseq_max_symbol (sq)
-  for i in range( 0,  sq.seq_number):
-    mo[i] = ghmm_dmodel_generate_from_sequence (sq.seq[i], sq.seq_len[i],                                       max_symb + 1)
-
-  mo_number = sq.seq_number
-  ghmm_dseq_free (&sq)
-  return mo
-
+  pass
 
 
 def ghmm_alphabet_free(a) :
@@ -484,11 +255,10 @@ def ghmm_dmodel_check(mo) :
       sum += mo.s[i].out_a[j]
 
     if j==0:
-      GHMM_LOG_PRINTF(LDEBUG, LOC, "out_states = 0 (state %d . final statenot )", i)
+      Log.note("out_states = 0 (state %d . final statenot )", i)
 
     elif sum == 0.0:
-      GHMM_LOG_PRINTF(LWARN, LOC, "sum of s[%d].out_a[*] = 0.0 (assumed final "
-                      "state but %d transitions)", i, mo.s[i].out_states)
+      Log.warning("sum of s[%d].out_a[*] = 0.0 (assumed final state but %d transitions)", i, mo.s[i].out_states)
 
     if abs(sum-1.0) >= GHMM_EPS_PREC:
       Log.error("sum of s[%d].out_a[*] = %f != 1.0", i, sum)
@@ -550,9 +320,8 @@ def ghmm_dmodel_check_compatibel_models(mo, m2):
 
 
 def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
-  mo=ARRAY_CALLOC( 1)
-  mo.N = seq_len
-  mo.M = anz_symb
+  mo=ghmm_dmodel(seq_len, anz_symb)
+
   # All models generated from sequences have to be LeftRight-models
   mo.model_type = kLeftRight
 
@@ -560,25 +329,17 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
   mo.s=ARRAY_CALLOC( mo.N)
   for i in range( 0,  mo.N):
     if i == 0:
-      if model_state_alloc(, mo.M, 0, 1):
-        GHMM_LOG_QUEUED(LCONVERTED)
-        goto STOP
-
-
+        mo.s[i] = ghmm_dstate(mo.M, 0, 1)
     elif i == mo.N - 1:  # End state
-      if model_state_alloc(mo.s + i, mo.M, 1, 0):
-        GHMM_LOG_QUEUED(LCONVERTED)
-        goto STOP
+       mo.s[i] =ghmm_dstate( mo.M, 1, 0)
     else:                      # others
-      if model_state_alloc(mo.s + i, mo.M, 1, 1):
-        GHMM_LOG_QUEUED(LCONVERTED)
-        goto STOP
+       mo.s[i] =ghmm_dstate(mo.M, 1, 1)
 
 
   # Allocate states with the right values, the initial state and the end
   #     state extra
   for i in range( 1,  mo.N - 1):
-    s = mo.s + i
+    s = mo.s[i]
     s.pi = 0.0
     s.out_states = 1
     s.in_states = 1
@@ -589,7 +350,7 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
 
 
   # Initial state
-  s = mo.s
+  s = mo.s[0]
   s.pi = 1.0
   s.out_states = 1
   s.in_states = 0
@@ -599,27 +360,27 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
   # No in_id and in_a
 
   # End state
-  s = mo.s + mo.N - 1
+  s = mo.s[mo.N - 1]
   s.pi = 0.0
   s.out_states = 0
   s.in_states = 1
   s.b[seq[mo.N - 1]] = 1.0   # All other b's stay zero
-  *(s.in_id) = mo.N - 2
-  *(s.in_a) = 1.0
+  s.in_id = mo.N - 2
+  s.in_a = 1.0
   # No out_id and out_a
 
   ghmm_dmodel_check(mo)
 
   return mo
 
- def get_random_output(mo, i, position):
+def get_random_output(mo, i, position):
   sum=0.0
 
   p = GHMM_RNG_UNIFORM (RNG)
 
   for m in range( 0,  mo.M):
     # get the right index for higher order emission models
-    e_index = get_emission_index(mo, i, m, position)
+    e_index = mo.get_emission_index( i, m, position)
 
     # get the probability, exit, if the index is -1
     if -1 != e_index:
@@ -633,12 +394,12 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
   if mo.M == m:
     Log.error("no valid output choosen. Are the Probabilities correct? sum: %g, p: %g\n",             sum, p)
 
-  return (m)
+  return m
 
 def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
-  int n = 0
+  n = 0
 
-  sq = ghmm_dseq_calloc(seq_number)
+  sq = ghmm_dseq(seq_number)
 
   # allocating additional fields for the state sequence in the ghmm_dseq class
   sq.states=ARRAY_CALLOC( seq_number)
@@ -647,7 +408,7 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
   # A specific length of the sequences isn't given. As a model should have
   #     an end state, the konstant MAX_SEQ_LEN is used.
   if len <= 0:
-    len = (int)GHMM_MAX_SEQ_LEN
+    len = GHMM_MAX_SEQ_LEN
 
   if seed > 0:
     GHMM_RNG_SET(RNG, seed)
@@ -685,9 +446,8 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
 
       # Get a random output m if the state is not a silent state
       if not (mo.model_type & kSilentStates) or not (mo.silent[state]):
- :
         m = get_random_output(mo, state, pos)
-        update_emission_history(mo, m)
+        mo.update_emission_history(m)
         sq.seq[n][pos] = m
         pos+=1
 
@@ -695,7 +455,6 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
       # get next state
       p = GHMM_RNG_UNIFORM(RNG)
       if pos < mo.maxorder:
- :
         max_sum = 0.0
         for j in range( 0,  mo.s[state].out_states):
           j_id = mo.s[state].out_id[j]
@@ -703,7 +462,6 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
             max_sum += mo.s[state].out_a[j]
 
         if j and abs(max_sum) < GHMM_EPS_PREC:
- :
           Log.error("No possible transition from state %d "
                           "since all successor states require more history "
                           "than seen up to position: %d.",
@@ -718,7 +476,6 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
       for j in range( 0,  mo.s[state].out_states):
         j_id = mo.s[state].out_id[j]
         if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] <= pos:
- :
           sum += mo.s[state].out_a[j]
           if sum >= p:
             break
@@ -726,9 +483,7 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
 
 
       if sum == 0.0:
- :
-        Log.note("final state (%d) reached at position %d "
-                        "of sequence %d", state, pos, n)
+        Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
         break
 
 
@@ -736,7 +491,6 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
                                # while pos < len:
     # realocate state path and label sequence to actual size
     if mo.model_type & kSilentStates:
- :
       sq.states[n]=ARRAY_REALLOC(sq.states[n], label_pos)
 
 
@@ -744,449 +498,80 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
     sq.states_len[n] = label_pos
     n+=1
                                # while  n < seq_number :
-  return (sq)
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
-  ghmm_dseq_free(&sq)
-  return None
-#undef CUR_PROC
+  return sq
 
 
 #============================================================================
 
-def ghmm_dmodel_likelihood(mo, sq)
-:
-# define CUR_PROC "ghmm_dmodel_likelihood"
-  double log_p_i, log_p
-  int found, i
-
-  # printf("***  model_likelihood:\n")
-
-  found = 0
+def ghmm_dmodel_likelihood(mo, sq):
   log_p = 0.0
-  for i in range( 0,  sq.seq_number):
-
-#         printf("sequence:\n")
-#         for j in range( sq.seq_len[i]):
-#                 printf("%d, ",sq.seq[i][j])
-#
-#         printf("\n")
-
-
-    def ghmm_dmodel_logp(mo, sq.seq[i], sq.seq_len[i], &log_p_i) == -1:
- :
-      GHMM_LOG_QUEUED(LCONVERTED)
-      goto STOP
-
-
-#         printf("\nlog_p_i = %f\n", log_p_i)
-
+  for i in range( sq.seq_number):
+    log_p_i = mo.logp(sq.seq[i], sq.seq_len[i])
     if log_p_i != +1:
- :
       log_p += log_p_i
-      found = 1
-
     else:
-      GHMM_LOG_PRINTF(LWARN, LOC, "sequence[%d] can't be build.", i)
+      Log.error("sequence[%d] can't be build.", i)
 
-
-  if not found:
-    log_p = +1.0
-  return (log_p)
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
-  return -1
-# undef CUR_PROC
-                               # ghmm_dmodel_likelihood
-
-def ghmm_dmodel_get_transition(mo, i, j)
-:
-# define CUR_PROC "ghmm_dmodel_get_transition"
-  int out
-
+def ghmm_dmodel_get_transition(mo, i, j):
   if mo.s and mo.s[i].out_a and mo.s[j].in_a:
- :
     for out in range( mo.s[i].out_states):
       if mo.s[i].out_id[out] == j:
         return mo.s[i].out_a[out]
-
-
   return 0.0
-# undef CUR_PROC
-   # ghmm_dmodel_get_transition
 
-def ghmm_dmodel_check_transition(mo, i, j)
-:
-# define CUR_PROC "ghmm_dmodel_check_transition"
-  int out
 
+def ghmm_dmodel_check_transition(mo, i, j):
   if mo.s and mo.s[i].out_a and mo.s[j].in_a:
- :
     for out in range( mo.s[i].out_states):
       if mo.s[i].out_id[out] == j:
         return 1
-
-
   return 0
-# undef CUR_PROC
-   # ghmm_dmodel_check_transition
 
-def ghmm_dmodel_set_transition(mo, i, j, prob)
-:
+
+def ghmm_dmodel_set_transition(mo, i, j, prob):
 # define CUR_PROC "ghmm_dmodel_set_transition"
-  int in, out
-
   if mo.s and mo.s[i].out_a and mo.s[j].in_a:
- :
     for out in range( 0,  mo.s[i].out_states):
       if mo.s[i].out_id[out] == j:
- :
         mo.s[i].out_a[out] = prob
-        # fprintf(stderr, CUR_PROC": State %d, %d, = %f\n", i, j,
-        #                prob)
         break
-
-
 
     for in in range( 0,  mo.s[j].in_states):
       if mo.s[j].in_id[in] == i:
- :
         mo.s[j].in_a[in] = prob
         break
 
 
 
-# undef CUR_PROC
-   # ghmm_dmodel_set_transition
+def ghmm_dmodel_direct_clean(mo_d, check):
+  pass
 
 
-
-
-#============================================================================
-# Some outputs
-#============================================================================
-
-def ghmm_dmodel_states_print(file, mo)
-:
-  int i, j
-  fprintf (file, "Modelparameters: \n M = %d \t N = %d\n", mo.M, mo.N)
-  for i in range( 0,  mo.N):
-    fprintf (file,
-             "\nState %d \n PI = %.3f \n out_states = %d \n in_states = %d \n",
-             i, mo.s[i].pi, mo.s[i].out_states, mo.s[i].in_states)
-    fprintf (file, " Output probability:\t")
-    for j in range( 0,  mo.M):
-      fprintf (file, "%.3f \t", mo.s[i].b[j])
-    fprintf (file, "\n Transition probability \n")
-    fprintf (file, "  Out states (Id, a):\t")
-    for j in range( 0,  mo.s[i].out_states):
-      fprintf (file, "(%d, %.3f) \t", mo.s[i].out_id[j], mo.s[i].out_a[j])
-    fprintf (file, "\n")
-    fprintf (file, "  In states (Id, a):\t")
-    for j in range( 0,  mo.s[i].in_states):
-      fprintf (file, "(%d, %.3f) \t", mo.s[i].in_id[j], mo.s[i].in_a[j])
-    fprintf (file, "\n")
-
-                               # ghmm_dmodel_states_print
-
-#============================================================================
-
-def ghmm_dmodel_A_print(file, mo, tab, separator, ending)
-:
-  int i, j, out_state
-  for i in range( 0,  mo.N):
-    out_state = 0
-    fprintf (file, "%s", tab)
-    if mo.s[i].out_states > 0 and mo.s[i].out_id[out_state] == 0:
- :
-      fprintf (file, "%.2f", mo.s[i].out_a[out_state])
-      out_state+=1
-
-    def fprintf(file, "0.00")
-    for j in range( 1,  mo.N):
-      if mo.s[i].out_states > out_state and mo.s[i].out_id[out_state] == j:
- :
-        fprintf (file, "%s %.2f", separator, mo.s[i].out_a[out_state])
-        out_state+=1
-
-      def fprintf(file, "%s 0.00", separator)
-
-    fprintf (file, "%s\n", ending)
-
-                               # ghmm_dmodel_A_print
-
-#============================================================================
-
-def ghmm_dmodel_B_print(file, mo, tab, separator, ending)
-:
-  int i, j, size
-
-  for i in range( 0,  mo.N):
-    fprintf (file, "%s", tab)
-    fprintf (file, "%.2f", mo.s[i].b[0])
-    if not (mo.model_type & kHigherOrderEmissions):
- :
-      for j in range( 1,  mo.M):
-        fprintf (file, "%s %.2f", separator, mo.s[i].b[j])
-      fprintf (file, "%s\n", ending)
-
-    else:
-      size = ghmm_ipow (mo, mo.M, mo.order[i] + 1)
-      for j in range( 1,  size):
-        fprintf (file, "%s %.2f", separator, mo.s[i].b[j])
-      fprintf (file, "%s\n", ending)
-
-
-                               # ghmm_dmodel_B_print
-
-#============================================================================
-
-def ghmm_dmodel_Pi_print(file, mo, tab, separator, ending)
-:
-  int i
-  fprintf (file, "%s%.2f", tab, mo.s[0].pi)
-  for i in range( 1,  mo.N):
-    fprintf (file, "%s %.2f", separator, mo.s[i].pi)
-  fprintf (file, "%s\n", ending)
-                               # ghmm_dmodel_Pi_print
-
-def ghmm_dmodel_fix_print(file, mo, tab, separator, ending)
-:
-  int i
-  fprintf (file, "%s%d", tab, mo.s[0].fix)
-  for i in range( 1,  mo.N):
-    fprintf (file, "%s %d", separator, mo.s[i].fix)
-  fprintf (file, "%s\n", ending)
-                               # ghmm_dmodel_Pi_print
-
-#============================================================================
-
-def ghmm_dmodel_A_print_transp(file, mo, tab, separator, ending)
-:
-# define CUR_PROC "ghmm_dmodel_A_print_transp"
-  int i, j
-  int *out_state
-
-  out_state=ARRAY_CALLOC( mo.N)
-  for i in range( 0,  mo.N):
-    out_state[i] = 0
-
-  for j in range( 0,  mo.N):
-    fprintf (file, "%s", tab)
-    if mo.s[0].out_states != 0 and mo.s[0].out_id[out_state[0]] == j:
- :
-      fprintf (file, "%.2f", mo.s[0].out_a[out_state[0]])
-      (out_state[0])+=1
-
-    def fprintf(file, "0.00")
-    for i in range( 1,  mo.N):
-      if mo.s[i].out_states != 0 and mo.s[i].out_id[out_state[i]] == j:
- :
-        fprintf (file, "%s %.2f", separator, mo.s[i].out_a[out_state[i]])
-        (out_state[i])+=1
-
-      def fprintf(file, "%s 0.00", separator)
-
-    fprintf (file, "%s\n", ending)
-
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
-  m_free (out_state)
-  return
-# undef CUR_PROC
-                               # ghmm_dmodel_A_print_transp
-
-#============================================================================
-
-def ghmm_dmodel_B_print_transp(file, mo, tab, separator, ending)
-:
-  int i, j
-  for j in range( 0,  mo.M):
-    fprintf (file, "%s", tab)
-    fprintf (file, "%.2f", mo.s[0].b[j])
-    for i in range( 1,  mo.N):
-      fprintf (file, "%s %.2f", separator, mo.s[i].b[j])
-    fprintf (file, "%s\n", ending)
-
-                               # ghmm_dmodel_B_print_transp
-
-#============================================================================
-
-def ghmm_dmodel_Pi_print_transp(file, mo, tab, ending)
-:
-  int i
-  for i in range( 0,  mo.N):
-    fprintf (file, "%s%.2f%s\n", tab, mo.s[i].pi, ending)
-                               # ghmm_dmodel_Pi_print_transp
-
-#============================================================================
-
-def ghmm_dl_print(file, mo, tab, separator, ending)
-:
-  int i
-  fprintf (file, "%s%d", tab, mo.label[0])
-  for i in range( 1,  mo.N):
-    fprintf (file, "%s %d", separator, mo.label[i])
-  fprintf (file, "%s\n", ending)
-                               # ghmm_dl_print
-
-#============================================================================
-def ghmm_dmodel_print(file, mo)
-:
-  fprintf (file, "HMM = :\n\tM = %d\n\tN = %d\n", mo.M, mo.N)
-  fprintf (file, "\tprior = %.3f\n", mo.prior)
-  fprintf (file, "\tModelType = %d\n", mo.model_type)
-  fprintf (file, "\tA = matrix :\n")
-  ghmm_dmodel_A_print (file, mo, "\t", ",", "")
-  fprintf (file, "\t\n\tB = matrix :\n")
-  ghmm_dmodel_B_print (file, mo, "\t", ",", "")
-  fprintf (file, "\t\n\tPi = vector :\n")
-  ghmm_dmodel_Pi_print (file, mo, "\t", ",", "")
-  fprintf (file, "\t\n\tfix_state = vector :\n")
-  ghmm_dmodel_fix_print (file, mo, "\t", ",", "")
-  if mo.model_type & kLabeledStates:
- :
-    fprintf (file, "\t\n\tlabel_state = vector :\n")
-    ghmm_dl_print (file, mo, "\t", ",", "")
-
-  fprintf (file, "\t\n\n\n")
-                               # ghmm_dmodel_print
-
-#============================================================================
-
-#ifdef GHMM_OBSOLETE
-def ghmm_dmodel_direct_print(file, mo_d, multip)
-:
-  int i, j
-  for i in range( 0,  multip):
-    fprintf (file, "HMM = :\n\tM = %d\n\tN = %d\n", mo_d.M, mo_d.N)
-    fprintf (file, "\tprior = %.3f\n", mo_d.prior)
-    fprintf (file, "\tA = matrix :\n")
-    ighmm_cmatrix_print (file, mo_d.A, mo_d.N, mo_d.N, "\t", ",", "")
-    fprintf (file, "\t\n\tB = matrix :\n")
-    ighmm_cmatrix_print (file, mo_d.B, mo_d.N, mo_d.M, "\t", ",", "")
-    fprintf (file, "\t\n\tPi = vector :\n")
-    fprintf (file, "\t%.4f", mo_d.Pi[0])
-    for j in range( 1,  mo_d.N):
-      fprintf (file, ", %.4f", mo_d.Pi[j])
-    fprintf (file, "\n\t\n")
-    fprintf (file, "\tfix_state = vector :\n")
-    fprintf (file, "\t%d", mo_d.fix_state[0])
-    for j in range( 1,  mo_d.N):
-      fprintf (file, ", %d", mo_d.fix_state[j])
-    fprintf (file, "\n\t\n")
-    fprintf (file, "\n\n")
-
-                               # ghmm_dmodel_direct_print
-
-#============================================================================
-
-def ghmm_dmodel_direct_clean(mo_d, check)
-:
-#define CUR_PROC "ghmm_dmodel_direct_clean"
-  int i
-  if not mo_d:
-    return
-  mo_d.M = mo_d.N = 0
-  mo_d.prior = -1
-  if mo_d.A:
- :
-    for i in range( 0,  check.r_a):
-      m_free (mo_d.A[i])
-    m_free (mo_d.A)
-
-  if mo_d.B:
- :
-    for i in range( 0,  check.r_b):
-      m_free (mo_d.B[i])
-    m_free (mo_d.B)
-
-  if mo_d.Pi:
-    m_free (mo_d.Pi)
-
-  if mo_d.fix_state:
-    m_free (mo_d.fix_state)
-
-
-  mo_d.A = mo_d.B = None
-  mo_d.Pi = None
-  mo_d.fix_state = None
-#undef CUR_PROC
-                               # ghmm_dmodel_direct_clean
-
-#============================================================================
-
-def ghmm_dmodel_direct_check_data(mo_d, check)
-:
+def ghmm_dmodel_direct_check_data(mo_d, check):
 #define CUR_PROC "ghmm_dmodel_direct_check_data"
-  char *str
   if check.r_a != mo_d.N or check.c_a != mo_d.N:
- :
-    str = ighmm_mprintf (None, 0, "Incompatible dim. A (%d X %d) and N (%d)\n",
-                   check.r_a, check.c_a, mo_d.N)
-    GHMM_LOG(LCONVERTED, str)
-    m_free (str)
-    return (-1)
+    Log.error("Incompatible dim. A (%d X %d) and N (%d)\n",check.r_a, check.c_a, mo_d.N)
 
   if check.r_b != mo_d.N or check.c_b != mo_d.M:
- :
-    str = ighmm_mprintf (None, 0,
-            "Incompatible dim. B (%d X %d) and N X M (%d X %d)\n",
-            check.r_b, check.c_b, mo_d.N, mo_d.M)
-    GHMM_LOG(LCONVERTED, str)
-    m_free (str)
-    return (-1)
+    Log.error("Incompatible dim. B (%d X %d) and N X M (%d X %d)\n",check.r_b, check.c_b, mo_d.N, mo_d.M)
 
   if check.len_pi != mo_d.N:
- :
-    str = ighmm_mprintf (None, 0, "Incompatible dim. Pi (%d) and N (%d)\n",
-                   check.len_pi, mo_d.N)
-    GHMM_LOG(LCONVERTED, str)
-    m_free (str)
-    return (-1)
+    Log.error( "Incompatible dim. Pi (%d) and N (%d)\n",                   check.len_pi, mo_d.N)
 
   if check.len_fix != mo_d.N:
- :
-    str = ighmm_mprintf (None, 0, "Incompatible dim. fix_state (%d) and N (%d)\n",
-                   check.len_fix, mo_d.N)
-    GHMM_LOG(LCONVERTED, str)
-    m_free (str)
-    return (-1)
-
-
-  return 0
-#undef CUR_PROC
-                               # ghmm_dmodel_direct_check_data
-#endif # GHMM_OBSOLETE
+    Log.error(  "Incompatible dim. fix_state (%d) and N (%d)\n",    check.len_fix, mo_d.N)
 
 
 #============================================================================
 # XXX symmetric not implemented yet
-def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose)
-:
-#define CUR_PROC "ghmm_dmodel_prob_distance"
-
-#define STEPS 40
-
-  double p0, p
-  double d = 0.0
-  double *d1
-  ghmm_dseq *seq0 = None
-  ghmm_dseq *tmp = None
-  ghmm_dmodel *mo1, *mo2
-  int i, t, a, k
-  int true_len
-  int true_number
-  int left_to_right = 0
-  long total, index
-  int step_width = 0
-  int steps = 1
-
-  # printf("***  model_prob_distance:\n")
-
+def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose):
+  STEPS=40
+  d = 0.0
   if verbose:
- :                # If we are doing it verbosely we want to have 40 steps
     step_width = maxT / 40
     steps = STEPS
 
-  else                          # else just one
+  else:                          # else just one
     step_width = maxT
 
   d1=ARRAY_CALLOC( steps)
@@ -1194,21 +579,14 @@ def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose)
   mo1 = m0
   mo2 = m
 
-  for (k = 0 k < 2 k++) :     # Two passes for the symmetric case
-
+  for k in range(2):    # Two passes for the symmetric case
     # seed = 0 . no reseeding. Call  ghmm_rng_timeseed(RNG) externally
     seq0 = ghmm_dmodel_generate_sequences (mo1, 0, maxT + 1, 1, maxT + 1)
 
-
-
     if seq0 == None:
- :
-      GHMM_LOG(LCONVERTED, " generate_sequences failed not ")
-      goto STOP
+      Log.error(" generate_sequences failed not ")
 
-
-    if seq0.seq_len[0] < maxT:
- :      # There is an absorbing state
+    if seq0.seq_len[0] < maxT:      # There is an absorbing state
 
       # NOTA BENE: Assumpting the model delivers an explicit end state,
       #         the condition of a fix initial state is removed.
@@ -1221,7 +599,6 @@ def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose)
       #         t+=1
       #
       #         if t > 1:
- :
       #         GHMM_LOG(LCONVERTED, "ERROR: No proper left-to-right model. Multiple start states")
       #         goto STOP
       #
@@ -1236,9 +613,7 @@ def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose)
         # printf("total=%d generating %d", total, a)
         tmp = ghmm_dmodel_generate_sequences (mo1, 0, 0, a, a)
         if tmp == None:
- :
-          GHMM_LOG(LCONVERTED, " generate_sequences failed not ")
-          goto STOP
+          Log.error(" generate_sequences failed not ")
 
         ghmm_dseq_free (&tmp)
         ghmm_dseq_add (seq0, tmp)
@@ -1250,8 +625,6 @@ def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose)
 
 
     if left_to_right:
- :
-
       for t in range( step_width, i = 0,  maxT):
 
         index = 0
@@ -1274,31 +647,22 @@ def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose)
         seq0.seq_number = index
 
         p0 = ghmm_dmodel_likelihood (mo1, seq0)
-        if p0 == +1 or p0 == -1:
- :     # errornot
-          GHMM_LOG(LCONVERTED, "problem: ghmm_dmodel_likelihood failed not ")
-          goto STOP
+        if p0 == +1 or p0 == -1:     # error!
+          Log.error("problem: ghmm_dmodel_likelihood failed not ")
 
         p = ghmm_dmodel_likelihood (mo2, seq0)
-        if p == +1 or p == -1:
- :       # what shall we do now?
-          GHMM_LOG(LCONVERTED, "problem: ghmm_dmodel_likelihood failed not ")
-          goto STOP
-
+        if p == +1 or p == -1:       # what shall we do now?
+          Log.error("problem: ghmm_dmodel_likelihood failed not ")
 
         d = 1.0 / t * (p0 - p)
 
         if symmetric:
- :
           if k == 0:
             # save d
             d1[i] = d
           else:
             # calculate d
             d = 0.5 * (d1[i] + d)
-
-
-
         if verbose and (not symmetric or k == 1):
           printf ("%d\t%f\t%f\t%f\n", t, p0, p, d)
 
@@ -1317,22 +681,16 @@ def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose)
         p0 = ghmm_dmodel_likelihood (mo1, seq0)
         # printf("   P(O|m1) = %f\n",p0)
         if p0 == +1:
- :         # errornot
-          GHMM_LOG(LCONVERTED, "seq0 can't be build from mo1not ")
-          goto STOP
+          Log.error("seq0 can't be build from mo1not ")
 
         p = ghmm_dmodel_likelihood (mo2, seq0)
         # printf("   P(O|m2) = %f\n",p)
-        if p == +1:
- :          # what shall we do now?
-          GHMM_LOG(LCONVERTED, "problem: seq0 can't be build from mo2not ")
-          goto STOP
-
+        if p == +1 :          # what shall we do now?
+          Log.error("problem: seq0 can't be build from mo2not ")
 
         d = (1.0 / t) * (p0 - p)
 
         if symmetric:
- :
           if k == 0:
             # save d
             d1[i] = d
@@ -1340,96 +698,34 @@ def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose)
             # calculate d
             d = 0.5 * (d1[i] + d)
 
-
-
         if verbose and (not symmetric or k == 1):
-          printf ("%d\t%f\t%f\t%f\n", t, p0, p, d)
+          Log.note("%d\t%f\t%f\t%f\n", t, p0, p, d)
 
 
       seq0.seq_len[0] = true_len
 
 
     if symmetric:
- :
       ghmm_dseq_free (&seq0)
       mo1 = m
       mo2 = m0
 
-    else
+    else:
       break
 
-                               # k = 1,2
-
-  ghmm_dseq_free (&seq0)
-  m_free (d1)
   return d
 
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
-  ghmm_dseq_free (&seq0)
-  m_free (d1)
-  return (0.0)
-#undef CUR_PROC
 
 
-
-#============================================================================
-
-def ghmm_dstate_clean(my_state)
-:
-#define CUR_PROC "ghmm_dstate_clean"
-
-  mes_check_ptr (my_state, return)
-
-  if my_state.b:
-    m_free (my_state.b)
-
-  if my_state.out_id:
-    m_free (my_state.out_id)
-
-  if my_state.in_id:
-    m_free (my_state.in_id)
-
-  if my_state.out_a:
-    m_free (my_state.out_a)
-
-  if my_state.in_a:
-    m_free (my_state.in_a)
-
-  my_state.pi = 0
-  my_state.b = None
-  my_state.out_id = None
-  my_state.in_id = None
-  my_state.out_a = None
-  my_state.in_a = None
-  my_state.out_states = 0
-  my_state.in_states = 0
-  my_state.fix = 0
-
-#undef CUR_PROC
-                               # ghmm_dstate_clean
-
+def ghmm_dstate_clean(my_state):
+    pass
 
 
 #==========================  Labeled HMMs  ================================
 
-def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
-:
-#define CUR_PROC "ghmm_dmodel_label_generate_sequences"
-
-  ghmm_dseq *sq = None
-  int state
-  int j, m, j_id
-  double p, sum, max_sum
-  int len = global_len
-  int n = 0
-  int pos, label_pos
-
-  sq = ghmm_dseq_calloc(seq_number)
-  if not sq:
- :
-    GHMM_LOG_QUEUED(LCONVERTED)
-    goto STOP
-
+def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax):
+  n = 0
+  sq = ghmm_dseq(seq_number)
 
   # allocating additional fields for the state sequence in the ghmm_dseq class
   sq.states=ARRAY_CALLOC( seq_number)
@@ -1442,10 +738,9 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
   # A specific length of the sequences isn't given. As a model should have
   #     an end state, the konstant MAX_SEQ_LEN is used.
   if len <= 0:
-    len = (int)GHMM_MAX_SEQ_LEN
+    len = GHMM_MAX_SEQ_LEN
 
   if seed > 0:
- :
     GHMM_RNG_SET(RNG, seed)
 
 
@@ -1458,7 +753,6 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
     # for silent models we have to allocate for the maximal possible number
     #       of lables and states
     if mo.model_type & kSilentStates:
- :
       sq.states[n]=ARRAY_CALLOC( len * mo.N)
       sq.state_labels[n]=ARRAY_CALLOC( len * mo.N)
 
@@ -1486,9 +780,8 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
 
       # Get a random output m if the state is not a silent state
       if not (mo.model_type & kSilentStates) or not (mo.silent[state]):
- :
         m = get_random_output(mo, state, pos)
-        update_emission_history(mo, m)
+        mo.update_emission_history( m)
         sq.seq[n][pos] = m
         pos+=1
 
@@ -1496,7 +789,6 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
       # get next state
       p = GHMM_RNG_UNIFORM(RNG)
       if pos < mo.maxorder:
- :
         max_sum = 0.0
         for j in range( 0,  mo.s[state].out_states):
           j_id = mo.s[state].out_id[j]
@@ -1504,12 +796,7 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
             max_sum += mo.s[state].out_a[j]
 
         if j and abs(max_sum) < GHMM_EPS_PREC:
- :
-          Log.error("No possible transition from state %d "
-                          "since all successor states require more history "
-                          "than seen up to position: %d.",
-                          state, pos)
-          break
+          Log.error("No possible transition from state %d since all successor states require more history than seen up to position: %d.",                    state, pos)
 
         if j:
           p *= max_sum
@@ -1519,7 +806,6 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
       for j in range( 0,  mo.s[state].out_states):
         j_id = mo.s[state].out_id[j]
         if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] < pos:
- :
           sum += mo.s[state].out_a[j]
           if sum >= p:
             break
@@ -1527,9 +813,7 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
 
 
       if sum == 0.0:
- :
-        Log.note("final state (%d) reached at position %d "
-                        "of sequence %d", state, pos, n)
+        Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
         break
 
 
@@ -1537,7 +821,6 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
                                # while pos < len:
     # realocate state path and label sequence to actual size
     if mo.model_type & kSilentStates:
- :
       sq.states[n]=ARRAY_REALLOC(sq.states[n], label_pos)
       sq.state_labels[n]=ARRAY_REALLOC(sq.state_labels[n], label_pos)
 
@@ -1548,18 +831,10 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
     n+=1
                                # while  n < seq_number :
   return (sq)
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
-  ghmm_dseq_free(&sq)
-  return None
-#undef CUR_PROC
 
 
-
-#-
 # Scales the output and transitions probs of all states in a given model
-def ghmm_dmodel_normalize(mo)
-:
-#define CUR_PROC "ghmm_dmodel_normalize"
+def ghmm_dmodel_normalize(mo):
   double pi_sum=0.0
   int i, j, m, j_id, i_id=0, res=0
   int size = 1
@@ -1702,7 +977,7 @@ STOP:     # Label STOP from ARRAY_[CM]ALLOC
   for (j = 0 dest != s[start].out_id[j] j++)
     if j == s[start].out_states:
  :
-      GHMM_LOG(LCONVERTED, "No such transition")
+      Log.error("No such transition")
       return -1
 
   # ... and replace outgoing
@@ -1715,7 +990,7 @@ STOP:     # Label STOP from ARRAY_[CM]ALLOC
   for (j = 0 start != s[dest].in_id[j] j++)
     if j == s[dest].in_states:
  :
-      GHMM_LOG(LCONVERTED, "No such transition")
+      Log.error("No such transition")
       return -1
 
   # ... and replace incoming
@@ -1759,7 +1034,7 @@ def ghmm_dmodel_duration_apply(mo, cur, times)
 
   if mo.model_type & kSilentStates:
  :
-    GHMM_LOG(LCONVERTED, "Sorry, apply_duration doesn't support silent states yet\n")
+    Log.error("Sorry, apply_duration doesn't support silent states yet\n")
     return -1
 
 
@@ -1922,7 +1197,7 @@ def ghmm_dmodel_background_apply(mo, background_weight)
 
   if not (mo.model_type & kBackgroundDistributions):
  :
-    GHMM_LOG(LCONVERTED, "Error: No background distributions")
+    Log.error("Error: No background distributions")
     return -1
 
 
@@ -1948,7 +1223,7 @@ def ghmm_dmodel_background_apply(mo, background_weight)
        else:
         if mo.bp.order[mo.background_id[i]] != 0:
  :
-          GHMM_LOG(LCONVERTED, "Error: State and background order do not match\n")
+          Log.error("Error: State and background order do not match\n")
           return -1
 
         for j in range(mo.M):
@@ -1974,7 +1249,7 @@ def ghmm_dmodel_get_uniform_background(mo, sq)
 
   if not (mo.model_type & kBackgroundDistributions):
  :
-    GHMM_LOG(LCONVERTED, "Error: Model has no background distribution")
+    Log.error("Error: Model has no background distribution")
     return -1
 
 

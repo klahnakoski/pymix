@@ -36,7 +36,7 @@
 from math import log
 from util.ghmm.types import kSilentStates
 from util.ghmm.wrapper import DBL_MIN, ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, GHMM_EPS_PREC
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 
 LOWER_SCALE_BOUND = 3.4811068399043105e-57

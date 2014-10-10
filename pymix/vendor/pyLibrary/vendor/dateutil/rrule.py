@@ -4,7 +4,7 @@ Copyright (c) 2003-2010  Gustavo Niemeyer <gustavo@niemeyer.net>
 This module offers extensions to the standard Python
 datetime module.
 """
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 __license__ = "Simplified BSD"
 

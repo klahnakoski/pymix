@@ -12,7 +12,7 @@ Algorithm per NIST FIPS-197 http://csrc.nist.gov/publications/fips/fips197/fips-
 Copyright (c) 2010, Adam Newman http://www.caller9.com/
 Licensed under the MIT license http://www.opensource.org/licenses/mit-license.php
 """
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 __author__ = "Adam Newman"
 

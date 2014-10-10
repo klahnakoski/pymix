@@ -125,6 +125,8 @@ from util.ghmm.dbackground import dbackground
 from util.ghmm.dmodel import ghmm_dmodel
 from util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
 from util.ghmm.dstate import ghmm_dstate
+from util.ghmm.gradescent import ghmm_dmodel_label_gradient_descent
+from util.ghmm.kbest import ghmm_dmodel_label_kbest
 from util.ghmm.matrixop import ighmm_invert_det
 from util.ghmm.sreestimate import ghmm_cmodel_baum_welch
 from util.ghmm.sviterbi import ghmm_cmodel_viterbi
@@ -137,7 +139,7 @@ from vendor.ghmm.class_change import class_change_context
 from vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, DiscreteDistribution, GaussianMixtureDistribution, GaussianDistribution
 from vendor.ghmm.emission_domain import LabelDomain, Float, Alphabet, IntegerRange, AminoAcids, DNA
 from vendor.ghmm.sequence_set import SequenceSet, EmissionSequence
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 
 
@@ -285,9 +287,7 @@ class HMMOpenFactory(HMMFactory):
             getModel = file.get_cmodel
 
         # we have a discrete HMM, prepare for hmm creation
-        elif ((modelType & kDiscreteHMM)
-        and not (modelType & kTransitionClasses)
-        and not (modelType & kPairHMM)):
+        elif ((modelType & kDiscreteHMM)        and not (modelType & kTransitionClasses)        and not (modelType & kPairHMM)):
             emission_domain = 'd'
             distribution = DiscreteDistribution
             getModel = file.get_dmodel
@@ -298,7 +298,7 @@ class HMMOpenFactory(HMMFactory):
 
         # currently not supported
         else:
-            Log.error("Non-supported model type")
+            raise Log.error("Non-supported model type")
 
 
         # read all models to list at first
@@ -330,7 +330,7 @@ class HMMOpenFactory(HMMFactory):
     def openOldXML(self, fileName):
         # from ghmm_gato import xmlutil
 
-        hmm_dom = xmlutil.HMM(fileName)
+        hmm_dom = None #xmlutil.HMM(fileName)
         emission_domain = hmm_dom.AlphabetType()
 
         if emission_domain == int:
@@ -401,7 +401,7 @@ class HMMOpenFactory(HMMFactory):
         elif h.m == 20:   # Peptide model
             emission_domain = AminoAcids
         else:   # some other model
-            emission_domain = Integerrange(h.m)
+            emission_domain = IntegerRange(0, h.m)
         distribution = DiscreteDistribution(emission_domain)
 
         # XXX TODO: Probably slow for large matrices (Rewrite for 0.9)
@@ -568,15 +568,13 @@ class HMMFromMatricesFactory(HMMFactory):
                     else:
                         order = len(B[i]) - 1
 
-                    Log.note("order in state " + str(i) + " = " + str(order))
+                    Log.note("order in state %d = %d", i, order)
                     # check or valid number of emission parameters
                     order = int(order)
                     if cmodel.M ** (order + 1) == len(B[i]):
                         tmpOrder.append(order)
                     else:
-                        Log.error("The number of " + str(len(B[i])) +
-                                                     " emission parameters for state " +
-                                                     str(i) + " is invalid. State order can not be determined.")
+                        Log.error("The number of " + str(len(B[i])) + " emission parameters for state " + str(i) + " is invalid. State order can not be determined.")
 
                     state.b = list(B[i])
                     state.pi = pi[i]
@@ -988,6 +986,22 @@ class HMM(object):
         self.M = self.cmodel.M  # number of symbols / mixture components
         self.name2id = dict()
         self.updateName2id()
+
+    @property
+    def maxorder(self):
+        Log.error("Not allowed")
+
+    @maxorder.setter
+    def maxorder(self, value):
+        Log.error("Not allowed")
+
+    @property
+    def model_type(self):
+        Log.error("Not allowed")
+
+    @model_type.setter
+    def model_type(self, value):
+        Log.error("Not allowed")
 
 
     def __del__(self):
@@ -1491,8 +1505,8 @@ class DiscreteEmissionHMM(HMM):
     def __init__(self, emissionDomain, distribution, cmodel):
         HMM.__init__(self, emissionDomain, distribution, cmodel)
 
-        self.model_type = self.cmodel.model_type  # model type
-        self.maxorder = self.cmodel.maxorder
+        # self.model_type = self.cmodel.model_type  # model type
+        # self.maxorder = self.cmodel.maxorder
         self.background = None
 
     def __str__(self):
@@ -1621,7 +1635,7 @@ class DiscreteEmissionHMM(HMM):
         """ Set the emission distribution parameters for a discrete model."""
         i = self.state(i)
         if not len(distributionParameters) == self.M:
-            raise TypeError
+            Log.error("Can not handle more than zero-order emmisions at this time")
 
         state = self.cmodel.getState(i)
 
@@ -1643,9 +1657,15 @@ class DiscreteEmissionHMM(HMM):
             slist[i] = 1
             self.cmodel.silent = slist
 
+        #CODE ASSUMES THE ORDER IS ZERO
+        self.cmodel.order[i] = 0
+        self.clearFlags(kHigherOrderEmissions)
+        self.cmodel.maxorder = max(self.cmodel.order)
+        if self.cmodel.maxorder > 0:
+            self.setFlags(kHigherOrderEmissions)
+
         #set the emission probabilities
-        wrapper.free(state.b)
-        state.b = list(distributionParameters)
+        state.b = distributionParameters
 
 
     # XXX Change name?
@@ -2060,7 +2080,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
         """
         @returns label of the state 'stateIndex'.
         """
-        return self.cmodel.getLabel(stateIndex)
+        return self.cmodel.label[stateIndex]
 
     def externalLabel(self, internal):
         """
@@ -2144,7 +2164,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             seq = emissionSequences.cseq.getSequence(i)
             seq_len = emissionSequences.cseq.getLength(i)
 
-            labeling, log_p = self.cmodel.label_kbest(seq, seq_len, k)
+            labeling, log_p = ghmm_dmodel_label_kbest(self.cmodel, seq, seq_len, k)
             oneLabel = wrapper.int_array2list(labeling, seq_len)
 
             allLabels.append(oneLabel)
@@ -2173,13 +2193,11 @@ class StateLabelHMM(DiscreteEmissionHMM):
         emissionSequences = emissionSequences.asSequenceSet()
         seqNumber = len(emissionSequences)
 
-        tmp_model = self.cmodel.label_gradient_descent(emissionSequences.cseq, eta, steps)
-        if tmp_model is None:
-            Log.error("Gradient descent finished not successfully.")
-            return False
-        else:
-            self.cmodel = tmp_model
-            return True
+        try:
+            self.cmodel = ghmm_dmodel_label_gradient_descent(self.cmodel, emissionSequences.cseq, eta, steps)
+        except Exception, e:
+            Log.error("Gradient descent finished not successfully.", e)
+
 
     def labeledlogikelihoods(self, emissionSequences):
         """ Compute a vector ( log( P[s,l| model]) )_{s} of log-likelihoods of the
@@ -3463,11 +3481,7 @@ class PairHMM(HMM):
         log_p = wrapper.double_array_getitem(log_p_ptr, 0)
         length = length_ptr[0]
         path = [cpath[x] for x in range(length)]
-        # free the memory
-        wrapper.free(log_p_ptr)
-        ghmmwrapper(length_ptr)
-        wrapper.free(cpath)
-        return (path, log_p)
+        return path, log_p
 
     def viterbiPropagate(self, complexEmissionSequenceX, complexEmissionSequenceY, startX=None, startY=None, stopX=None, stopY=None, startState=None, startLogp=None, stopState=None, stopLogp=None):
         """
@@ -3630,7 +3644,7 @@ class PairHMMOpenFactory(HMMOpenFactory):
         if not len(A) == len(B):
             Log.error("Different number of entries in A and B.")
 
-        cmodel = wrapper.ghmm_dp_init()
+        cmodel = ghmm_cmodel()
         cmodel.N = len(A)
         cmodel.M = -1 # no use anymore len(emissionDomain)
 

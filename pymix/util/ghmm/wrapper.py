@@ -8,9 +8,9 @@
 # Changes made by: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 ################################################################################
-from math import sqrt
+from math import sqrt, exp, log
 from util.ghmm.emission import ghmm_c_emission
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 from vendor.pyLibrary.maths.randoms import Random
 
 DBL_MAX = 1e300
@@ -583,5 +583,37 @@ class ghmm_cmodel_baum_welch_context():
         self.eps = 0
         #* max. no of iterations
         self.max_iter = 0
+
+
+def ighmm_cvector_log_sum(a, length):
+    max = 1.0
+    argmax = 0
+
+    # find maximum value in a:
+    for i in range(0, length):
+        if max == 1.0 or (a[i] > max and a[i] != 1.0):
+            max = a[i]
+            argmax = i
+
+
+    # calculate max+log(1+sum[i!=argmax exp(a[i]-max)])
+    result = 1.0
+    for i in range(0, length):
+        if a[i] != 1.0 and i != argmax:
+            result += exp(a[i] - max)
+
+    result = log(result)
+    result += max
+    return result
+
+
+def ghmm_dseq_max_symbol(sq):
+    max_symb = -1
+    for i in range(sq.seq_number):
+        for j in range(sq.seq_len[i]):
+            if sq.seq[i][j] > max_symb:
+                max_symb = sq.seq[i][j]
+
+    return max_symb
 
 

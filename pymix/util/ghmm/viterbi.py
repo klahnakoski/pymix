@@ -36,7 +36,7 @@
 from math import log
 from util.ghmm.types import kSilentStates
 from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_dmatrix_stat_alloc, ighmm_cmatrix_alloc, DBL_MAX
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 
 class viterbi_alloc:

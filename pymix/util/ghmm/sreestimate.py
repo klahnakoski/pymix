@@ -42,7 +42,7 @@ from util.ghmm.sdfoba import ghmm_dsmodel_forward
 from util.ghmm.sfoba import ghmm_cmodel_forward, ghmm_cmodel_backward
 from util.ghmm.types import kMultivariate
 from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, DBL_MIN, GHMM_EPS_PREC, DBL_MAX, normal_right, matrix_alloc
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 from vendor.pyLibrary.maths import Math
 
 MCI = 0

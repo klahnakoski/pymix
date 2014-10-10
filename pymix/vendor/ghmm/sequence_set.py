@@ -6,7 +6,7 @@ from util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
 from util.ghmm.wrapper import double_matrix_getitem
 from vendor.ghmm import ghmmhelper
 from vendor.ghmm.emission_domain import LabelDomain
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 
 class SequenceSet(object):

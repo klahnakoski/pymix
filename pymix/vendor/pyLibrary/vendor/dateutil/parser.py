@@ -7,7 +7,7 @@ datetime module.
 """
 from __future__ import unicode_literals
 from __future__ import division
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 __license__ = "Simplified BSD"
 

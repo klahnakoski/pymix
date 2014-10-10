@@ -6,7 +6,7 @@ from util.ghmm.reestimate import ighmm_reestimate_alloc_matvek, ighmm_reestimate
 from util.ghmm.topological_sort import topological_sort
 from util.ghmm.types import kHigherOrderEmissions, kSilentStates, kUntied, kTiedEmissions, kNoBackgroundDistribution, kBackgroundDistributions, kLabeledStates
 from util.ghmm.wrapper import RNG, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN, GHMM_RNG_UNIFORM, GHMM_EPS_PREC, ARRAY_REALLOC, double_matrix_alloc, double_array_alloc, ARRAY_CALLOC, ARRAY_MALLOC, MAX_ITER_BW, EPS_ITER_BW, ighmm_cvector_normalize
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 
 class ghmm_dmodel():
@@ -268,7 +268,9 @@ class ghmm_dmodel():
             if self.order[S] > T:
                 return -1
             else:
-                return (self.emission_history * self.M) % pow(self.M, self.order[S] + 1) + O
+                # THE PROBLEM IS THIS MAKING A REF INTO 2D CUBE
+                output = (self.emission_history * self.M) % pow(self.M, self.order[S] + 1) + O
+                return output
         else:
             return O
 
@@ -718,7 +720,10 @@ class ghmm_dmodel():
                     # t, i, self.label[i], label[t])*/
                         e_index = self.get_emission_index(i, O[t], t)
                         if -1 != e_index:
-                            alpha[t][i] = self.s[i].forward_step(alpha[t - 1], self.s[i].b[e_index])
+                            try:
+                                alpha[t][i] = self.s[i].forward_step(alpha[t - 1], self.s[i].b[e_index])
+                            except Exception, e:
+                                pass
                             #if alpha[t][i] < GHMM_EPS_PREC:
                             # printf("alpha[%d][%d] = %g \t ", t, i, alpha[t][i])
                             # printf("self.s[%d].b[%d] = %g\n", i, e_index, self.s[i].b[e_index])
@@ -1464,7 +1469,6 @@ class ghmm_dmodel():
 
             elif log_p > GHMM_EPS_PREC:
                 Log.error("No convergence: log P > 0not  (n = %d)\n", n)
-
 
             # stop iterations? */
             if diff < abs(likelihood_delta * log_p):

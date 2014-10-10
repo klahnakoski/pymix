@@ -39,7 +39,7 @@
 # NOTE: code in this file is a mild modification of code from the GHMM library (www.ghmm.org)
 import copy
 from util.ghmm import wrapper
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 
 class EmissionDomain:

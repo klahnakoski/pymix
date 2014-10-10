@@ -1,5 +1,5 @@
 from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 
 def nologSum(vec, n):

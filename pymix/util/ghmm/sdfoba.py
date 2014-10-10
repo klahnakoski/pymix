@@ -36,7 +36,7 @@
 from math import log
 from util.ghmm.types import kSilentStates
 from util.ghmm.wrapper import GHMM_EPS_PREC, ARRAY_CALLOC, ighmm_cmatrix_alloc
-from vendor.pyLibrary.env.logs import Log
+from util.logs import Log
 
 
 EPS_PREC = 1E-8
