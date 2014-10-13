@@ -4,7 +4,7 @@ from util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal,
 from util.ghmm.types import kContinuousHMM
 from util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC
 from util.logs import Log
-from vendor.pyLibrary.maths.randoms import Random
+from pyLibrary.maths.randoms import Random
 
 
 class ghmm_cmodel:

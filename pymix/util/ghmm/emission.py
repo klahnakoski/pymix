@@ -1,7 +1,7 @@
 #*
 #      ghmm_c_emission bundles all emission parameters
 #
-from vendor.pyLibrary.struct import Struct
+from pyLibrary.struct import Struct
 
 
 class ghmm_c_emission:

@@ -49,8 +49,8 @@ from ..util.errors import InvalidPosteriorDistribution, ConvergenceFailureEM, In
 from ..util.dataset import DataSet
 from ..util.maths import sum_logs, dict_intersection
 from ..util.stats import entropy, sym_kl_dist, get_posterior
-from vendor.pyLibrary.collections import array
-from vendor.pyLibrary.collections.matrix import Matrix
+from pyLibrary.collections import array
+from pyLibrary.collections.matrix import Matrix
 
 
 class MixtureModel(ProbDistribution):

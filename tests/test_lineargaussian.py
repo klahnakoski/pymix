@@ -12,7 +12,7 @@ import unittest
 import copy
 
 from pymix import mixtureLinearGaussian
-from vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
+from pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
 class LinearGaussianDistributionTests(FuzzyTestCase):

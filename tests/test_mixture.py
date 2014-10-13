@@ -67,8 +67,8 @@ from pymix.util.emission_domain import Alphabet
 from pymix.util.candidate_group import CandidateGroup
 from pymix.util.constrained_dataset import ConstrainedDataSet
 from pymix.util.dataset import DataSet
-from pymix.vendor.pyLibrary.thread.threads import Thread
-from pymix.vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
+from pymix.pyLibrary.thread.threads import Thread
+from pymix.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
 

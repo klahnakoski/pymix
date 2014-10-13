@@ -39,7 +39,7 @@ import unittest
 
 from numpy import ndarray
 
-from pymix.vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
+from pymix.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 from pymix import mixtureHMM
 from pymix.distributions.multinomial import MultinomialDistribution
 from pymix.distributions.normal import NormalDistribution

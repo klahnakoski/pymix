@@ -42,7 +42,7 @@ from .prob import ProbDistribution
 from ..util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from ..util.dataset import DataSet
 from vendor.ghmm.emission_domain import IntegerRange
-from vendor.pyLibrary.testing.fuzzytestcase import assertAlmostEqual
+from pyLibrary.testing.fuzzytestcase import assertAlmostEqual
 
 
 class MultinomialDistribution(ProbDistribution):
@@ -72,7 +72,7 @@ class MultinomialDistribution(ProbDistribution):
             assert len(alphabet) == self.M, "Size of alphabet and M does not match: " + str(len(alphabet)) + " != " + str(self.M)
             self.alphabet = alphabet
         else:
-            self.alphabet = Integerrange(self.M)
+            self.alphabet = IntegerRange(0, self.M)
 
         if parFix == None:
             self.parFix = np.array([0] * self.M)

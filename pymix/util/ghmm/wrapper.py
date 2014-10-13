@@ -11,7 +11,7 @@
 from math import sqrt, exp, log
 from util.ghmm.emission import ghmm_c_emission
 from util.logs import Log
-from vendor.pyLibrary.maths.randoms import Random
+from pyLibrary.maths.randoms import Random
 
 DBL_MAX = 1e300
 EPS_ITER_BW = 0.0001

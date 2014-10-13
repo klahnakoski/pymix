@@ -63,7 +63,7 @@ from vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphab
 from vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
 from vendor.ghmm.sequence_set import EmissionSequence, SequenceSet, ComplexEmissionSequence
 from util.logs import Log
-from vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
+from pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
 def newSplit(self, s, ts):
