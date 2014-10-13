@@ -536,9 +536,9 @@ def ghmm_dmodel_set_transition(mo, i, j, prob):
         mo.s[i].out_a[out] = prob
         break
 
-    for in in range( 0,  mo.s[j].in_states):
-      if mo.s[j].in_id[in] == i:
-        mo.s[j].in_a[in] = prob
+    for _in in range( 0,  mo.s[j].in_states):
+      if mo.s[j].in_id[_in] == i:
+        mo.s[j].in_a[_in] = prob
         break
 
 
@@ -615,7 +615,6 @@ def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose):
         if tmp == None:
           Log.error(" generate_sequences failed not ")
 
-        ghmm_dseq_free (&tmp)
         ghmm_dseq_add (seq0, tmp)
 
         total = 0

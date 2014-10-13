@@ -1,6 +1,6 @@
 import re
-from vendor.pyLibrary.env.logs import Log as moLog
-from vendor.pyLibrary.struct import Struct
+from pyLibrary.env.logs import Log as moLog
+from pyLibrary.struct import Struct
 
 
 class Log(object):
@@ -17,14 +17,12 @@ class Log(object):
         moLog.note(t, p)
 
     @staticmethod
-    def warning(template, *params):
-        t, p = fix(template, params)
-        moLog.warning(t, p)
+    def warning(*args, **kwargs):
+        moLog.warning(*args, **kwargs)
 
     @staticmethod
-    def error(template, *params):
-        t, p = fix(template, params)
-        moLog.error(t, p)
+    def error(*args, **kwargs):
+        moLog.error(*args, **kwargs)
 
 
 def fix(template, params):

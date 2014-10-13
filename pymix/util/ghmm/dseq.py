@@ -118,6 +118,83 @@ class ghmm_dseq():
         target.state_labels[no]=list(self.state_labels[index])
 
 
+
+#============================================================================
+def ghmm_dseq_add(target, source):
+#define CUR_PROC "ghmm_dseq_add"
+
+  int res = -1
+  int **old_seq = target.seq
+  #int **old_seq_st    = target.states
+  int *old_seq_len = target.seq_len
+#ifdef GHMM_OBSOLETE
+  long *old_seq_label = target.seq_label
+#endif # GHMM_OBSOLETE
+  double *old_seq_id = target.seq_id
+  double *old_seq_w = target.seq_w
+  long old_seq_number = target.seq_number
+  long i
+
+  target.seq_number = old_seq_number + source.seq_number
+  target.total_w += source.total_w
+
+  ARRAY_CALLOC (target.seq, target.seq_number)
+  #ARRAY_CALLOC (target.states, target.seq_number)
+  ARRAY_CALLOC (target.seq_len, target.seq_number)
+#ifdef GHMM_OBSOLETE
+  ARRAY_CALLOC (target.seq_label, target.seq_number)
+#endif # GHMM_OBSOLETE
+  ARRAY_CALLOC (target.seq_id, target.seq_number)
+  ARRAY_CALLOC (target.seq_w, target.seq_number)
+
+  for i in range( 0,  old_seq_number):
+    target.seq[i] = old_seq[i]
+    #target.states[i] = old_seq_st[i]
+    target.seq_len[i] = old_seq_len[i]
+#ifdef GHMM_OBSOLETE
+    target.seq_label[i] = old_seq_label[i]
+#endif # GHMM_OBSOLETE
+    target.seq_id[i] = old_seq_id[i]
+    target.seq_w[i] = old_seq_w[i]
+
+
+  for i in range( 0,  (target.seq_number - old_seq_number)):
+    ARRAY_CALLOC (target.seq[i + old_seq_number], source.seq_len[i])
+
+    ghmm_dseq_copy (target.seq[i + old_seq_number], source.seq[i],
+                   source.seq_len[i])
+
+    #ARRAY_CALLOC (target.states[i+old_seq_number], source.seq_len[i])
+
+    # ghmm_dseq_copy(target.states[i+old_seq_number], source.states[i],
+    #       source.seq_len[i])
+
+    target.seq_len[i + old_seq_number] = source.seq_len[i]
+#ifdef GHMM_OBSOLETE
+    target.seq_label[i + old_seq_number] = source.seq_label[i]
+#endif # GHMM_OBSOLETE
+    target.seq_id[i + old_seq_number] = source.seq_id[i]
+    target.seq_w[i + old_seq_number] = source.seq_w[i]
+
+
+
+  m_free (old_seq)
+  #m_free(old_seq_st)
+  m_free (old_seq_len)
+#ifdef GHMM_OBSOLETE
+  m_free (old_seq_label)
+#endif # GHMM_OBSOLETE
+  m_free (old_seq_id)
+  m_free (old_seq_w)
+  res = 0
+STOP:     # Label STOP from ARRAY_[CM]ALLOC
+  return res
+#undef CUR_PROC
+
+
+
+
+
 def ghmm_dseq_read():
     pass
 
