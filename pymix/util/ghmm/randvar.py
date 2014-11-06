@@ -38,8 +38,8 @@
 #   N(0,1)-distribution, with x in [0.00, 19.99]
 from math import erf, exp, pi, sqrt, log, cos, erfc
 from numpy.random.mtrand import dirichlet
-from util.ghmm.wrapper import DBL_MIN, RNG, GHMM_RNG_SET, GHMM_RNG_UNIFORM, multinormal, binormal, uniform, normal_left, normal_approx, normal_right, normal
-from util.logs import Log
+from pymix.util.ghmm.wrapper import DBL_MIN, RNG, GHMM_RNG_SET, GHMM_RNG_UNIFORM, multinormal, binormal, uniform, normal_left, normal_approx, normal_right, normal
+from pymix.util.logs import Log
 
 PDFLEN = 2000
 X_STEP_PDF = 0.01         # step size

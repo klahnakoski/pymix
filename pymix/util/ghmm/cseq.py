@@ -1,4 +1,4 @@
-from util.ghmm.wrapper import double_array_alloc, ARRAY_CALLOC, matrix_alloc
+from pymix.util.ghmm.wrapper import double_array_alloc, ARRAY_CALLOC, matrix_alloc
 
 
 class ghmm_cseq():

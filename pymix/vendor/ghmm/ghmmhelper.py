@@ -35,7 +35,7 @@
 #*             last change by $Author: grunau $.
 #*
 #*******************************************************************************/
-from util.ghmm import wrapper
+from pymix.util.ghmm import wrapper
 
 
 def double_matrix2list(cmatrix, row, col):

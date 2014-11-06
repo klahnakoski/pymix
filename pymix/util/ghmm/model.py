@@ -33,12 +33,12 @@
 #*             last change by $Author: ejb177 $.
 #*
 #******************************************************************************
-from util.ghmm.dmodel import ghmm_dmodel
-from util.ghmm.dseq import ghmm_dseq
-from util.ghmm.dstate import ghmm_dstate
-from util.ghmm.types import kDiscreteHMM, kBackgroundDistributions, kSilentStates, kNoBackgroundDistribution, kTiedEmissions, kUntied, kHigherOrderEmissions, kLabeledStates, kLeftRight
-from util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, ghmm_dseq_max_symbol, RNG, GHMM_RNG_UNIFORM, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN
-from util.logs import Log
+from pymix.util.ghmm.dmodel import ghmm_dmodel
+from pymix.util.ghmm.dseq import ghmm_dseq
+from pymix.util.ghmm.dstate import ghmm_dstate
+from pymix.util.ghmm.types import kDiscreteHMM, kBackgroundDistributions, kSilentStates, kNoBackgroundDistribution, kTiedEmissions, kUntied, kHigherOrderEmissions, kLabeledStates, kLeftRight
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, ghmm_dseq_max_symbol, RNG, GHMM_RNG_UNIFORM, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN
+from pymix.util.logs import Log
 
 DONE=0
 NOTVISITED=1

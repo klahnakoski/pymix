@@ -35,8 +35,8 @@
 #******************************************************************************
 
 from math import log
-from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_dmatrix_alloc, DBL_MAX, ighmm_dmatrix_stat_alloc
-from util.logs import Log
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_dmatrix_alloc, DBL_MAX, ighmm_dmatrix_stat_alloc
+from pymix.util.logs import Log
 
 
 class local_store_t:

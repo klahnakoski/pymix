@@ -1,4 +1,4 @@
-from util.ghmm.wrapper import GHMM_EPS_PREC
+from pymix.util.ghmm.wrapper import GHMM_EPS_PREC
 
 
 class ghmm_dstate():

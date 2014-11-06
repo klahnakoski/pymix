@@ -38,8 +38,8 @@
 #-------------------------------------------------------------------------------
 # NOTE: code in this file is a mild modification of code from the GHMM library (www.ghmm.org)
 import copy
-from util.ghmm import wrapper
-from util.logs import Log
+from pymix.util.ghmm import wrapper
+from pymix.util.logs import Log
 
 
 class EmissionDomain:

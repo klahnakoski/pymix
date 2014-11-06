@@ -34,8 +34,8 @@
 #*
 #******************************************************************************
 from math import log, exp
-from util.ghmm.wrapper import ARRAY_MALLOC, ARRAY_CALLOC, ARRAY_REALLOC, ighmm_cvector_log_sum
-from util.logs import Log
+from pymix.util.ghmm.wrapper import ARRAY_MALLOC, ARRAY_CALLOC, ARRAY_REALLOC, ighmm_cvector_log_sum
+from pymix.util.logs import Log
 
 KBEST_THRESHOLD = -3.50655789732
 #* log(0.03) => threshold: 3% of most probable partial hypothesis

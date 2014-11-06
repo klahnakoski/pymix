@@ -34,9 +34,9 @@
 #*
 #******************************************************************************
 from math import log
-from util.ghmm.types import kSilentStates
-from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_dmatrix_stat_alloc, ighmm_cmatrix_alloc, DBL_MAX
-from util.logs import Log
+from pymix.util.ghmm.types import kSilentStates
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_dmatrix_stat_alloc, ighmm_cmatrix_alloc, DBL_MAX
+from pymix.util.logs import Log
 
 
 class viterbi_alloc:

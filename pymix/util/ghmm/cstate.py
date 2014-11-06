@@ -1,8 +1,8 @@
 #*
 #    State class for continuous emission HMMs.
 #
-from util.ghmm.randvar import density_func
-from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_alloc
+from pymix.util.ghmm.randvar import density_func
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_alloc
 
 
 class ghmm_cstate:

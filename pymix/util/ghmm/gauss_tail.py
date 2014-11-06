@@ -34,8 +34,8 @@
 #*
 #******************************************************************************
 from math import sqrt
-from util.ghmm.randvar import ighmm_rand_normal_density_trunc, ighmm_rand_get_xstepphi, ighmm_rand_get_xfaktphi, ighmm_rand_get_philen
-from util.ghmm.wrapper import DBL_MIN
+from pymix.util.ghmm.randvar import ighmm_rand_normal_density_trunc, ighmm_rand_get_xstepphi, ighmm_rand_get_xfaktphi, ighmm_rand_get_philen
+from pymix.util.ghmm.wrapper import DBL_MIN
 
 GHMM_EPS_U = 1E-4
 

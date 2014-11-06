@@ -1,9 +1,9 @@
-from util.ghmm.cseq import ghmm_cseq
-from util.ghmm.cstate import ghmm_cstate
-from util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal, ighmm_rand_uniform_cont, ighmm_rand_normal_right
-from util.ghmm.types import kContinuousHMM
-from util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC
-from util.logs import Log
+from pymix.util.ghmm.cseq import ghmm_cseq
+from pymix.util.ghmm.cstate import ghmm_cstate
+from pymix.util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal, ighmm_rand_uniform_cont, ighmm_rand_normal_right
+from pymix.util.ghmm.types import kContinuousHMM
+from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC
+from pymix.util.logs import Log
 from pyLibrary.maths.randoms import Random
 
 

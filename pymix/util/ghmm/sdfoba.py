@@ -34,9 +34,9 @@
 #*
 #******************************************************************************
 from math import log
-from util.ghmm.types import kSilentStates
-from util.ghmm.wrapper import GHMM_EPS_PREC, ARRAY_CALLOC, ighmm_cmatrix_alloc
-from util.logs import Log
+from pymix.util.ghmm.types import kSilentStates
+from pymix.util.ghmm.wrapper import GHMM_EPS_PREC, ARRAY_CALLOC, ighmm_cmatrix_alloc
+from pymix.util.logs import Log
 
 
 EPS_PREC = 1E-8

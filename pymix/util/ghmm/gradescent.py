@@ -33,10 +33,10 @@
 #*             last change by $Author: grunau $.
 #*
 #******************************************************************************
-from util.ghmm.reestimate import ighmm_reestimate_alloc_matvek
-from util.ghmm.types import kTiedEmissions
-from util.ghmm.wrapper import ARRAY_CALLOC, GHMM_EPS_PREC
-from util.logs import Log
+from pymix.util.ghmm.reestimate import ighmm_reestimate_alloc_matvek
+from pymix.util.ghmm.types import kTiedEmissions
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, GHMM_EPS_PREC
+from pymix.util.logs import Log
 
 
 def gradient_descent_gfree(matrix_b, matrix_a, matrix_pi, N):

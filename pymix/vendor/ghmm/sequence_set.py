@@ -1,12 +1,12 @@
 import os
 from string import join
-from util.ghmm import wrapper
-from util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
-from util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
-from util.ghmm.wrapper import double_matrix_getitem
-from vendor.ghmm import ghmmhelper
-from vendor.ghmm.emission_domain import LabelDomain
-from util.logs import Log
+from pymix.util.ghmm import wrapper
+from pymix.util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
+from pymix.util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
+from pymix.util.ghmm.wrapper import double_matrix_getitem
+from pymix.vendor.ghmm import ghmmhelper
+from pymix.vendor.ghmm.emission_domain import LabelDomain
+from pymix.util.logs import Log
 
 
 class SequenceSet(object):

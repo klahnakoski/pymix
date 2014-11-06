@@ -1,4 +1,4 @@
-from util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC
 
 
 class dbackground:

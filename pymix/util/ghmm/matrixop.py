@@ -30,7 +30,7 @@
 
 #============================================================================
 from math import sqrt
-from util.ghmm.wrapper import matrix_alloc, DBL_MIN
+from pymix.util.ghmm.wrapper import matrix_alloc, DBL_MIN
 
 
 # RETURN inverse, det PAIR

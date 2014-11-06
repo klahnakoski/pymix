@@ -1,4 +1,4 @@
-from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_dmatrix_stat_alloc
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_dmatrix_stat_alloc
 
 def topological_sort(c_model):
     v = local_store_topo(c_model)

@@ -43,8 +43,8 @@ import cStringIO
 #----------------------------------- File IO --------------------------------------------------
 # XXX  While functional the flat file based file IO is somewhat crude. XXX
 # XXX  The whole thing ought to be redone in XML at some point.        XXX
-from vendor.ghmm.emission_domain import Alphabet
-from util.logs import Log
+from pymix.vendor.ghmm.emission_domain import Alphabet
+from pymix.util.logs import Log
 
 
 def numerize(data):

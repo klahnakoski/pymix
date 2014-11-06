@@ -1,5 +1,5 @@
-from util.ghmm.types import kHigherOrderEmissions
-from util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC
+from pymix.util.ghmm.types import kHigherOrderEmissions
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC
 
 
 class local_store_t():

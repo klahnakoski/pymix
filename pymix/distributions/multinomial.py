@@ -41,7 +41,7 @@ import numpy as np
 from .prob import ProbDistribution
 from ..util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from ..util.dataset import DataSet
-from vendor.ghmm.emission_domain import IntegerRange
+from pymix.vendor.ghmm.emission_domain import IntegerRange
 from pyLibrary.testing.fuzzytestcase import assertAlmostEqual
 
 

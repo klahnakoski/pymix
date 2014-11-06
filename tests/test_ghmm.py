@@ -55,14 +55,14 @@ Testing GHMM
 import unittest
 import random
 import re
-from util.ghmm.types import kSilentStates, kDiscreteHMM
+from pymix.util.ghmm.types import kSilentStates, kDiscreteHMM
 
-from util.ghmm.wrapper import ASCI_SEQ_FILE, uniform, normal_right, normal_left, int_array_getitem, normal, SMO_FILE_SUPPORT, SEQ_LABEL_FIELD
-from vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, GaussianMixtureDistribution, GaussianDistribution, DiscreteDistribution
-from vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphabet, DNA
-from vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
-from vendor.ghmm.sequence_set import EmissionSequence, SequenceSet, ComplexEmissionSequence
-from util.logs import Log
+from pymix.util.ghmm.wrapper import ASCI_SEQ_FILE, uniform, normal_right, normal_left, int_array_getitem, normal, SMO_FILE_SUPPORT, SEQ_LABEL_FIELD
+from pymix.vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, GaussianMixtureDistribution, GaussianDistribution, DiscreteDistribution
+from pymix.vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphabet, DNA
+from pymix.vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
+from pymix.vendor.ghmm.sequence_set import EmissionSequence, SequenceSet, ComplexEmissionSequence
+from pyLibrary.env.logs import Log
 from pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 

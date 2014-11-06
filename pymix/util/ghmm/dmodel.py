@@ -1,12 +1,12 @@
 from math import log
-from util.ghmm.dseq import ghmm_dseq
-from util.ghmm.dstate import model_state_alloc
-from util.ghmm.local_store_t import reestimate_alloc
-from util.ghmm.reestimate import ighmm_reestimate_alloc_matvek, ighmm_reestimate_free_matvek, nologSum
-from util.ghmm.topological_sort import topological_sort
-from util.ghmm.types import kHigherOrderEmissions, kSilentStates, kUntied, kTiedEmissions, kNoBackgroundDistribution, kBackgroundDistributions, kLabeledStates
-from util.ghmm.wrapper import RNG, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN, GHMM_RNG_UNIFORM, GHMM_EPS_PREC, ARRAY_REALLOC, double_matrix_alloc, double_array_alloc, ARRAY_CALLOC, ARRAY_MALLOC, MAX_ITER_BW, EPS_ITER_BW, ighmm_cvector_normalize
-from util.logs import Log
+from pymix.util.ghmm.dseq import ghmm_dseq
+from pymix.util.ghmm.dstate import model_state_alloc
+from pymix.util.ghmm.local_store_t import reestimate_alloc
+from pymix.util.ghmm.reestimate import ighmm_reestimate_alloc_matvek, ighmm_reestimate_free_matvek, nologSum
+from pymix.util.ghmm.topological_sort import topological_sort
+from pymix.util.ghmm.types import kHigherOrderEmissions, kSilentStates, kUntied, kTiedEmissions, kNoBackgroundDistribution, kBackgroundDistributions, kLabeledStates
+from pymix.util.ghmm.wrapper import RNG, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN, GHMM_RNG_UNIFORM, GHMM_EPS_PREC, ARRAY_REALLOC, double_matrix_alloc, double_array_alloc, ARRAY_CALLOC, ARRAY_MALLOC, MAX_ITER_BW, EPS_ITER_BW, ighmm_cvector_normalize
+from pymix.util.logs import Log
 
 
 class ghmm_dmodel():

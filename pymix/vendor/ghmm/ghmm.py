@@ -117,29 +117,29 @@ import os
 from string import join
 from textwrap import fill
 
-from util.ghmm import types
-from util.ghmm import wrapper
-from util.ghmm.cmodel import ghmm_cmodel
-from util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
-from util.ghmm.dbackground import dbackground
-from util.ghmm.dmodel import ghmm_dmodel
-from util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
-from util.ghmm.dstate import ghmm_dstate
-from util.ghmm.gradescent import ghmm_dmodel_label_gradient_descent
-from util.ghmm.kbest import ghmm_dmodel_label_kbest
-from util.ghmm.matrixop import ighmm_invert_det
-from util.ghmm.sreestimate import ghmm_cmodel_baum_welch
-from util.ghmm.sviterbi import ghmm_cmodel_viterbi
-from util.ghmm.types import kSilentStates, kHigherOrderEmissions, kTiedEmissions, kBackgroundDistributions, kLabeledStates, kNotSpecified, kMultivariate, kContinuousHMM, kDiscreteHMM, kTransitionClasses, kPairHMM
-from util.ghmm.wrapper import ARRAY_MALLOC, matrix_alloc
-from util.ghmm.viterbi import ghmm_dmodel_viterbi
-from vendor.ghmm import ghmmhelper
+from pymix.util.ghmm import types
+from pymix.util.ghmm import wrapper
+from pymix.util.ghmm.cmodel import ghmm_cmodel
+from pymix.util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
+from pymix.util.ghmm.dbackground import dbackground
+from pymix.util.ghmm.dmodel import ghmm_dmodel
+from pymix.util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
+from pymix.util.ghmm.dstate import ghmm_dstate
+from pymix.util.ghmm.gradescent import ghmm_dmodel_label_gradient_descent
+from pymix.util.ghmm.kbest import ghmm_dmodel_label_kbest
+from pymix.util.ghmm.matrixop import ighmm_invert_det
+from pymix.util.ghmm.sreestimate import ghmm_cmodel_baum_welch
+from pymix.util.ghmm.sviterbi import ghmm_cmodel_viterbi
+from pymix.util.ghmm.types import kSilentStates, kHigherOrderEmissions, kTiedEmissions, kBackgroundDistributions, kLabeledStates, kNotSpecified, kMultivariate, kContinuousHMM, kDiscreteHMM, kTransitionClasses, kPairHMM
+from pymix.util.ghmm.wrapper import ARRAY_MALLOC, matrix_alloc
+from pymix.util.ghmm.viterbi import ghmm_dmodel_viterbi
+from pymix.vendor.ghmm import ghmmhelper
 import modhmmer
-from vendor.ghmm.class_change import class_change_context
-from vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, DiscreteDistribution, GaussianMixtureDistribution, GaussianDistribution
-from vendor.ghmm.emission_domain import LabelDomain, Float, Alphabet, IntegerRange, AminoAcids, DNA
-from vendor.ghmm.sequence_set import SequenceSet, EmissionSequence
-from util.logs import Log
+from pymix.vendor.ghmm.class_change import class_change_context
+from pymix.vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, DiscreteDistribution, GaussianMixtureDistribution, GaussianDistribution
+from pymix.vendor.ghmm.emission_domain import LabelDomain, Float, Alphabet, IntegerRange, AminoAcids, DNA
+from pymix.vendor.ghmm.sequence_set import SequenceSet, EmissionSequence
+from pymix.util.logs import Log
 
 
 

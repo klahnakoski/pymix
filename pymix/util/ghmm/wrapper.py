@@ -9,8 +9,8 @@
 #
 ################################################################################
 from math import sqrt, exp, log
-from util.ghmm.emission import ghmm_c_emission
-from util.logs import Log
+from pymix.util.ghmm.emission import ghmm_c_emission
+from pymix.util.logs import Log
 from pyLibrary.maths.randoms import Random
 
 DBL_MAX = 1e300
@@ -22,6 +22,8 @@ SEQ_LABEL_FIELD = 0
 GHMM_MAX_SEQ_LEN = 1000000
 DBL_MIN = 1e-15
 GHMM_EPS_PREC = 1e-8
+GHMM_PENALTY_LOGP = -500.0
+
 
 normal = 0,        #< gaussian */
 normal_right = 1  #< right tail */
@@ -41,7 +43,7 @@ def fake_random_number_generator():
 
 
 RNG = fake_random_number_generator
-
+GHMM_MAX_SEQ_NUMBER = 1500000
 
 def int_array_getitem(array, index):
     return array[index]

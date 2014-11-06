@@ -34,15 +34,15 @@
 #*
 #******************************************************************************
 from math import sqrt
-from util.ghmm.gauss_tail import ighmm_gtail_pmue_umin
-from util.ghmm.matrixop import ighmm_invert_det
-from util.ghmm.randvar import GHMM_EPS_NDT, ighmm_rand_normal_density_pos, ighmm_rand_get_xPHIless1
-from util.ghmm.root_finder import ghmm_zbrent_AB
-from util.ghmm.sdfoba import ghmm_dsmodel_forward
-from util.ghmm.sfoba import ghmm_cmodel_forward, ghmm_cmodel_backward
-from util.ghmm.types import kMultivariate
-from util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, DBL_MIN, GHMM_EPS_PREC, DBL_MAX, normal_right, matrix_alloc
-from util.logs import Log
+from pymix.util.ghmm.gauss_tail import ighmm_gtail_pmue_umin
+from pymix.util.ghmm.matrixop import ighmm_invert_det
+from pymix.util.ghmm.randvar import GHMM_EPS_NDT, ighmm_rand_normal_density_pos, ighmm_rand_get_xPHIless1
+from pymix.util.ghmm.root_finder import ghmm_zbrent_AB
+from pymix.util.ghmm.sdfoba import ghmm_dsmodel_forward
+from pymix.util.ghmm.sfoba import ghmm_cmodel_forward, ghmm_cmodel_backward
+from pymix.util.ghmm.types import kMultivariate
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, DBL_MIN, GHMM_EPS_PREC, DBL_MAX, normal_right, matrix_alloc
+from pymix.util.logs import Log
 from pyLibrary.maths import Math
 
 MCI = 0
