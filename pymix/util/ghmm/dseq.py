@@ -11,7 +11,7 @@ class ghmm_dseq():
 
         # matrix of state ids, can be used to save the viterbi path during sequence generation.
         # ATTENTION: is NOT allocated by ghmm_dseq_calloc
-        self.states = [None]*len(seq)  # int **
+        self.states = [None] * len(seq)  # int **
 
         # array of sequence length
         self.seq_len = [len(s) for s in seq]
@@ -21,7 +21,7 @@ class ghmm_dseq():
         ## array of sequence IDs
         self.seq_id = double_array_alloc(len(seq))  # double *
         ## positiv! sequence weights.  default is 1 = no weight
-        self.seq_w = [1.0]*len(seq)  # double *
+        self.seq_w = [1.0] * len(seq)  # double *
         ## total number of sequences
         self.seq_number = len(seq)
         ## reserved space for sequences is always >= seq_number
@@ -82,7 +82,7 @@ class ghmm_dseq():
         return self.seq[seq_num][index]
 
     def setSymbol(self, seq_num, index, value):
-        self.seq[seq_num][index]=value
+        self.seq[seq_num][index] = value
 
     def getLabels(self, index):
         return self.state_labels[index]
@@ -94,7 +94,7 @@ class ghmm_dseq():
         return self.seq_w[index]
 
     def setWeight(self, index, value):
-        self.seq_w[index]=value
+        self.seq_w[index] = value
 
 
     def get_singlesequence(self, index):
@@ -115,46 +115,43 @@ class ghmm_dseq():
 
     def copyStateLabel(self, index, target, no):
         target.state_labels_len[no] = self.state_labels_len[index]
-        target.state_labels[no]=list(self.state_labels[index])
-
+        target.state_labels[no] = list(self.state_labels[index])
 
 
 #============================================================================
 def ghmm_dseq_add(target, source):
 #define CUR_PROC "ghmm_dseq_add"
 
-  old_seq = target.seq
-  old_seq_len = target.seq_len
-  old_seq_id = target.seq_id
-  old_seq_w = target.seq_w
-  old_seq_number = target.seq_number
+    old_seq = target.seq
+    old_seq_len = target.seq_len
+    old_seq_id = target.seq_id
+    old_seq_w = target.seq_w
+    old_seq_number = target.seq_number
 
-  target.seq_number = old_seq_number + source.seq_number
-  target.total_w += source.total_w
+    target.seq_number = old_seq_number + source.seq_number
+    target.total_w += source.total_w
 
-  target.seq=ARRAY_CALLOC( target.seq_number)
-  #target.states=ARRAY_CALLOC( target.seq_number)
-  target.seq_len=ARRAY_CALLOC( target.seq_number)
-  target.seq_id=ARRAY_CALLOC( target.seq_number)
-  target.seq_w=ARRAY_CALLOC( target.seq_number)
+    target.seq = ARRAY_CALLOC(target.seq_number)
+    #target.states=ARRAY_CALLOC( target.seq_number)
+    target.seq_len = ARRAY_CALLOC(target.seq_number)
+    target.seq_id = ARRAY_CALLOC(target.seq_number)
+    target.seq_w = ARRAY_CALLOC(target.seq_number)
 
-  for i in range( 0,  old_seq_number):
-    target.seq[i] = old_seq[i]
-    target.seq_len[i] = old_seq_len[i]
-    target.seq_id[i] = old_seq_id[i]
-    target.seq_w[i] = old_seq_w[i]
+    for i in range(0, old_seq_number):
+        target.seq[i] = old_seq[i]
+        target.seq_len[i] = old_seq_len[i]
+        target.seq_id[i] = old_seq_id[i]
+        target.seq_w[i] = old_seq_w[i]
 
+    for i in range(0, (target.seq_number - old_seq_number)):
+        target.seq[i + old_seq_number] = ARRAY_CALLOC(source.seq_len[i])
 
-  for i in range( 0,  (target.seq_number - old_seq_number)):
-    target.seq[i + old_seq_number]=ARRAY_CALLOC( source.seq_len[i])
+        ghmm_dseq_copy(target.seq[i + old_seq_number], source.seq[i],
+            source.seq_len[i])
 
-    ghmm_dseq_copy (target.seq[i + old_seq_number], source.seq[i],
-                   source.seq_len[i])
-
-
-    target.seq_len[i + old_seq_number] = source.seq_len[i]
-    target.seq_id[i + old_seq_number] = source.seq_id[i]
-    target.seq_w[i + old_seq_number] = source.seq_w[i]
+        target.seq_len[i + old_seq_number] = source.seq_len[i]
+        target.seq_id[i + old_seq_number] = source.seq_id[i]
+        target.seq_w[i + old_seq_number] = source.seq_w[i]
 
 
 def ghmm_dseq_read():

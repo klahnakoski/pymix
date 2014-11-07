@@ -541,21 +541,21 @@ class ghmm_dsmodel():
 def ighmm_cmatrix_normalize(matrix, rows, cols):
     # Scales the row vectors of a matrix to have the sum 1
     for i in range(rows):
-        ighmm_cvector_normalize(matrix[i], cols)
+        ighmm_cvector_normalize(matrix[i], 0, cols)
 
 
-def ighmm_cvector_normalize(v, len):
+def ighmm_cvector_normalize(v, start, len):
     """
     Scales the elements of a vector to have the sum 1
     PROBLEM: Entries can get very small and be rounded to 0
     """
     sum = 0.0
 
-    for i in range(len):
+    for i in range(start, start+len):
         sum += v[i]
     if len > 0 and sum < GHMM_EPS_PREC:
         Log.error("Can't normalize vector. Sum smaller than %g\n", GHMM_EPS_PREC)
-    for i in range(len):
+    for i in range(start, start+len):
         v[i] /= sum
 
 

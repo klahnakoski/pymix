@@ -1608,7 +1608,7 @@ class ghmm_dmodel():
                 size = pow(self.M, self.order[i])
 
             # normalize transition probabilities
-            ighmm_cvector_normalize(self.s[i].out_a, self.s[i].out_states)
+            ighmm_cvector_normalize(self.s[i].out_a, 0, self.s[i].out_states)
 
             # for every outgoing probability update the corrosponding incoming probability
             for j in range(self.s[i].out_states):
@@ -1626,14 +1626,11 @@ class ghmm_dmodel():
             # normalize emission probabilities, but not for silent states
             if not ((self.model_type & kSilentStates) and self.silent[i]):
                 if size == 1:
-                    ighmm_cvector_normalize(self.s[i].b, self.M)
+                    ighmm_cvector_normalize(self.s[i].b, 0, self.M)
                 else:
                     for m in range(size):
                         #NORMALIZE THIS SUB-ARRAY
-                        v = self.s[i].b[m * self.M:(m + 1) * self.M]
-                        ighmm_cvector_normalize(v, self.M)
-                        for i, vv in enumerate(range(m * self.M, (m + 1) * self.M)):
-                            self.s[i].b[vv] = v[i]
+                        ighmm_cvector_normalize(self.s[i].b, m * self.M, self.M)
 
         for i in range(self.N):
             self.s[i].pi /= pi_sum

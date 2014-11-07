@@ -34,95 +34,46 @@
 #*
 #******************************************************************************
 from pymix.util.ghmm.dmodel import ghmm_dmodel
-from pymix.util.ghmm.dseq import ghmm_dseq
+from pymix.util.ghmm.dseq import ghmm_dseq, ghmm_dseq_add
 from pymix.util.ghmm.dstate import ghmm_dstate
-from pymix.util.ghmm.types import kDiscreteHMM, kBackgroundDistributions, kSilentStates, kNoBackgroundDistribution, kTiedEmissions, kUntied, kHigherOrderEmissions, kLabeledStates, kLeftRight
-from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, ghmm_dseq_max_symbol, RNG, GHMM_RNG_UNIFORM, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN
+from pymix.util.ghmm.sequence import ghmm_dseq_free
+from pymix.util.ghmm.types import kDiscreteHMM, kBackgroundDistributions, kSilentStates, kNoBackgroundDistribution, kTiedEmissions, kUntied, kHigherOrderEmissions, kLabeledStates, kLeftRight, kPairHMM, kTransitionClasses
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, ghmm_dseq_max_symbol, RNG, GHMM_RNG_UNIFORM, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN, ghmm_xmlfile_parse, ighmm_cvector_normalize
 from pymix.util.logs import Log
 
-DONE=0
-NOTVISITED=1
-VISITED=2
-
-
-
-
-def model_state_alloc(s, M, in_states, out_states):
-# define CUR_PROC "model_state_alloc"
-  s.b=ARRAY_CALLOC( M)
-  if out_states > 0:
-    s.out_id=ARRAY_CALLOC( out_states)
-    s.out_a=ARRAY_CALLOC( out_states)
-
-  if in_states > 0:
-    s.in_id=ARRAY_CALLOC( in_states)
-    s.in_a=ARRAY_CALLOC( in_states)
-
-
-def ghmm_dmodel_calloc(M, N, modeltype, inDegVec, outDegVec) :
-  assert(modeltype & kDiscreteHMM)
-
-  mo=ARRAY_CALLOC( 1)
-
-  mo.M = M
-  mo.N = N
-  mo.model_type = modeltype
-
-  mo.s=ARRAY_CALLOC( N)
-  for i in range(N):
-      mo.s[i]= model_state_alloc(M, inDegVec[i], outDegVec[i])
-
-
-  if mo.model_type & kSilentStates:
-    mo.silent=ARRAY_CALLOC( N)
-
-  if mo.model_type & kTiedEmissions:
-    mo.tied_to=ARRAY_CALLOC( N)
-    for i in range(N):
-      mo.tied_to[i] = kUntied
-
-
-  if mo.model_type & kBackgroundDistributions:
-    mo.background_id=ARRAY_MALLOC( N)
-    for i in range(N):
-      mo.background_id[i] = kNoBackgroundDistribution
-
-  if mo.model_type & kHigherOrderEmissions:
-    mo.order=ARRAY_CALLOC( N)
-
-  if mo.model_type & kLabeledStates:
-    mo.label=ARRAY_CALLOC( N)
-
-  return mo
-
+DONE = 0
+NOTVISITED = 1
+VISITED = 2
 
 
 def model_copy_vectors(mo, index, a_matrix, b_matrix, pi, fix):
-  cnt_out = 0
-  cnt_in = 0
-  mo.s[index].pi = pi[index]
-  mo.s[index].fix = fix[index]
-  for i in range( 0,  mo.M):
-    mo.s[index].b[i] = b_matrix[index][i]
-  for i in range( 0,  mo.N):
-    if a_matrix[index][i]:   # Transitions to a following state possible
-      if cnt_out >= mo.s[index].out_states:
-        Log.error("")
+    cnt_out = 0
+    cnt_in = 0
+    mo.s[index].pi = pi[index]
+    mo.s[index].fix = fix[index]
+    for i in range(0, mo.M):
+        mo.s[index].b[i] = b_matrix[index][i]
+    for i in range(0, mo.N):
+        if a_matrix[index][i]:   # Transitions to a following state possible
+            if cnt_out >= mo.s[index].out_states:
+                Log.error("")
 
-      mo.s[index].out_id[cnt_out] = i
-      mo.s[index].out_a[cnt_out] = a_matrix[index][i]
-      cnt_out+=1
+            mo.s[index].out_id[cnt_out] = i
+            mo.s[index].out_a[cnt_out] = a_matrix[index][i]
+            cnt_out += 1
 
-    if a_matrix[i][index]:   # Transitions to a previous state possible
-      if cnt_in >= mo.s[index].in_states:
-        Log.error("")
+        if a_matrix[i][index]:   # Transitions to a previous state possible
+            if cnt_in >= mo.s[index].in_states:
+                Log.error("")
 
-      mo.s[index].in_id[cnt_in] = i
-      mo.s[index].in_a[cnt_in] = a_matrix[i][index]
-      cnt_in+=1
+            mo.s[index].in_id[cnt_in] = i
+            mo.s[index].in_a[cnt_in] = a_matrix[i][index]
+            cnt_in += 1
+
 
 def ghmm_dmodel_read(filename):
-  pass
+    pass
+
 
 def ghmm_dmodel_direct_read(s, multip):
     pass
@@ -130,590 +81,572 @@ def ghmm_dmodel_direct_read(s, multip):
 #============================================================================
 # Produces models from given sequences
 def ghmm_dmodel_from_sequence(sq):
-  mo=ARRAY_CALLOC( sq.seq_number)
-  max_symb = ghmm_dseq_max_symbol (sq)
-  for i in range( 0,  sq.seq_number):
-    mo[i] = ghmm_dmodel_generate_from_sequence (sq.seq[i], sq.seq_len[i],                                          max_symb + 1)
-  return mo
+    mo = ARRAY_CALLOC(sq.seq_number)
+    max_symb = ghmm_dseq_max_symbol(sq)
+    for i in range(0, sq.seq_number):
+        mo[i] = ghmm_dmodel_generate_from_sequence(sq.seq[i], sq.seq_len[i], max_symb + 1)
+    return mo
 
 
 #============================================================================
 # Produces models form given sequences
 def ghmm_dmodel_from_sequence_ascii(s, mo_number):
-  pass
+    pass
 
 
-def ghmm_alphabet_free(a) :
-  pass
-
-
-#============================================================================
-def ghmm_dmodel_free(mo) :
-  pass
+def ghmm_alphabet_free(a):
+    pass
 
 
 #============================================================================
-def ghmm_dbackground_free(bg) :
+def ghmm_dmodel_free(mo):
+    pass
+
+
+#============================================================================
+def ghmm_dbackground_free(bg):
     pass
 
 
 #============================================================================
 def ghmm_dmodel_copy(mo):
-  m2=ARRAY_CALLOC( 1)
-  m2.s=ARRAY_CALLOC( mo.N)
+    m2 = ghmm_dmodel(mo.M, mo.N, mo.model_type, [0]*mo.N, [0]*mo.N)
+    m2.s = [ ghmm_dstate() for i in range(mo.N)]
 
-  if mo.model_type & kSilentStates:
-    m2.silent=ARRAY_CALLOC( mo.N)
-  if mo.model_type & kTiedEmissions:
-    m2.tied_to=ARRAY_CALLOC( mo.N)
-  if mo.model_type & kBackgroundDistributions:
-    m2.background_id=ARRAY_CALLOC( mo.N)
-    m2.bp = mo.bp
-
-  if mo.model_type & kHigherOrderEmissions:
-    m2.order=ARRAY_CALLOC( mo.N)
-  if mo.model_type & kLabeledStates:
-    m2.label=ARRAY_CALLOC( mo.N)
-
-  m2.pow_lookup=ARRAY_MALLOC( mo.maxorder+2)
-
-  for i in range( 0,  mo.N):
-    if mo.model_type & kHigherOrderEmissions:
-      size = pow( mo.M, mo.order[i]+1)
-    else:
-      size = mo.M
-
-    nachf = mo.s[i].out_states
-    vorg = mo.s[i].in_states
-
-    m2.s[i].out_id=ARRAY_CALLOC( nachf)
-    m2.s[i].out_a=ARRAY_CALLOC( nachf)
-    m2.s[i].in_id=ARRAY_CALLOC( vorg)
-    m2.s[i].in_a=ARRAY_CALLOC( vorg)
-    m2.s[i].b=ARRAY_CALLOC( size)
-
-    # copy the values
-    for j in range( 0,  nachf):
-      m2.s[i].out_a[j] = mo.s[i].out_a[j]
-      m2.s[i].out_id[j] = mo.s[i].out_id[j]
-
-    for j in range( 0,  vorg):
-      m2.s[i].in_a[j] = mo.s[i].in_a[j]
-      m2.s[i].in_id[j] = mo.s[i].in_id[j]
-
-    # copy all b values for higher order states
-    for m in range( 0,  size):
-      m2.s[i].b[m] = mo.s[i].b[m]
-
-    m2.s[i].pi = mo.s[i].pi
-    m2.s[i].fix = mo.s[i].fix
     if mo.model_type & kSilentStates:
-      m2.silent[i] = mo.silent[i]
+        m2.silent = ARRAY_CALLOC(mo.N)
     if mo.model_type & kTiedEmissions:
-      m2.tied_to[i] = mo.tied_to[i]
-    if mo.model_type & kLabeledStates:
-      m2.label[i] = mo.label[i]
-    if mo.model_type & kHigherOrderEmissions:
-      m2.order[i] = mo.order[i]
+        m2.tied_to = ARRAY_CALLOC(mo.N)
     if mo.model_type & kBackgroundDistributions:
-      m2.background_id[i] = mo.background_id[i]
-    m2.s[i].out_states = nachf
-    m2.s[i].in_states = vorg
+        m2.background_id = ARRAY_CALLOC(mo.N)
+        m2.bp = mo.bp
 
+    if mo.model_type & kHigherOrderEmissions:
+        m2.order = ARRAY_CALLOC(mo.N)
+    if mo.model_type & kLabeledStates:
+        m2.label = ARRAY_CALLOC(mo.N)
 
-  m2.N = mo.N
-  m2.M = mo.M
-  m2.prior = mo.prior
-  if mo.model_type & kHigherOrderEmissions:
-    m2.maxorder = mo.maxorder
-    for i in range( mo.maxorder+2):
-      m2.pow_lookup[i] = mo.pow_lookup[i]
+    m2.pow_lookup = ARRAY_MALLOC(mo.maxorder + 2)
 
+    for i in range(0, mo.N):
+        if mo.model_type & kHigherOrderEmissions:
+            size = pow(mo.M, mo.order[i] + 1)
+        else:
+            size = mo.M
 
-  m2.model_type = mo.model_type
-  # not necessary but the history is at least initialised
-  m2.emission_history = mo.emission_history
-  return (m2)
+        nachf = mo.s[i].out_states
+        vorg = mo.s[i].in_states
+
+        m2.s[i].out_id = ARRAY_CALLOC(nachf)
+        m2.s[i].out_a = ARRAY_CALLOC(nachf)
+        m2.s[i].in_id = ARRAY_CALLOC(vorg)
+        m2.s[i].in_a = ARRAY_CALLOC(vorg)
+        m2.s[i].b = ARRAY_CALLOC(size)
+
+        # copy the values
+        for j in range(0, nachf):
+            m2.s[i].out_a[j] = mo.s[i].out_a[j]
+            m2.s[i].out_id[j] = mo.s[i].out_id[j]
+
+        for j in range(0, vorg):
+            m2.s[i].in_a[j] = mo.s[i].in_a[j]
+            m2.s[i].in_id[j] = mo.s[i].in_id[j]
+
+        # copy all b values for higher order states
+        for m in range(0, size):
+            m2.s[i].b[m] = mo.s[i].b[m]
+
+        m2.s[i].pi = mo.s[i].pi
+        m2.s[i].fix = mo.s[i].fix
+        if mo.model_type & kSilentStates:
+            m2.silent[i] = mo.silent[i]
+        if mo.model_type & kTiedEmissions:
+            m2.tied_to[i] = mo.tied_to[i]
+        if mo.model_type & kLabeledStates:
+            m2.label[i] = mo.label[i]
+        if mo.model_type & kHigherOrderEmissions:
+            m2.order[i] = mo.order[i]
+        if mo.model_type & kBackgroundDistributions:
+            m2.background_id[i] = mo.background_id[i]
+        m2.s[i].out_states = nachf
+        m2.s[i].in_states = vorg
+
+    m2.N = mo.N
+    m2.M = mo.M
+    m2.prior = mo.prior
+
+    m2.model_type = mo.model_type
+    # not necessary but the history is at least initialised
+    m2.emission_history = mo.emission_history
+    return m2
 
 #============================================================================
-def ghmm_dmodel_check(mo) :
-  imag=0
+def ghmm_dmodel_check(mo):
+    imag = 0
 
-  # The sum of the Pi[i]'s is 1
-  sum = 0.0
-  for i in range( 0,  mo.N):
-    sum += mo.s[i].pi
-
-  if abs(sum-1.0) >= GHMM_EPS_PREC:
-    Log.error("sum Pi[i] != 1.0")
-
-  # check each state
-  for i in range(mo.N):
+    # The sum of the Pi[i]'s is 1
     sum = 0.0
-    # Sum the a[i][j]'s : normalized out transitions
-    for j in range( mo.s[i].out_states):
-      sum += mo.s[i].out_a[j]
+    for i in range(0, mo.N):
+        sum += mo.s[i].pi
 
-    if j==0:
-      Log.note("out_states = 0 (state %d . final statenot )", i)
+    if abs(sum - 1.0) >= GHMM_EPS_PREC:
+        Log.error("sum Pi[i] != 1.0")
 
-    elif sum == 0.0:
-      Log.warning("sum of s[%d].out_a[*] = 0.0 (assumed final state but %d transitions)", i, mo.s[i].out_states)
+    # check each state
+    for i in range(mo.N):
+        sum = 0.0
+        # Sum the a[i][j]'s : normalized out transitions
+        for j in range(mo.s[i].out_states):
+            sum += mo.s[i].out_a[j]
 
-    if abs(sum-1.0) >= GHMM_EPS_PREC:
-      Log.error("sum of s[%d].out_a[*] = %f != 1.0", i, sum)
+        if j == 0:
+            Log.note("out_states = 0 (state %d . final statenot )", i)
 
-    # Sum the a[i][j]'s : normalized in transitions
-    sum = mo.s[i].pi
-    for j in range(mo.s[i].in_states):
-      sum += mo.s[i].in_a[j]
+        elif sum == 0.0:
+            Log.warning("sum of s[%d].out_a[*] = 0.0 (assumed final state but %d transitions)", i, mo.s[i].out_states)
 
-    if abs(sum) <= GHMM_EPS_PREC:
-      imag = 1
-      Log.error("state %d can't be reached", i)
+        if abs(sum - 1.0) >= GHMM_EPS_PREC:
+            Log.error("sum of s[%d].out_a[*] = %f != 1.0", i, sum)
+
+        # Sum the a[i][j]'s : normalized in transitions
+        sum = mo.s[i].pi
+        for j in range(mo.s[i].in_states):
+            sum += mo.s[i].in_a[j]
+
+        if abs(sum) <= GHMM_EPS_PREC:
+            imag = 1
+            Log.error("state %d can't be reached", i)
 
 
-    # Sum the b[j]'s: normalized emission probs
-    sum = 0.0
-    for j in range(mo.M):
-      sum += mo.s[i].b[j]
+        # Sum the b[j]'s: normalized emission probs
+        sum = 0.0
+        for j in range(mo.M):
+            sum += mo.s[i].b[j]
 
-    if imag:
-      # not reachable states
-      if (abs(sum + mo.M ) >= GHMM_EPS_PREC):
-        Log.error("state %d can't be reached but is not set as non-reachale state", i)
+        if imag:
+            # not reachable states
+            if (abs(sum + mo.M) >= GHMM_EPS_PREC):
+                Log.error("state %d can't be reached but is not set as non-reachale state", i)
 
-     elif (mo.model_type & kSilentStates) and mo.silent[i]:
-      # silent states
-      if sum != 0.0:
-        Log.error("state %d is silent but has a non-zero emission probability", i)
-    else:
-      # normal states
-      if abs(sum-1.0) >= GHMM_EPS_PREC:
-        Log.error("sum s[%d].b[*] = %f != 1.0", i, sum)
+        elif (mo.model_type & kSilentStates) and mo.silent[i]:
+            # silent states
+            if sum != 0.0:
+                Log.error("state %d is silent but has a non-zero emission probability", i)
+        else:
+            # normal states
+            if abs(sum - 1.0) >= GHMM_EPS_PREC:
+                Log.error("sum s[%d].b[*] = %f != 1.0", i, sum)
 
 
 def ghmm_dmodel_check_compatibility(mo, model_number):
-  for i in range( 1,  model_number):
-    if -1 == ghmm_dmodel_check_compatibel_models (mo[0], mo[i]):
-      return -1
+    for i in range(1, model_number):
+        if -1 == ghmm_dmodel_check_compatibel_models(mo[0], mo[i]):
+            return -1
 
-  return 0
+    return 0
 
 
 def ghmm_dmodel_check_compatibel_models(mo, m2):
-  if mo.N != m2.N:
-    Log.error("different number of states (%d != %d)\n",               mo.N, m2.N)
+    if mo.N != m2.N:
+        Log.error("different number of states (%d != %d)\n", mo.N, m2.N)
 
-  if mo.M != m2.M:
-    Log.error("different number of possible outputs (%d != %d)\n",                  mo.M, m2.M)
+    if mo.M != m2.M:
+        Log.error("different number of possible outputs (%d != %d)\n", mo.M, m2.M)
 
-  for i in range(mo.N):
-    if mo.s[i].out_states != m2.s[i].out_states:
-      Log.error("different number of outstates (%d != %d) in state %d.\n",                  mo.s[i].out_states, m2.s[i].out_states, i)
+    for i in range(mo.N):
+        if mo.s[i].out_states != m2.s[i].out_states:
+            Log.error("different number of outstates (%d != %d) in state %d.\n", mo.s[i].out_states, m2.s[i].out_states, i)
 
-    for j in range(mo.s[i].out_states):
-      if mo.s[i].out_id[j] != m2.s[i].out_id[j]:
-        Log.error("different out_ids (%d != %d) in entry %d of state %d.\n",                      mo.s[i].out_id[j], m2.s[i].out_id[j], j, i)
+        for j in range(mo.s[i].out_states):
+            if mo.s[i].out_id[j] != m2.s[i].out_id[j]:
+                Log.error("different out_ids (%d != %d) in entry %d of state %d.\n", mo.s[i].out_id[j], m2.s[i].out_id[j], j, i)
 
-  return 0
+    return 0
 
 
 def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
-  mo=ghmm_dmodel(seq_len, anz_symb)
+    mo = ghmm_dmodel(seq_len, anz_symb)
 
-  # All models generated from sequences have to be LeftRight-models
-  mo.model_type = kLeftRight
+    # All models generated from sequences have to be LeftRight-models
+    mo.model_type = kLeftRight
 
-  # Allocate memory for all vectors
-  mo.s=ARRAY_CALLOC( mo.N)
-  for i in range( 0,  mo.N):
-    if i == 0:
-        mo.s[i] = ghmm_dstate(mo.M, 0, 1)
-    elif i == mo.N - 1:  # End state
-       mo.s[i] =ghmm_dstate( mo.M, 1, 0)
-    else:                      # others
-       mo.s[i] =ghmm_dstate(mo.M, 1, 1)
+    # Allocate memory for all vectors
+    mo.s = ARRAY_CALLOC(mo.N)
+    for i in range(0, mo.N):
+        if i == 0:
+            mo.s[i] = ghmm_dstate(mo.M, 0, 1)
+        elif i == mo.N - 1:  # End state
+            mo.s[i] = ghmm_dstate(mo.M, 1, 0)
+        else:                      # others
+            mo.s[i] = ghmm_dstate(mo.M, 1, 1)
 
 
-  # Allocate states with the right values, the initial state and the end
-  #     state extra
-  for i in range( 1,  mo.N - 1):
-    s = mo.s[i]
-    s.pi = 0.0
+    # Allocate states with the right values, the initial state and the end
+    #     state extra
+    for i in range(1, mo.N - 1):
+        s = mo.s[i]
+        s.pi = 0.0
+        s.out_states = 1
+        s.in_states = 1
+        s.b[seq[i]] = 1.0         # others stay 0
+        (s.out_id) = i + 1
+        (s.in_id) = i - 1
+        (s.out_a) = (s.in_a) = 1.0
+
+
+    # Initial state
+    s = mo.s[0]
+    s.pi = 1.0
     s.out_states = 1
+    s.in_states = 0
+    s.b[seq[0]] = 1.0
+    (s.out_id) = 1
+    (s.out_a) = 1.0
+    # No in_id and in_a
+
+    # End state
+    s = mo.s[mo.N - 1]
+    s.pi = 0.0
+    s.out_states = 0
     s.in_states = 1
-    s.b[seq[i]] = 1.0         # others stay 0
-    (s.out_id) = i + 1
-    (s.in_id) = i - 1
-    (s.out_a) = (s.in_a) = 1.0
+    s.b[seq[mo.N - 1]] = 1.0   # All other b's stay zero
+    s.in_id = mo.N - 2
+    s.in_a = 1.0
+    # No out_id and out_a
 
+    ghmm_dmodel_check(mo)
 
-  # Initial state
-  s = mo.s[0]
-  s.pi = 1.0
-  s.out_states = 1
-  s.in_states = 0
-  s.b[seq[0]] = 1.0
-  (s.out_id) = 1
-  (s.out_a) = 1.0
-  # No in_id and in_a
+    return mo
 
-  # End state
-  s = mo.s[mo.N - 1]
-  s.pi = 0.0
-  s.out_states = 0
-  s.in_states = 1
-  s.b[seq[mo.N - 1]] = 1.0   # All other b's stay zero
-  s.in_id = mo.N - 2
-  s.in_a = 1.0
-  # No out_id and out_a
-
-  ghmm_dmodel_check(mo)
-
-  return mo
 
 def get_random_output(mo, i, position):
-  sum=0.0
+    sum = 0.0
 
-  p = GHMM_RNG_UNIFORM (RNG)
+    p = GHMM_RNG_UNIFORM(RNG)
 
-  for m in range( 0,  mo.M):
-    # get the right index for higher order emission models
-    e_index = mo.get_emission_index( i, m, position)
+    for m in range(0, mo.M):
+        # get the right index for higher order emission models
+        e_index = mo.get_emission_index(i, m, position)
 
-    # get the probability, exit, if the index is -1
-    if -1 != e_index:
-      sum += mo.s[i].b[e_index]
-      if sum >= p:
-        break
+        # get the probability, exit, if the index is -1
+        if -1 != e_index:
+            sum += mo.s[i].b[e_index]
+            if sum >= p:
+                break
 
-    else:
-      Log.error("State has order %d, but in the history are only %d emissions.\n",mo.order[i], position)
+        else:
+            Log.error("State has order %d, but in the history are only %d emissions.\n", mo.order[i], position)
 
-  if mo.M == m:
-    Log.error("no valid output choosen. Are the Probabilities correct? sum: %g, p: %g\n",             sum, p)
+    if mo.M == m:
+        Log.error("no valid output choosen. Are the Probabilities correct? sum: %g, p: %g\n", sum, p)
 
-  return m
+    return m
+
 
 def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
-  n = 0
+    n = 0
 
-  sq = ghmm_dseq(seq_number)
+    sq = ghmm_dseq(seq_number)
 
-  # allocating additional fields for the state sequence in the ghmm_dseq class
-  sq.states=ARRAY_CALLOC( seq_number)
-  sq.states_len=ARRAY_CALLOC( seq_number)
+    # allocating additional fields for the state sequence in the ghmm_dseq class
+    sq.states = ARRAY_CALLOC(seq_number)
+    sq.states_len = ARRAY_CALLOC(seq_number)
 
-  # A specific length of the sequences isn't given. As a model should have
-  #     an end state, the konstant MAX_SEQ_LEN is used.
-  if len <= 0:
-    len = GHMM_MAX_SEQ_LEN
+    # A specific length of the sequences isn't given. As a model should have
+    #     an end state, the konstant MAX_SEQ_LEN is used.
+    if len <= 0:
+        len = GHMM_MAX_SEQ_LEN
 
-  if seed > 0:
-    GHMM_RNG_SET(RNG, seed)
-
-
-  # initialize the emission history
-  mo.emission_history = 0
-
-  while n < seq_number:
-    sq.seq[n]=ARRAY_CALLOC( len)
-
-    # for silent models we have to allocate for the maximal possible number
-    #       of lables and states
-    if mo.model_type & kSilentStates:
-      sq.states[n]=ARRAY_CALLOC( len * mo.N)
-    else:
-      sq.states[n]=ARRAY_CALLOC( len)
+    if seed > 0:
+        GHMM_RNG_SET(RNG, seed)
 
 
-    pos = label_pos = 0
+    # initialize the emission history
+    mo.emission_history = 0
 
-    # Get a random initial state i
-    p = GHMM_RNG_UNIFORM(RNG)
-    sum = 0.0
-    for state in range( mo.N):
-      sum += mo.s[state].pi
-      if sum >= p:
-        break
+    while n < seq_number:
+        sq.seq[n] = ARRAY_CALLOC(len)
 
+        # for silent models we have to allocate for the maximal possible number
+        #       of lables and states
+        if mo.model_type & kSilentStates:
+            sq.states[n] = ARRAY_CALLOC(len * mo.N)
+        else:
+            sq.states[n] = ARRAY_CALLOC(len)
 
-    while pos < len:
-      # save the state path and label
-      sq.states[n][label_pos] = state
-      label_pos+=1
+        pos = label_pos = 0
 
-      # Get a random output m if the state is not a silent state
-      if not (mo.model_type & kSilentStates) or not (mo.silent[state]):
-        m = get_random_output(mo, state, pos)
-        mo.update_emission_history(m)
-        sq.seq[n][pos] = m
-        pos+=1
+        # Get a random initial state i
+        p = GHMM_RNG_UNIFORM(RNG)
+        sum = 0.0
+        for state in range(mo.N):
+            sum += mo.s[state].pi
+            if sum >= p:
+                break
 
+        while pos < len:
+            # save the state path and label
+            sq.states[n][label_pos] = state
+            label_pos += 1
 
-      # get next state
-      p = GHMM_RNG_UNIFORM(RNG)
-      if pos < mo.maxorder:
-        max_sum = 0.0
-        for j in range( 0,  mo.s[state].out_states):
-          j_id = mo.s[state].out_id[j]
-          if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] <= pos:
-            max_sum += mo.s[state].out_a[j]
-
-        if j and abs(max_sum) < GHMM_EPS_PREC:
-          Log.error("No possible transition from state %d "
-                          "since all successor states require more history "
-                          "than seen up to position: %d.",
-                          state, pos)
-          break
-
-        if j:
-          p *= max_sum
+            # Get a random output m if the state is not a silent state
+            if not (mo.model_type & kSilentStates) or not (mo.silent[state]):
+                m = get_random_output(mo, state, pos)
+                mo.update_emission_history(m)
+                sq.seq[n][pos] = m
+                pos += 1
 
 
-      sum = 0.0
-      for j in range( 0,  mo.s[state].out_states):
-        j_id = mo.s[state].out_id[j]
-        if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] <= pos:
-          sum += mo.s[state].out_a[j]
-          if sum >= p:
-            break
+            # get next state
+            p = GHMM_RNG_UNIFORM(RNG)
+            if pos < mo.maxorder:
+                max_sum = 0.0
+                for j in range(0, mo.s[state].out_states):
+                    j_id = mo.s[state].out_id[j]
+                    if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] <= pos:
+                        max_sum += mo.s[state].out_a[j]
 
+                if j and abs(max_sum) < GHMM_EPS_PREC:
+                    Log.error("No possible transition from state %d "
+                              "since all successor states require more history "
+                              "than seen up to position: %d.",
+                        state, pos)
+                    break
 
+                if j:
+                    p *= max_sum
 
-      if sum == 0.0:
-        Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
-        break
+            sum = 0.0
+            for j in range(0, mo.s[state].out_states):
+                j_id = mo.s[state].out_id[j]
+                if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] <= pos:
+                    sum += mo.s[state].out_a[j]
+                    if sum >= p:
+                        break
 
+            if sum == 0.0:
+                Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
+                break
 
-      state = j_id
-                               # while pos < len:
-    # realocate state path and label sequence to actual size
-    if mo.model_type & kSilentStates:
-      sq.states[n]=ARRAY_REALLOC(sq.states[n], label_pos)
+            state = j_id
+            # while pos < len:
+        # realocate state path and label sequence to actual size
+        if mo.model_type & kSilentStates:
+            sq.states[n] = ARRAY_REALLOC(sq.states[n], label_pos)
 
-
-    sq.seq_len[n] = pos
-    sq.states_len[n] = label_pos
-    n+=1
-                               # while  n < seq_number :
-  return sq
+        sq.seq_len[n] = pos
+        sq.states_len[n] = label_pos
+        n += 1
+        # while  n < seq_number :
+    return sq
 
 
 #============================================================================
 
 def ghmm_dmodel_likelihood(mo, sq):
-  log_p = 0.0
-  for i in range( sq.seq_number):
-    log_p_i = mo.logp(sq.seq[i], sq.seq_len[i])
-    if log_p_i != +1:
-      log_p += log_p_i
-    else:
-      Log.error("sequence[%d] can't be build.", i)
+    log_p = 0.0
+    for i in range(sq.seq_number):
+        log_p_i = mo.logp(sq.seq[i], sq.seq_len[i])
+        if log_p_i != +1:
+            log_p += log_p_i
+        else:
+            Log.error("sequence[%d] can't be build.", i)
+
 
 def ghmm_dmodel_get_transition(mo, i, j):
-  if mo.s and mo.s[i].out_a and mo.s[j].in_a:
-    for out in range( mo.s[i].out_states):
-      if mo.s[i].out_id[out] == j:
-        return mo.s[i].out_a[out]
-  return 0.0
+    if mo.s and mo.s[i].out_a and mo.s[j].in_a:
+        for out in range(mo.s[i].out_states):
+            if mo.s[i].out_id[out] == j:
+                return mo.s[i].out_a[out]
+    return 0.0
 
 
 def ghmm_dmodel_check_transition(mo, i, j):
-  if mo.s and mo.s[i].out_a and mo.s[j].in_a:
-    for out in range( mo.s[i].out_states):
-      if mo.s[i].out_id[out] == j:
-        return 1
-  return 0
+    if mo.s and mo.s[i].out_a and mo.s[j].in_a:
+        for out in range(mo.s[i].out_states):
+            if mo.s[i].out_id[out] == j:
+                return 1
+    return 0
 
 
 def ghmm_dmodel_set_transition(mo, i, j, prob):
 # define CUR_PROC "ghmm_dmodel_set_transition"
-  if mo.s and mo.s[i].out_a and mo.s[j].in_a:
-    for out in range( 0,  mo.s[i].out_states):
-      if mo.s[i].out_id[out] == j:
-        mo.s[i].out_a[out] = prob
-        break
+    if mo.s and mo.s[i].out_a and mo.s[j].in_a:
+        for out in range(0, mo.s[i].out_states):
+            if mo.s[i].out_id[out] == j:
+                mo.s[i].out_a[out] = prob
+                break
 
-    for _in in range( 0,  mo.s[j].in_states):
-      if mo.s[j].in_id[_in] == i:
-        mo.s[j].in_a[_in] = prob
-        break
-
+        for _in in range(0, mo.s[j].in_states):
+            if mo.s[j].in_id[_in] == i:
+                mo.s[j].in_a[_in] = prob
+                break
 
 
 def ghmm_dmodel_direct_clean(mo_d, check):
-  pass
+    pass
 
 
 def ghmm_dmodel_direct_check_data(mo_d, check):
 #define CUR_PROC "ghmm_dmodel_direct_check_data"
-  if check.r_a != mo_d.N or check.c_a != mo_d.N:
-    Log.error("Incompatible dim. A (%d X %d) and N (%d)\n",check.r_a, check.c_a, mo_d.N)
+    if check.r_a != mo_d.N or check.c_a != mo_d.N:
+        Log.error("Incompatible dim. A (%d X %d) and N (%d)\n", check.r_a, check.c_a, mo_d.N)
 
-  if check.r_b != mo_d.N or check.c_b != mo_d.M:
-    Log.error("Incompatible dim. B (%d X %d) and N X M (%d X %d)\n",check.r_b, check.c_b, mo_d.N, mo_d.M)
+    if check.r_b != mo_d.N or check.c_b != mo_d.M:
+        Log.error("Incompatible dim. B (%d X %d) and N X M (%d X %d)\n", check.r_b, check.c_b, mo_d.N, mo_d.M)
 
-  if check.len_pi != mo_d.N:
-    Log.error( "Incompatible dim. Pi (%d) and N (%d)\n",                   check.len_pi, mo_d.N)
+    if check.len_pi != mo_d.N:
+        Log.error("Incompatible dim. Pi (%d) and N (%d)\n", check.len_pi, mo_d.N)
 
-  if check.len_fix != mo_d.N:
-    Log.error(  "Incompatible dim. fix_state (%d) and N (%d)\n",    check.len_fix, mo_d.N)
+    if check.len_fix != mo_d.N:
+        Log.error("Incompatible dim. fix_state (%d) and N (%d)\n", check.len_fix, mo_d.N)
 
 
 #============================================================================
 # XXX symmetric not implemented yet
 def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose):
-  STEPS=40
-  d = 0.0
-  if verbose:
-    step_width = maxT / 40
-    steps = STEPS
+    STEPS = 40
+    d = 0.0
+    if verbose:
+        step_width = maxT / 40
+        steps = STEPS
 
-  else:                          # else just one
-    step_width = maxT
+    else:                          # else just one
+        step_width = maxT
 
-  d1=ARRAY_CALLOC( steps)
+    d1 = ARRAY_CALLOC(steps)
 
-  mo1 = m0
-  mo2 = m
+    mo1 = m0
+    mo2 = m
 
-  for k in range(2):    # Two passes for the symmetric case
-    # seed = 0 . no reseeding. Call  ghmm_rng_timeseed(RNG) externally
-    seq0 = ghmm_dmodel_generate_sequences (mo1, 0, maxT + 1, 1, maxT + 1)
+    for k in range(2):    # Two passes for the symmetric case
+        # seed = 0 . no reseeding. Call  ghmm_rng_timeseed(RNG) externally
+        seq0 = ghmm_dmodel_generate_sequences(mo1, 0, maxT + 1, 1, maxT + 1)
 
-    if seq0 == None:
-      Log.error(" generate_sequences failed not ")
+        if seq0 == None:
+            Log.error(" generate_sequences failed not ")
 
-    if seq0.seq_len[0] < maxT:      # There is an absorbing state
+        if seq0.seq_len[0] < maxT:      # There is an absorbing state
 
-      # NOTA BENE: Assumpting the model delivers an explicit end state,
-      #         the condition of a fix initial state is removed.
+            # NOTA BENE: Assumpting the model delivers an explicit end state,
+            #         the condition of a fix initial state is removed.
 
-      # For now check that Pi puts all weight on state
-      #
-      #         t = 0
-      #         for i in range( 0,  mo1.N):
-      #         if mo1.s[i].pi > 0.001:
-      #         t+=1
-      #
-      #         if t > 1:
-      #         GHMM_LOG(LCONVERTED, "ERROR: No proper left-to-right model. Multiple start states")
-      #         goto STOP
-      #
+            # For now check that Pi puts all weight on state
+            #
+            #         t = 0
+            #         for i in range( 0,  mo1.N):
+            #         if mo1.s[i].pi > 0.001:
+            #         t+=1
+            #
+            #         if t > 1:
+            #         GHMM_LOG(LCONVERTED, "ERROR: No proper left-to-right model. Multiple start states")
+            #         goto STOP
+            #
 
-      left_to_right = 1
-      total = seq0.seq_len[0]
+            left_to_right = 1
+            total = seq0.seq_len[0]
 
-      while total <= maxT:
+            while total <= maxT:
 
-        # create a additional sequences at once
-        a = (maxT - total) / (total / seq0.seq_number) + 1
-        # printf("total=%d generating %d", total, a)
-        tmp = ghmm_dmodel_generate_sequences (mo1, 0, 0, a, a)
-        if tmp == None:
-          Log.error(" generate_sequences failed not ")
+                # create a additional sequences at once
+                a = (maxT - total) / (total / seq0.seq_number) + 1
+                # printf("total=%d generating %d", total, a)
+                tmp = ghmm_dmodel_generate_sequences(mo1, 0, 0, a, a)
+                if tmp == None:
+                    Log.error(" generate_sequences failed not ")
 
-        ghmm_dseq_add (seq0, tmp)
+                ghmm_dseq_add(seq0, tmp)
 
-        total = 0
-        for i in range( 0,  seq0.seq_number):
-          total += seq0.seq_len[i]
+                total = 0
+                for i in range(0, seq0.seq_number):
+                    total += seq0.seq_len[i]
+
+        if left_to_right:
+            for i, t in enumerate(range(step_width, maxT + step_width, step_width)):
+                index = 0
+                total = seq0.seq_len[0]
+
+                # Determine how many sequences we need to get a total of t
+                #           and adjust length of last sequence to obtain total of
+                #           exactly t
+
+                while total < t:
+                    index += 1
+                    total += seq0.seq_len[index]
+
+                true_len = seq0.seq_len[index]
+                true_number = seq0.seq_number
+
+                if (total - t) > 0:
+                    seq0.seq_len[index] = total - t
+                seq0.seq_number = index
+
+                p0 = ghmm_dmodel_likelihood(mo1, seq0)
+                if p0 == +1 or p0 == -1:     # error!
+                    Log.error("problem: ghmm_dmodel_likelihood failed not ")
+
+                p = ghmm_dmodel_likelihood(mo2, seq0)
+                if p == +1 or p == -1:       # what shall we do now?
+                    Log.error("problem: ghmm_dmodel_likelihood failed not ")
+
+                d = 1.0 / t * (p0 - p)
+
+                if symmetric:
+                    if k == 0:
+                        # save d
+                        d1[i] = d
+                    else:
+                        # calculate d
+                        d = 0.5 * (d1[i] + d)
+                if verbose and (not symmetric or k == 1):
+                    Log.note("%d\t%f\t%f\t%f\n", t, p0, p, d)
+
+                seq0.seq_len[index] = true_len
+                seq0.seq_number = true_number
 
 
 
-    if left_to_right:
-      for t in range( step_width, i = 0,  maxT):
+        else:
 
-        index = 0
-        total = seq0.seq_len[0]
+            true_len = seq0.seq_len[0]
 
-        # Determine how many sequences we need to get a total of t
-        #           and adjust length of last sequence to obtain total of
-        #           exactly t
+            for i, t in enumerate(range(step_width, maxT + step_width, step_width)):
+                seq0.seq_len[0] = t
 
-        while total < t:
-          index+=1
-          total += seq0.seq_len[index]
+                p0 = ghmm_dmodel_likelihood(mo1, seq0)
+                # printf("   P(O|m1) = %f\n",p0)
+                if p0 == +1:
+                    Log.error("seq0 can't be build from mo1not ")
 
+                p = ghmm_dmodel_likelihood(mo2, seq0)
+                # printf("   P(O|m2) = %f\n",p)
+                if p == +1:          # what shall we do now?
+                    Log.error("problem: seq0 can't be build from mo2not ")
 
-        true_len = seq0.seq_len[index]
-        true_number = seq0.seq_number
+                d = (1.0 / t) * (p0 - p)
 
-        if (total - t) > 0:
-          seq0.seq_len[index] = total - t
-        seq0.seq_number = index
+                if symmetric:
+                    if k == 0:
+                        # save d
+                        d1[i] = d
+                    else:
+                        # calculate d
+                        d = 0.5 * (d1[i] + d)
 
-        p0 = ghmm_dmodel_likelihood (mo1, seq0)
-        if p0 == +1 or p0 == -1:     # error!
-          Log.error("problem: ghmm_dmodel_likelihood failed not ")
+                if verbose and (not symmetric or k == 1):
+                    Log.note("%d\t%f\t%f\t%f\n", t, p0, p, d)
 
-        p = ghmm_dmodel_likelihood (mo2, seq0)
-        if p == +1 or p == -1:       # what shall we do now?
-          Log.error("problem: ghmm_dmodel_likelihood failed not ")
-
-        d = 1.0 / t * (p0 - p)
+            seq0.seq_len[0] = true_len
 
         if symmetric:
-          if k == 0:
-            # save d
-            d1[i] = d
-          else:
-            # calculate d
-            d = 0.5 * (d1[i] + d)
-        if verbose and (not symmetric or k == 1):
-          printf ("%d\t%f\t%f\t%f\n", t, p0, p, d)
+            ghmm_dseq_free(seq0)
+            mo1 = m
+            mo2 = m0
 
-        seq0.seq_len[index] = true_len
-        seq0.seq_number = true_number
+        else:
+            break
 
-
-
-    else:
-
-      true_len = seq0.seq_len[0]
-
-      for t in range( step_width, i = 0,  maxT):
-        seq0.seq_len[0] = t
-
-        p0 = ghmm_dmodel_likelihood (mo1, seq0)
-        # printf("   P(O|m1) = %f\n",p0)
-        if p0 == +1:
-          Log.error("seq0 can't be build from mo1not ")
-
-        p = ghmm_dmodel_likelihood (mo2, seq0)
-        # printf("   P(O|m2) = %f\n",p)
-        if p == +1 :          # what shall we do now?
-          Log.error("problem: seq0 can't be build from mo2not ")
-
-        d = (1.0 / t) * (p0 - p)
-
-        if symmetric:
-          if k == 0:
-            # save d
-            d1[i] = d
-          else:
-            # calculate d
-            d = 0.5 * (d1[i] + d)
-
-        if verbose and (not symmetric or k == 1):
-          Log.note("%d\t%f\t%f\t%f\n", t, p0, p, d)
-
-
-      seq0.seq_len[0] = true_len
-
-
-    if symmetric:
-      ghmm_dseq_free (&seq0)
-      mo1 = m
-      mo2 = m0
-
-    else:
-      break
-
-  return d
-
+    return d
 
 
 def ghmm_dstate_clean(my_state):
@@ -723,298 +656,240 @@ def ghmm_dstate_clean(my_state):
 #==========================  Labeled HMMs  ================================
 
 def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax):
-  n = 0
-  sq = ghmm_dseq(seq_number)
+    n = 0
+    sq = ghmm_dseq(seq_number)
 
-  # allocating additional fields for the state sequence in the ghmm_dseq class
-  sq.states=ARRAY_CALLOC( seq_number)
-  sq.states_len=ARRAY_CALLOC( seq_number)
+    # allocating additional fields for the state sequence in the ghmm_dseq class
+    sq.states = ARRAY_CALLOC(seq_number)
+    sq.states_len = ARRAY_CALLOC(seq_number)
 
-  # allocating additional fields for the labels in the ghmm_dseq class
-  sq.state_labels=ARRAY_CALLOC( seq_number)
-  sq.state_labels_len=ARRAY_CALLOC( seq_number)
+    # allocating additional fields for the labels in the ghmm_dseq class
+    sq.state_labels = ARRAY_CALLOC(seq_number)
+    sq.state_labels_len = ARRAY_CALLOC(seq_number)
 
-  # A specific length of the sequences isn't given. As a model should have
-  #     an end state, the konstant MAX_SEQ_LEN is used.
-  if len <= 0:
-    len = GHMM_MAX_SEQ_LEN
+    # A specific length of the sequences isn't given. As a model should have
+    #     an end state, the konstant MAX_SEQ_LEN is used.
+    if len <= 0:
+        len = GHMM_MAX_SEQ_LEN
 
-  if seed > 0:
-    GHMM_RNG_SET(RNG, seed)
-
-
-  # initialize the emission history
-  mo.emission_history = 0
-
-  while n < seq_number:
-    sq.seq[n]=ARRAY_CALLOC( len)
-
-    # for silent models we have to allocate for the maximal possible number
-    #       of lables and states
-    if mo.model_type & kSilentStates:
-      sq.states[n]=ARRAY_CALLOC( len * mo.N)
-      sq.state_labels[n]=ARRAY_CALLOC( len * mo.N)
-
-     else:
-      sq.states[n]=ARRAY_CALLOC( len)
-      sq.state_labels[n]=ARRAY_CALLOC( len)
+    if seed > 0:
+        GHMM_RNG_SET(RNG, seed)
 
 
-    pos = label_pos = 0
+    # initialize the emission history
+    mo.emission_history = 0
 
-    # Get a random initial state i
-    p = GHMM_RNG_UNIFORM(RNG)
-    sum = 0.0
-    for state in range( mo.N):
-      sum += mo.s[state].pi
-      if sum >= p:
-        break
+    while n < seq_number:
+        sq.seq[n] = ARRAY_CALLOC(len)
 
+        # for silent models we have to allocate for the maximal possible number
+        #       of lables and states
+        if mo.model_type & kSilentStates:
+            sq.states[n] = ARRAY_CALLOC(len * mo.N)
+            sq.state_labels[n] = ARRAY_CALLOC(len * mo.N)
 
-    while pos < len:
-      # save the state path and label
-      sq.states[n][label_pos] = state
-      sq.state_labels[n][label_pos] = mo.label[state]
-      label_pos+=1
+        else:
+            sq.states[n] = ARRAY_CALLOC(len)
+            sq.state_labels[n] = ARRAY_CALLOC(len)
 
-      # Get a random output m if the state is not a silent state
-      if not (mo.model_type & kSilentStates) or not (mo.silent[state]):
-        m = get_random_output(mo, state, pos)
-        mo.update_emission_history( m)
-        sq.seq[n][pos] = m
-        pos+=1
+        pos = label_pos = 0
 
+        # Get a random initial state i
+        p = GHMM_RNG_UNIFORM(RNG)
+        sum = 0.0
+        for state in range(mo.N):
+            sum += mo.s[state].pi
+            if sum >= p:
+                break
 
-      # get next state
-      p = GHMM_RNG_UNIFORM(RNG)
-      if pos < mo.maxorder:
-        max_sum = 0.0
-        for j in range( 0,  mo.s[state].out_states):
-          j_id = mo.s[state].out_id[j]
-          if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] < pos:
-            max_sum += mo.s[state].out_a[j]
+        while pos < len:
+            # save the state path and label
+            sq.states[n][label_pos] = state
+            sq.state_labels[n][label_pos] = mo.label[state]
+            label_pos += 1
 
-        if j and abs(max_sum) < GHMM_EPS_PREC:
-          Log.error("No possible transition from state %d since all successor states require more history than seen up to position: %d.",                    state, pos)
-
-        if j:
-          p *= max_sum
-
-
-      sum = 0.0
-      for j in range( 0,  mo.s[state].out_states):
-        j_id = mo.s[state].out_id[j]
-        if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] < pos:
-          sum += mo.s[state].out_a[j]
-          if sum >= p:
-            break
+            # Get a random output m if the state is not a silent state
+            if not (mo.model_type & kSilentStates) or not (mo.silent[state]):
+                m = get_random_output(mo, state, pos)
+                mo.update_emission_history(m)
+                sq.seq[n][pos] = m
+                pos += 1
 
 
+            # get next state
+            p = GHMM_RNG_UNIFORM(RNG)
+            if pos < mo.maxorder:
+                max_sum = 0.0
+                for j in range(0, mo.s[state].out_states):
+                    j_id = mo.s[state].out_id[j]
+                    if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] < pos:
+                        max_sum += mo.s[state].out_a[j]
 
-      if sum == 0.0:
-        Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
-        break
+                if j and abs(max_sum) < GHMM_EPS_PREC:
+                    Log.error("No possible transition from state %d since all successor states require more history than seen up to position: %d.", state, pos)
 
+                if j:
+                    p *= max_sum
 
-      state = j_id
-                               # while pos < len:
-    # realocate state path and label sequence to actual size
-    if mo.model_type & kSilentStates:
-      sq.states[n]=ARRAY_REALLOC(sq.states[n], label_pos)
-      sq.state_labels[n]=ARRAY_REALLOC(sq.state_labels[n], label_pos)
+            sum = 0.0
+            for j in range(0, mo.s[state].out_states):
+                j_id = mo.s[state].out_id[j]
+                if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] < pos:
+                    sum += mo.s[state].out_a[j]
+                    if sum >= p:
+                        break
 
+            if sum == 0.0:
+                Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
+                break
 
-    sq.seq_len[n] = pos
-    sq.states_len[n] = label_pos
-    sq.state_labels_len[n] = label_pos
-    n+=1
-                               # while  n < seq_number :
-  return (sq)
+            state = j_id
+            # while pos < len:
+        # realocate state path and label sequence to actual size
+        if mo.model_type & kSilentStates:
+            sq.states[n] = ARRAY_REALLOC(sq.states[n], label_pos)
+            sq.state_labels[n] = ARRAY_REALLOC(sq.state_labels[n], label_pos)
+
+        sq.seq_len[n] = pos
+        sq.states_len[n] = label_pos
+        sq.state_labels_len[n] = label_pos
+        n += 1
+        # while  n < seq_number :
+    return (sq)
 
 
 # Scales the output and transitions probs of all states in a given model
 def ghmm_dmodel_normalize(mo):
-  double pi_sum=0.0
-  int i, j, m, j_id, i_id=0, res=0
-  int size = 1
+    pi_sum = 0.0
+    i_id = 0
+    size = 1
 
-  for i in range( 0,  mo.N):
-    if mo.s[i].pi >= 0.0:
-      pi_sum += mo.s[i].pi
-    else
-      mo.s[i].pi = 0.0
+    for i in range(mo.N):
+        if mo.s[i].pi >= 0.0:
+            pi_sum += mo.s[i].pi
+        else:
+            mo.s[i].pi = 0.0
 
-    # check model_type before using state order
-    if mo.model_type & kHigherOrderEmissions:
-      size = ghmm_ipow (mo, mo.M, mo.order[i])
+        # check model_type before using state order
+        if mo.model_type & kHigherOrderEmissions:
+            size = pow(mo, mo.M, mo.order[i])
 
-    # normalize transition probabilities
-    def ighmm_cvector_normalize(mo.s[i].out_a, mo.s[i].out_states) == -1:
- :
-      res = -1
+        # normalize transition probabilities
+        ighmm_cvector_normalize(mo.s[i].out_a, 0, mo.s[i].out_states)
 
-    # for every outgoing probability update the corrosponding incoming probability
-    for j in range( 0,  mo.s[i].out_states):
-      j_id = mo.s[i].out_id[j]
-      for m in range( 0,  mo.s[j_id].in_states):
-        if i == mo.s[j_id].in_id[m]:
- :
-          i_id = m
-          break
+        # for every outgoing probability update the corrosponding incoming probability
+        for j in range(0, mo.s[i].out_states):
+            j_id = mo.s[i].out_id[j]
+            for m in range(0, mo.s[j_id].in_states):
+                if i == mo.s[j_id].in_id[m]:
+                    i_id = m
+                    break
 
+            if i_id == mo.s[j_id].in_states:
+                Log.error("Outgoing transition from state %d to state %d has no corresponding incoming transition.", i, j_id)
+                return -1
 
-      if i_id == mo.s[j_id].in_states:
- :
-        Log.error("Outgoing transition from state %d to \
-           state %d has no corresponding incoming transition.", i, j_id)
-        return -1
+            mo.s[j_id].in_a[i_id] = mo.s[i].out_a[j]
 
-      mo.s[j_id].in_a[i_id] = mo.s[i].out_a[j]
+        # normalize emission probabilities, but not for silent states
+        if not ((mo.model_type & kSilentStates) and mo.silent[i]):
+            for m in range(size):
+                ighmm_cvector_normalize(mo.s[i].b, m * mo.M, mo.M)
 
-    # normalize emission probabilities, but not for silent states
-    if not ((mo.model_type & kSilentStates) and mo.silent[i]):
- :
-      for m in range( 0,  size):
-        def ighmm_cvector_normalize(&(mo.s[i].b[m * mo.M]), mo.M) == -1:
-          res = -1
+    for i in range(0, mo.N):
+        mo.s[i].pi /= pi_sum
 
 
+def ghmm_dmodel_add_noise(mo, level, seed):
+    if level > 1.0:
+        level = 1.0
 
-  for i in range( 0,  mo.N):
-    mo.s[i].pi /= pi_sum
+    for i in range(0, mo.N):
+        for j in range(0, mo.s[i].out_states):
+            # add noise only to out_a, in_a is updated on normalisation
+            mo.s[i].out_a[j] *= (1 - level) + (GHMM_RNG_UNIFORM(RNG) * 2 * level)
 
-  return res
-#undef CUR_PROC
-                               # ghmm_dmodel_normalize
+        if mo.model_type & kHigherOrderEmissions:
+            size = pow(mo, mo.M, mo.order[i])
+        for hist in range(size):
+            for h in range(hist * mo.M, hist * mo.M + mo.M):
+                mo.s[i].b[h] *= (1 - level) + (GHMM_RNG_UNIFORM(RNG) * 2 * level)
 
-
-#-
-def ghmm_dmodel_add_noise(mo, level, seed)
-:
-#define CUR_PROC "model_add_noise_A"
-
-  int h, i, j, hist
-  int size = 1
-
-  if level > 1.0:
-    level = 1.0
-
-  for i in range( 0,  mo.N):
-    for j in range( 0,  mo.s[i].out_states):
-      # add noise only to out_a, in_a is updated on normalisation
-      mo.s[i].out_a[j] *= (1 - level) + (GHMM_RNG_UNIFORM (RNG) * 2 * level)
-
-    if mo.model_type & kHigherOrderEmissions:
-      size = ghmm_ipow (mo, mo.M, mo.order[i])
-    for hist in range( 0,  size):
-      for h in range( hist * mo.M,  hist * mo.M + mo.M):
-        mo.s[i].b[h] *= (1 - level) + (GHMM_RNG_UNIFORM (RNG) * 2 * level)
+    ghmm_dmodel_normalize(mo)
 
 
-  def ghmm_dmodel_normalize(mo)
+def ghmm_dstate_transition_add(s, start, dest, prob):
+    # resize the arrays
+    s[dest].in_id = ARRAY_REALLOC(s[dest].in_id, s[dest].in_states + 1)
+    s[dest].in_a = ARRAY_REALLOC(s[dest].in_a, s[dest].in_states + 1)
+    s[start].out_id = ARRAY_REALLOC(s[start].out_id, s[start].out_states + 1)
+    s[start].out_a = ARRAY_REALLOC(s[start].out_a, s[start].out_states + 1)
 
-#undef CUR_PROC
+    s[dest].in_states += 1
+    s[start].out_states += 1
 
+    # search the right place to insert while moving greater entrys one field back
+    for i in reversed(range(s[start].out_states)):
+        if i == 0 or dest > s[start].out_id[i - 1]:
+            s[start].out_id[i] = dest
+            s[start].out_a[i] = prob
+            break
 
-#-
- def ghmm_dstate_transition_add(s, start, dest, prob)
-:
-#define CUR_PROC "ghmm_dmodel_transition_add"
-
-  int i
-
-  # resize the arrays
-  s[dest].in_id=ARRAY_REALLOC(s[dest].in_id, s[dest].in_states + 1)
-  s[dest].in_a=ARRAY_REALLOC(s[dest].in_a, s[dest].in_states + 1)
-  s[start].out_id=ARRAY_REALLOC(s[start].out_id, s[start].out_states + 1)
-  s[start].out_a=ARRAY_REALLOC(s[start].out_a, s[start].out_states + 1)
-
-  s[dest].in_states += 1
-  s[start].out_states += 1
-
-  # search the right place to insert while moving greater entrys one field back
-  for (i = s[start].out_states - 1 i >= 0 i--) :
-    if i == 0 or dest > s[start].out_id[i - 1]:
- :
-      s[start].out_id[i] = dest
-      s[start].out_a[i] = prob
-      break
-
-    else:
-      s[start].out_id[i] = s[start].out_id[i - 1]
-      s[start].out_a[i] = s[start].out_a[i - 1]
+        else:
+            s[start].out_id[i] = s[start].out_id[i - 1]
+            s[start].out_a[i] = s[start].out_a[i - 1]
 
 
 
-  # search the right place to insert while moving greater entrys one field back
-  for (i = s[dest].in_states - 1 i >= 0 i--)
-    if i == 0 or start > s[dest].in_id[i - 1]:
- :
-      s[dest].in_id[i] = start
-      s[dest].in_a[i] = prob
-      break
+    # search the right place to insert while moving greater entrys one field back
+    for i in reversed(range(s[dest].in_states)):
+        if i == 0 or start > s[dest].in_id[i - 1]:
+            s[dest].in_id[i] = start
+            s[dest].in_a[i] = prob
+            break
 
-    else:
-      s[dest].in_id[i] = s[dest].in_id[i - 1]
-      s[dest].in_a[i] = s[dest].in_a[i - 1]
-
-
-  return 0
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
-  return -1
-#undef CUR_PROC
+        else:
+            s[dest].in_id[i] = s[dest].in_id[i - 1]
+            s[dest].in_a[i] = s[dest].in_a[i - 1]
 
 
-#-
- def ghmm_dstate_transition_del(s, start, dest)
-:
-#define CUR_PROC "ghmm_dmodel_transition_del"
+def ghmm_dstate_transition_del(s, start, dest):
+    # search ...
+    j = 0
+    while dest != s[start].out_id[j]:
+        if j == s[start].out_states:
+            Log.error("No such transition")
+        j += 1
 
-  int i, j
+    # ... and replace outgoing
+    for i in range(j + 1, s[start].out_states):
+        s[start].out_id[i - 1] = s[start].out_id[i]
+        s[start].out_a[i - 1] = s[start].out_a[i]
 
-  # search ...
-  for (j = 0 dest != s[start].out_id[j] j++)
-    if j == s[start].out_states:
- :
-      Log.error("No such transition")
-      return -1
+    # search ...
+    j = 0
+    while start != s[dest].in_id[j]:
+        if j == s[dest].in_states:
+            Log.error("No such transition")
+            return -1
+        j += 1
 
-  # ... and replace outgoing
-  for i in range( j + 1,  s[start].out_states):
-    s[start].out_id[i - 1] = s[start].out_id[i]
-    s[start].out_a[i - 1] = s[start].out_a[i]
-
-
-  # search ...
-  for (j = 0 start != s[dest].in_id[j] j++)
-    if j == s[dest].in_states:
- :
-      Log.error("No such transition")
-      return -1
-
-  # ... and replace incoming
-  for i in range( j + 1,  s[dest].in_states):
-    s[dest].in_id[i - 1] = s[dest].in_id[i]
-    s[dest].in_a[i - 1] = s[dest].in_a[i]
+    # ... and replace incoming
+    for i in range(j + 1, s[dest].in_states):
+        s[dest].in_id[i - 1] = s[dest].in_id[i]
+        s[dest].in_a[i - 1] = s[dest].in_a[i]
 
 
-  # reset number
-  s[dest].in_states -= 1
-  s[start].out_states -= 1
+    # reset number
+    s[dest].in_states -= 1
+    s[start].out_states -= 1
 
-  # free memory
-  s[dest].in_id=ARRAY_REALLOC(s[dest].in_id, s[dest].in_states)
-  s[dest].in_a=ARRAY_REALLOC(s[dest].in_a, s[dest].in_states)
-  s[start].out_id=ARRAY_REALLOC(s[start].out_id, s[start].out_states)
-  s[start].out_a=ARRAY_REALLOC(s[start].out_a, s[start].out_states)
+    # free memory
+    s[dest].in_id = ARRAY_REALLOC(s[dest].in_id, s[dest].in_states)
+    s[dest].in_a = ARRAY_REALLOC(s[dest].in_a, s[dest].in_states)
+    s[start].out_id = ARRAY_REALLOC(s[start].out_id, s[start].out_states)
+    s[start].out_a = ARRAY_REALLOC(s[start].out_a, s[start].out_states)
 
-  return 0
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
-  return -1
-#undef CUR_PROC
-
-
-#-
 #*
 #   Allocates a new ghmm_dbackground class and assigs the arguments to
 #   the respective fields. Note: The arguments need allocation outside of this
@@ -1025,388 +900,240 @@ STOP:     # Label STOP from ARRAY_[CM]ALLOC
 #   @param cur  :               a id of a state
 #   @param times:               number of times the state cur is at least evaluated
 #
-def ghmm_dmodel_duration_apply(mo, cur, times)
-:
-#define CUR_PROC "ghmm_dmodel_duration_apply"
-
-  int i, j, last, size, failed=0
-
-  if mo.model_type & kSilentStates:
- :
-    Log.error("Sorry, apply_duration doesn't support silent states yet\n")
-    return -1
-
-
-  last = mo.N
-  mo.N += times - 1
-
-  mo.s=ARRAY_REALLOC(mo.s, mo.N)
-  if mo.model_type & kSilentStates:
- :
-    mo.silent=ARRAY_REALLOC(mo.silent, mo.N)
-    mo.topo_order=ARRAY_REALLOC(mo.topo_order, mo.N)
-
-  if mo.model_type & kTiedEmissions:
-    mo.tied_to=ARRAY_REALLOC(mo.tied_to, mo.N)
-  if mo.model_type & kBackgroundDistributions:
-    mo.background_id=ARRAY_REALLOC(mo.background_id, mo.N)
-
-  size = ghmm_ipow (mo, mo.M, mo.order[cur] + 1)
-  for i in range( last,  mo.N):
-    # set the new state
-    mo.s[i].pi = 0.0
-    mo.order[i] = mo.order[cur]
-    mo.s[i].fix = mo.s[cur].fix
-    mo.label[i] = mo.label[cur]
-    mo.s[i].in_a = None
-    mo.s[i].in_id = None
-    mo.s[i].in_states = 0
-    mo.s[i].out_a = None
-    mo.s[i].out_id = None
-    mo.s[i].out_states = 0
-
-    mo.s[i].b=ARRAY_MALLOC( size)
-    for j in range( 0,  size):
-      mo.s[i].b[j] = mo.s[cur].b[j]
+def ghmm_dmodel_duration_apply(mo, cur, times):
+    failed = 0
 
     if mo.model_type & kSilentStates:
-      mo.silent[i] = mo.silent[cur]
-      # XXX what to do with topo_order
-      #         mo.topo_order[i] = ????????????
+        Log.error("Sorry, apply_duration doesn't support silent states yet\n")
+
+    last = mo.N
+    mo.N += times - 1
+
+    mo.s = ARRAY_REALLOC(mo.s, mo.N)
+    if mo.model_type & kSilentStates:
+        mo.silent = ARRAY_REALLOC(mo.silent, mo.N)
+        mo.topo_order = ARRAY_REALLOC(mo.topo_order, mo.N)
 
     if mo.model_type & kTiedEmissions:
-      # XXX is there a clean solution for tied states?
-      #         what if the current state is a tie group leader?
-      #         the last added state should probably become
-      #         the new tie group leader
-      mo.tied_to[i] = kUntied
+        mo.tied_to = ARRAY_REALLOC(mo.tied_to, mo.N)
     if mo.model_type & kBackgroundDistributions:
-      mo.background_id[i] = mo.background_id[cur]
+        mo.background_id = ARRAY_REALLOC(mo.background_id, mo.N)
+
+    size = pow(mo, mo.M, mo.order[cur] + 1)
+    for i in range(last, mo.N):
+        # set the new state
+        mo.s[i].pi = 0.0
+        mo.order[i] = mo.order[cur]
+        mo.s[i].fix = mo.s[cur].fix
+        mo.label[i] = mo.label[cur]
+        mo.s[i].in_a = None
+        mo.s[i].in_id = None
+        mo.s[i].in_states = 0
+        mo.s[i].out_a = None
+        mo.s[i].out_id = None
+        mo.s[i].out_states = 0
+
+        mo.s[i].b = ARRAY_MALLOC(size)
+        for j in range(0, size):
+            mo.s[i].b[j] = mo.s[cur].b[j]
+
+        if mo.model_type & kSilentStates:
+            mo.silent[i] = mo.silent[cur]
+            # XXX what to do with topo_order
+            #         mo.topo_order[i] = ????????????
+
+        if mo.model_type & kTiedEmissions:
+            # XXX is there a clean solution for tied states?
+            #         what if the current state is a tie group leader?
+            #         the last added state should probably become
+            #         the new tie group leader
+            mo.tied_to[i] = kUntied
+        if mo.model_type & kBackgroundDistributions:
+            mo.background_id[i] = mo.background_id[cur]
+
+
+    # move the outgoing transitions to the last state
+    while mo.s[cur].out_states > 0:
+        if mo.s[cur].out_id[0] == cur:
+            ghmm_dstate_transition_add(mo.s, mo.N - 1, mo.N - 1, mo.s[cur].out_a[0])
+            ghmm_dstate_transition_del(mo.s, cur, mo.s[cur].out_id[0])
+        else:
+            ghmm_dstate_transition_add(mo.s, mo.N - 1, mo.s[cur].out_id[0], mo.s[cur].out_a[0])
+            ghmm_dstate_transition_del(mo.s, cur, mo.s[cur].out_id[0])
+
+
+    # set the linear transitions through all added states
+    ghmm_dstate_transition_add(mo.s, cur, last, 1.0)
+    for i in range(last + 1, mo.N):
+        ghmm_dstate_transition_add(mo.s, i - 1, i, 1.0)
+
+    ghmm_dmodel_normalize(mo)
+
+
+def ghmm_dbackground_alloc(n, m, orders, B):
+    ptbackground = ARRAY_CALLOC(1)
+
+    # initialize name
+    ptbackground.name = ARRAY_CALLOC(n)
+    for i in range(n):
+        ptbackground.name[i] = None
+
+    ptbackground.n = n
+    ptbackground.m = m
+    if orders:
+        ptbackground.order = orders
+    if B:
+        ptbackground.b = B
 
+    return ptbackground
+
+
+def ghmm_dbackground_copy(bg):
+    new_order = ARRAY_MALLOC(bg.n)
+    new_b = ARRAY_CALLOC(bg.n)
 
-  # move the outgoing transitions to the last state
-  while mo.s[cur].out_states > 0:
-    if mo.s[cur].out_id[0] == cur:
- :
-      ghmm_dstate_transition_add (mo.s, mo.N - 1, mo.N - 1, mo.s[cur].out_a[0])
-      ghmm_dstate_transition_del (mo.s, cur, mo.s[cur].out_id[0])
+    for i in range(0, bg.n):
+        new_order[i] = bg.order[i]
+        b_i_len = pow(bg.m, bg.order[i] + 1)
+        new_b[i] = ARRAY_CALLOC(b_i_len)
+        for j in range(0, b_i_len):
+            new_b[i][j] = bg.b[i][j]
 
-    else:
-      ghmm_dstate_transition_add (mo.s, mo.N - 1, mo.s[cur].out_id[0],
-                            mo.s[cur].out_a[0])
-      ghmm_dstate_transition_del (mo.s, cur, mo.s[cur].out_id[0])
+    tmp = ghmm_dbackground_alloc(bg.n, bg.m, new_order, new_b)
 
+    for i in range(0, bg.n):
+        tmp.name[i] = bg.name[i]
 
+    return tmp
 
-  # set the linear transitions through all added states
-  ghmm_dstate_transition_add (mo.s, cur, last, 1.0)
-  for i in range( last + 1,  mo.N):
-    ghmm_dstate_transition_add (mo.s, i - 1, i, 1.0)
 
+def ghmm_dmodel_background_apply(mo, background_weight):
+    if not (mo.model_type & kBackgroundDistributions):
+        Log.error("Error: No background distributions")
 
-  def ghmm_dmodel_normalize(mo):
-    goto STOP
+    for i in range(mo.N):
+        if mo.background_id[i] != kNoBackgroundDistribution:
+            if mo.model_type & kHigherOrderEmissions:
+                if mo.order[i] != mo.bp.order[mo.background_id[i]]:
+                    Log.error("State (%d) and background order (%d) do not match in state %d. Background_id = %d",
+                        mo.order[i],
+                        mo.bp.order[mo.background_id[i]], i,
+                        mo.background_id[i])
+                    # XXX Cache in ghmm_dbackground
+                size = pow(mo.M, mo.order[i] + 1)
+                for j in range(size):
+                    mo.s[i].b[j] = (1.0 - background_weight[i]) * mo.s[i].b[j] + background_weight[i] * mo.bp.b[mo.background_id[i]][j]
+            else:
+                if mo.bp.order[mo.background_id[i]] != 0:
+                    Log.error("Error: State and background order do not match\n")
+                    return -1
 
-  return 0
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
-  # Fail hard if these realloc fail. They shouldn't because we have the memory
-  #     and try only to clean upnot
-  if failed++:
-    exit (1)
+                for j in range(mo.M):
+                    mo.s[i].b[j] = (1.0 - background_weight[i]) * mo.s[i].b[j] + background_weight[i] * mo.bp.b[mo.background_id[i]][j]
 
-  mo.s=ARRAY_REALLOC(mo.s, last)
-  mo.tied_to=ARRAY_REALLOC(mo.tied_to, last)
-  mo.background_id=ARRAY_REALLOC(mo.background_id, last)
 
-  mo.N = last
-  return -1
-#undef CUR_PROC
+def ghmm_dmodel_get_uniform_background(mo, sq):
+    n = 0
+    sum = 0.0
 
+    if not (mo.model_type & kBackgroundDistributions):
+        Log.error("Error: Model has no background distribution")
 
-#-
-def ghmm_dbackground_alloc(n, m, orders, B) :
-#define CUR_PROC "ghmm_dbackground_alloc"
-  ghmm_dbackground *ptbackground
+    mo.bp = None
+    mo.background_id = ARRAY_MALLOC(mo.N)
 
-  ptbackground=ARRAY_CALLOC( 1)
+    # create a background distribution for each state
+    for i in range(0, mo.N):
+        mo.background_id[i] = mo.order[i]
 
-  # initialize name
-  ptbackground.name=ARRAY_CALLOC( n)
-  int i
-  for i in range( 0,  n):
-    ptbackground.name[i] = None
 
+    # allocate
+    mo.bp = ARRAY_CALLOC(1)
+    mo.bp.order = ARRAY_CALLOC(mo.maxorder)
 
-  ptbackground.n = n
-  ptbackground.m = m
-  if orders:
-    ptbackground.order = orders
-  if B:
-    ptbackground.b = B
+    # set number of distributions
+    mo.bp.n = mo.maxorder
 
-  return ptbackground
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
-  return None
-#undef CUR_PROC
+    # set br.order
+    for i in range(0, mo.N):
+        if mo.background_id[i] != kNoBackgroundDistribution:
+            mo.bp.order[mo.background_id[i]] = mo.order[i]
 
+    # allocate and initialize br.b with zeros
+    mo.bp.b = ARRAY_CALLOC(mo.bp.n)
 
-#-
-def ghmm_dbackground_copy(bg)
-:
-#define CUR_PROC "ghmm_dbackground_copy"
-  int i, j, b_i_len
-  int *new_order
-  double **new_b
+    for i in range(0, mo.bp.n):
+        mo.bp.b[i] = ARRAY_MALLOC(pow(mo, mo.M, mo.bp.order[i] + 1))
 
-  new_order=ARRAY_MALLOC( bg.n)
-  new_b=ARRAY_CALLOC( bg.n)
+    for i in range(0, mo.bp.n):
 
-  for i in range( 0,  bg.n):
-    new_order[i] = bg.order[i]
-    b_i_len = pow (bg.m, bg.order[i] + 1)
-    new_b[i]=ARRAY_CALLOC( b_i_len)
-    for j in range( 0,  b_i_len):
-      new_b[i][j] = bg.b[i][j]
+        # find a state with the current order
+        for j in range(0, mo.N):
+            if mo.bp.order[i] == mo.order[j]:
+                break
 
+        # initialize with ones as psoudocounts
+        size = pow(mo, mo.M, mo.bp.order[n] + 1)
+        for m in range(0, size):
+            mo.bp.b[i][m] = 1.0
 
+        for n in range(0, sq.seq_number):
 
-  ghmm_dbackground *tmp = ghmm_dbackground_alloc (bg.n, bg.m, new_order,
-                                               new_b)
+            for t in range(0, mo.bp.order[i]):
+                mo.update_emission_history(sq.seq[n][t])
 
-  for i in range( 0,  bg.n):
-    if bg.name[i]) strcpy(tmp.name[i], bg.name[i]:
+            for t in range(mo.bp.order[i], sq.seq_len[n]):
 
+                e_index = mo.get_emission_index(j, sq.seq[n][t], t)
+                if -1 != e_index:
+                    mo.bp.b[i][e_index] += 1
 
-  return tmp
 
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
 
-  return None
+        # normalise
+        size = pow(mo, mo.M, mo.bp.order[n])
+        for h in range(0, size, mo.M):
+            for m in range(h, h + mo.M):
+                sum += mo.bp.b[i][m]
+            for m in range(h, h + mo.M):
+                mo.bp.b[i][m] /= sum
 
-#undef CUR_PROC
 
+def ghmm_dmodel_distance(mo, m2):
+    number = 0
+    distance = 0.0
 
+    # PI
+    for i in range(mo.N):
+        tmp = mo.s[i].pi - m2.s[i].pi
+        distance += tmp * tmp
+        number += 1
 
-#-
-def ghmm_dmodel_background_apply(mo, background_weight)
-:
-# define CUR_PROC "ghmm_dmodel_apply_background"
+    for i in range(mo.N):
+        # A
+        for j in range(mo.s[i].out_states):
+            tmp = mo.s[i].out_a[j] - m2.s[i].out_a[j]
+            distance += tmp * tmp
+            number += 1
 
-  int i, j, size
+        # B
+        for j in range(pow(mo.M, mo.order[i] + 1)):
+            tmp = mo.s[i].b[j] - m2.s[i].b[j]
+            distance += tmp * tmp
+            number += 1
 
-  if not (mo.model_type & kBackgroundDistributions):
- :
-    Log.error("Error: No background distributions")
-    return -1
+    return distance / number
 
 
-  for i in range(mo.N):
-    if mo.background_id[i] != kNoBackgroundDistribution:
- :
-      if mo.model_type & kHigherOrderEmissions:
- :
-        if mo.order[i] != mo.bp.order[mo.background_id[i]]:
- :
-          Log.error("State (%d) and background order (%d) "
-                               "do not match in state %d. Background_id = %d",
-                               mo.order[i],
-                               mo.bp.order[mo.background_id[i]], i,
-                               mo.background_id[i])
-          return -1
+def ghmm_dmodel_xml_read(filename, mo_number):
+    f = ghmm_xmlfile_parse(filename)
+    if not f and (f.modelType & kDiscreteHMM and not (f.modelType & (kPairHMM | kTransitionClasses))):
+        Log.error("wrong model type, model in file is not a plain discrete model")
 
-        # XXX Cache in ghmm_dbackground
-        size = pow( mo.M, mo.order[i]+1)
-        for j in range(size):
-          mo.s[i].b[j] = (1.0 - background_weight[i]) * mo.s[i].b[j]
-            + background_weight[i] * mo.bp.b[mo.background_id[i]][j]
-       else:
-        if mo.bp.order[mo.background_id[i]] != 0:
- :
-          Log.error("Error: State and background order do not match\n")
-          return -1
+    mo_number = f.noModels
+    mo = f.model.d
+    return mo
 
-        for j in range(mo.M):
-          mo.s[i].b[j] = (1.0 - background_weight[i]) * mo.s[i].b[j]
-            + background_weight[i] * mo.bp.b[mo.background_id[i]][j]
 
-
-
-
-  return 0
-#undef CUR_PROC
-                               # ghmm_dmodel_apply_background
-
-
-#-
-def ghmm_dmodel_get_uniform_background(mo, sq)
-:
-# define CUR_PROC "get_background"
-
-  int h, i, j, m, t, n=0
-  int e_index, size
-  double sum=0.0
-
-  if not (mo.model_type & kBackgroundDistributions):
- :
-    Log.error("Error: Model has no background distribution")
-    return -1
-
-
-  mo.bp = None
-  mo.background_id=ARRAY_MALLOC( mo.N)
-
-  # create a background distribution for each state
-  for i in range( 0,  mo.N):
-    mo.background_id[i] = mo.order[i]
-
-
-  # allocate
-  mo.bp=ARRAY_CALLOC( 1)
-  mo.bp.order=ARRAY_CALLOC( mo.maxorder)
-
-  # set number of distributions
-  mo.bp.n = mo.maxorder
-
-  # set br.order
-  for i in range( 0,  mo.N):
-    if mo.background_id[i] != kNoBackgroundDistribution:
-      mo.bp.order[mo.background_id[i]] = mo.order[i]
-
-  # allocate and initialize br.b with zeros
-  mo.bp.b=ARRAY_CALLOC( mo.bp.n)
-
-  for i in range( 0,  mo.bp.n):
-    mo.bp.b[i]=ARRAY_MALLOC( ghmm_ipow (mo, mo.M, mo.bp.order[i] + 1))
-
-  for i in range( 0,  mo.bp.n):
-
-    # find a state with the current order
-    for j in range( 0,  mo.N):
-      if mo.bp.order[i] == mo.order[j]:
-        break
-
-    # initialize with ones as psoudocounts
-    size = ghmm_ipow (mo, mo.M, mo.bp.order[n] + 1)
-    for m in range( 0,  size):
-      mo.bp.b[i][m] = 1.0
-
-    for n in range( 0,  sq.seq_number):
-
-      for t in range( 0,  mo.bp.order[i]):
-        update_emission_history (mo, sq.seq[n][t])
-
-      for t in range( mo.bp.order[i],  sq.seq_len[n]):
-
-        e_index = get_emission_index (mo, j, sq.seq[n][t], t)
-        if -1 != e_index:
-          mo.bp.b[i][e_index]+=1
-
-
-
-    # normalise
-    size = ghmm_ipow (mo, mo.M, mo.bp.order[n])
-    for (h = 0 h < size h += mo.M) :
-      for m in range( h,  h + mo.M):
-        sum += mo.bp.b[i][m]
-      for m in range( h,  h + mo.M):
-        mo.bp.b[i][m] /= sum
-
-
-
-
-  return 0
-
-STOP:     # Label STOP from ARRAY_[CM]ALLOC
-
-
-  return -1
-# undef CUR_PROC
-                               # end get_background
-
-
-#============================================================================
-def ghmm_dmodel_distance(mo, m2) :
-#define CUR_PROC "model_distances"
-
-  int i, j, number=0
-  double tmp, distance=0.0
-
-#   if not ghmm_dmodel_check_compatibility(mo, m2):
-
-#     exit(1)
-#   if not ghmm_dmodel_check(mo):
-
-#     exit(1)
-#   if not ghmm_dmodel_check(m2):
-
-#     exit(1)
-
-
-  # PI
-  for i in range(mo.N):
-    tmp = mo.s[i].pi - m2.s[i].pi
-    distance += tmp*tmp
-    ++number
-
-  for i in range(mo.N):
-    # A
-    for j in range(mo.s[i].out_states):
-      tmp = mo.s[i].out_a[j] - m2.s[i].out_a[j]
-      distance += tmp*tmp
-      ++number
-
-    # B
-    for j in range(pow( mo.M, mo.order[i]+1)):
-      tmp = mo.s[i].b[j] - m2.s[i].b[j]
-      distance += tmp*tmp
-      ++number
-
-
-
-  return (distance/number)
-#undef CUR_PROC
-
-
-#============================================================================
-def ghmm_dmodel_xml_read(filename, mo_number) :
-#define CUR_PROC "ghmm_dmodel_xml_read"
-  ghmm_xmlfile* f
-  ghmm_dmodel** mo
-
-  f = ghmm_xmlfile_parse(filename)
-  if not f and (f.modelType & kDiscreteHMM:
-      and not (f.modelType & (kPairHMM+kTransitionClasses))) :
-    Log.error("wrong model type, model in file is not a plain discrete model")
-    goto STOP
-
-  mo_number = f.noModels
-  mo = f.model.d
-
-  free(f) # XXX - by now, we free f
-  return mo
-STOP:
-  return None
-#undef CUR_PROC
-
-
-
-#============================================================================
-def ghmm_dmodel_xml_write(mo, file, mo_number) :
-#define CUR_PROC "ghmm_dmodel_xml_write"
-
-  ghmm_xmlfile* f
-
-  f=ARRAY_MALLOC(1)
-  f.noModels = mo_number
-  f.modelType = mo[0].model_type
-  f.model.d = mo
-  ghmm_xmlfile_write(f, file)
-  free(f)
-  return 0
-STOP:
-  return -1
-#undef CUR_PROC
-
-
-
-#===================== E n d   o f  f i l e  "model.c"       ===============
+def ghmm_dmodel_xml_write(mo, file, mo_number):
+    pass

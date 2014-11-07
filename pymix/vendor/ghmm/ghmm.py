@@ -491,7 +491,7 @@ class HMMOpenFactory(HMMFactory):
         file.close()
         if emission_domain == 'int':
             # only integer alphabet
-            emission_domain = Integerrange(M)
+            emission_domain = IntegerRange(0, M)
             distribution = DiscreteDistribution
             hmm_class = DiscreteEmissionHMM
             return (hmm_class, emission_domain, distribution)

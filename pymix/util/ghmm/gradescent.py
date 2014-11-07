@@ -33,6 +33,7 @@
 #*             last change by $Author: grunau $.
 #*
 #******************************************************************************
+from pymix.util.ghmm.model import ghmm_dmodel_copy
 from pymix.util.ghmm.reestimate import ighmm_reestimate_alloc_matvek
 from pymix.util.ghmm.types import kTiedEmissions
 from pymix.util.ghmm.wrapper import ARRAY_CALLOC, GHMM_EPS_PREC
@@ -96,7 +97,9 @@ def ghmm_dmodel_label_gradient_expectations(mo, alpha, beta, scale, seq, seq_len
         for i in range(mo.N):
             # n_a(i,j) = sum[t=0..T-2 | xi(t,i,j)] / sum[t=0..T-2 | gamma(t,i)]
             # compute xi only till the state before the last
-            for j in range(mo.s[i].out_states) and (t < seq_len - 1):
+            for j in range(mo.s[i].out_states):
+                if t >= seq_len - 1:
+                    break
                 j_id = mo.s[i].out_id[j]
 
                 # compute xi implicit
@@ -109,8 +112,6 @@ def ghmm_dmodel_label_gradient_expectations(mo, alpha, beta, scale, seq, seq_len
 
 
 def compute_performance(mo, sq):
-#define CUR_PROC "compute_performance"
-
     # log P[O | lambda, labeling] as computed by the forward algorithm
     # sum over log P (calculated by forward_label) for all sequences
     #     used to compute the performance of the training
@@ -124,7 +125,7 @@ def compute_performance(mo, sq):
         log_p = mo.label_logp(sq.seq[k], sq.state_labels[k], seq_len)
         log_p_sum += log_p
 
-        log_p = mo.logp(mo, sq.seq[k], seq_len)
+        log_p = mo.logp(sq.seq[k], seq_len)
         log_p_sum -= log_p
 
 
@@ -154,7 +155,7 @@ def gradient_descent_onestep(mo, sq, eta):
 
         # calculate forward and backward variables without labels:
         log_p = mo.forward(sq.seq[k], seq_len, alpha, scale)
-        mo.backward(mo, sq.seq[k], seq_len, beta, scale)
+        mo.backward(sq.seq[k], seq_len, beta, scale)
 
         # compute n matrices (labels):
         ghmm_dmodel_label_gradient_expectations(mo, alpha, beta, scale, sq.seq[k], seq_len, m_b, m_a, m_pi)
@@ -162,7 +163,7 @@ def gradient_descent_onestep(mo, sq, eta):
         # calculate forward and backward variables with labels:
         log_p = mo.label_forward(sq.seq[k], sq.state_labels[k], seq_len, alpha, scale)
 
-        log_p = mo.backward(sq.seq[k], sq.state_labels[k], seq_len, beta, scale)
+        log_p = mo.label_backward(sq.seq[k], sq.state_labels[k], seq_len, beta, scale)
 
 
         # compute m matrices (labels):
@@ -276,7 +277,7 @@ def gradient_descent_onestep(mo, sq, eta):
 #
 def ghmm_dmodel_label_gradient_descent(mo, sq, eta, no_steps):
     runs = 0
-    last = mo.copy()
+    last = ghmm_dmodel_copy(mo)
     last_perf = compute_performance(last, sq)
 
     while eta > GHMM_EPS_PREC and runs < no_steps:
@@ -302,7 +303,7 @@ def ghmm_dmodel_label_gradient_descent(mo, sq, eta, no_steps):
                     Log.note("Performance: %g\t improvement: %g\t step %d", cur_perf, cur_perf - last_perf, runs)
 
                 # significant improvement, next iteration
-                last = mo.copy()
+                last = ghmm_dmodel_copy(mo)
                 last_perf = cur_perf
                 eta *= 1.07
 
