@@ -3,32 +3,32 @@ from pymix.util.ghmm.wrapper import GHMM_EPS_PREC
 
 class ghmm_dstate():
     def __init__(self):
-        # Initial probability */
+        # Initial probability
         self.pi = 0.0 #double
-        # Output probability */
+        # Output probability
         self.b = [0.0] #double*
 
-        # IDs of the following states */
+        # IDs of the following states
         self.out_id = [0] #int*
-        # IDs of the previous states */
+        # IDs of the previous states
         self.in_id = [0] #int*
 
-        # transition probabilities to successor states. */
+        # transition probabilities to successor states.
         self.out_a = [0.0] #double*
-        # transition probabilities from predecessor states. */
+        # transition probabilities from predecessor states.
         self.in_a = [0.0] #double*
 
-        # Number of successor states */
+        # Number of successor states
         self.out_states = 0 #int
-        # Number of precursor states */
+        # Number of precursor states
         self.in_states = 0 #int
-        # if fix == 1 -. b stays fix during the training */
+        # if fix == 1 -. b stays fix during the training
         self.fix = 0 #int
-        # contains a description of the state (null terminated utf-8)*/
+        # contains a description of the state (null terminated utf-8)
         self.desc = None #char*
-        # x coordinate position for graph representation plotting **/
+        # x coordinate position for graph representation plotting *
         self.xPosition = 0 #int
-        # y coordinate position for graph representation plotting **/
+        # y coordinate position for graph representation plotting *
         self.yPosition = 0 #int
 
 

@@ -25,14 +25,14 @@ GHMM_EPS_PREC = 1e-8
 GHMM_PENALTY_LOGP = -500.0
 
 
-normal = 0,        #< gaussian */
-normal_right = 1  #< right tail */
-normal_approx = 2 #< approximated gaussian */
-normal_left = 3   #< left tail */
+normal = 0,        #< gaussian
+normal_right = 1  #< right tail
+normal_approx = 2 #< approximated gaussian
+normal_left = 3   #< left tail
 uniform = 4
-binormal = 5      #< two dimensional gaussian */
-multinormal = 6   #< multivariate gaussian */
-density_number = 7 #< number of density types, has to stay last */
+binormal = 5      #< two dimensional gaussian
+multinormal = 6   #< multivariate gaussian
+density_number = 7 #< number of density types, has to stay last
 
 
 
@@ -428,20 +428,20 @@ def ighmm_cholesky_decomposition(dim, cov):
     sigmacd = [row.copy() for row in cov]
 
     for row in range(dim):
-        # First compute U[row][row] */
+        # First compute U[row][row]
         total = cov[row][row]
         for j in range(row - 1):
             total -= sigmacd[j][row] * sigmacd[j][row]
         if total > DBL_MIN:
             sigmacd[row][row] = sqrt(total)
-            # Now find elements sigmacd[row*dim+k], k > row. */
+            # Now find elements sigmacd[row*dim+k], k > row.
             for k in range(row + 1, dim):
                 total = cov[row][k]
                 for j in range(row - 1):
                     total -= sigmacd[j][row] * sigmacd[j][k]
                 sigmacd[row][k] = total / sigmacd[row][row]
 
-        else:  # blast off the entire row. */
+        else:  # blast off the entire row.
             for k in range(row, dim):
                 sigmacd[row][k] = 0.0
     return sigmacd
@@ -453,24 +453,24 @@ def GHMM_RNG_UNIFORM(rng):
 
 class ghmm_dsmodel():
     def __init__(self):
-        # Number of states */
+        # Number of states
         self.N = 0  # int
-        # Number of outputs */
+        # Number of outputs
         self.M = 0  # int
         # ghmm_dsmodel includes continuous model with one transition matrix
         # (cos  is set to 1) and an extension for models with several matrices
-        # (cos is set to a positive integer value > 1).*/
+        # (cos is set to a positive integer value > 1).
         self.cos = 0  # int
-        # Vector of the states */
+        # Vector of the states
         self.s = None  # ghmm_dsstate *
         # Prior for the a priori probability for the model.
-        # A value of -1 indicates that no prior is defined. */
+        # A value of -1 indicates that no prior is defined.
         self.prior = 0.0  # double
 
-        # contains a arbitrary name for the model (null terminated utf-8) */
+        # contains a arbitrary name for the model (null terminated utf-8)
         self.name = None  # char *
 
-        # pointer to class function   */
+        # pointer to class function
         self.get_class = None  # int (*get_class) (int *, int)
 
         # Contains bit flags for various model extensions such as
@@ -479,14 +479,14 @@ class ghmm_dsmodel():
 
         # Flag variables for each state indicating whether it is emitting
         # or not.
-        # Note: silent != NULL iff (model_type & kSilentStates) == 1  */
+        # Note: silent != NULL iff (model_type & kSilentStates) == 1
         self.silent = None  # int *
 
-        # Int variable for the maximum level of higher order emissions */
+        # Int variable for the maximum level of higher order emissions
         self.maxorder = 0  # int
         # saves the history of emissions as int,
         # the nth-last emission is (emission_history * |alphabet|^n+1) % |alphabet|
-        # see ...*/
+        # see ...
         self.emission_history = 0  # int
 
         # Flag variables for each state indicating whether the states emissions
@@ -495,7 +495,7 @@ class ghmm_dsmodel():
         # tied_to[s] == kUntied  : s is not a tied state
         # tied_to[s] == s        : s is a tie group leader
         # tied_to[t] == s        : t is tied to state s (t>s)
-        # Note: tied_to != NULL iff (model_type & kTiedEmissions) != 0  */
+        # Note: tied_to != NULL iff (model_type & kTiedEmissions) != 0
         self.tied_to = None  # int *
 
         # Note: State store order information of the emissions.
@@ -508,7 +508,7 @@ class ghmm_dsmodel():
         # The emissions are stored in the state's usual double* b. The order is
         # set order.
 
-        # Note: order != NULL iff (model_type & kHigherOrderEmissions) != 0  */
+        # Note: order != NULL iff (model_type & kHigherOrderEmissions) != 0
         self.order = None  # int *
 
         # ghmm_dbackground is a pointer to a
@@ -520,18 +520,18 @@ class ghmm_dsmodel():
         # distributions to use in parameter estimation. A value of kNoBackgroundDistribution
         # indicates that none should be used.
         #
-        # Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) != 0  */
+        # Note: background_id != NULL iff (model_type & kHasBackgroundDistributions) != 0
         self.background_id = None  # int *
         self.bp = None  # ghmm_dbackground *
 
         # (WR) added these variables for topological ordering of silent states
-        # Condition: topo_order != NULL iff (model_type & kSilentStates) != 0  */
+        # Condition: topo_order != NULL iff (model_type & kSilentStates) != 0
         self.topo_order = None  # int *
         self.topo_order_length = 0  # int
 
         # Store for each state a class label. Limits the possibly state sequence
 
-        # Note: label != NULL iff (model_type & kLabeledStates) != 0  */
+        # Note: label != NULL iff (model_type & kLabeledStates) != 0
         self.label = None  # int*
         self.label_alphabet = None  # ghmm_alphabet*
 

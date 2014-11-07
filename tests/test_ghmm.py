@@ -507,10 +507,6 @@ class DiscreteEmissionHMMTests(FuzzyTestCase):
         self.assertEqual(self.model.cmodel.getStateName(1), "test1")
         self.assertEqual(self.model.getTransition("test0", "test1"), self.model.getTransition(0, 1))
 
-    def testNewXML(self):
-        Log.note("testNewXML -- begin")
-        model = HMMOpen('../doc/xml_example.xml')
-
     def getModel(self):
         A = [[0.3, 0.6, 0.1], [0.0, 0.5, 0.5], [0.0, 0.0, 1.0]]
         B = [[0.5, 0.5], [0.5, 0.5], [1.0, 0.0]]

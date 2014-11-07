@@ -1658,11 +1658,11 @@ class DiscreteEmissionHMM(HMM):
             self.cmodel.silent = slist
 
         #CODE ASSUMES THE ORDER IS ZERO
-        self.cmodel.order[i] = 0
         self.clearFlags(kHigherOrderEmissions)
-        self.cmodel.maxorder = max(self.cmodel.order)
-        if self.cmodel.maxorder > 0:
-            self.setFlags(kHigherOrderEmissions)
+        if self.cmodel.order is not None:
+            self.cmodel.maxorder = max(self.cmodel.order)
+            if self.cmodel.maxorder > 0:
+                self.setFlags(kHigherOrderEmissions)
 
         #set the emission probabilities
         state.b = distributionParameters

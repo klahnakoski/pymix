@@ -34,7 +34,7 @@
 #*                       from $Date: 2013-01-03 13:45:31 -0500 (Thu, 03 Jan 2013) $
 #*             last change by $Author: schliep $.
 #*
-#*******************************************************************************/
+#******************************************************************************
 
 class testChange:
     def __init__(self):
@@ -94,12 +94,12 @@ def getClass(seq, k, t):
 class class_change_context:
 
     def __init__(self):
-        # Names of class change module/function (for python callback) */
+        # Names of class change module/function (for python callback)
         self.python_module=None
         self.python_function=None
 
         # pointer to class function called with seq X, Y and resp indices
-        # in the void you can pass the user data */
+        # in the void you can pass the user data
         self.get_class=getClass
-        # space for any data necessary for class switch, USER is RESPONSIBLE */
+        # space for any data necessary for class switch, USER is RESPONSIBLE
         self.user_data=None

@@ -59,14 +59,14 @@ class ghmm_dseq():
         self.total_w += source.total_w
 
         self.seq = ARRAY_CALLOC(self.seq_number)
-        # self.states=ARRAY_CALLOC( self.seq_number)*/
+        # self.states=ARRAY_CALLOC( self.seq_number)
         self.seq_len = ARRAY_CALLOC(self.seq_number)
         self.seq_id = ARRAY_CALLOC(self.seq_number)
         self.seq_w = ARRAY_CALLOC(self.seq_number)
 
         for i in range(old_seq_number):
             self.seq[i] = old_seq[i]
-            # self.states[i] = old_seq_st[i]*/
+            # self.states[i] = old_seq_st[i]
             self.seq_len[i] = old_seq_len[i]
             self.seq_id[i] = old_seq_id[i]
             self.seq_w[i] = old_seq_w[i]

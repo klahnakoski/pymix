@@ -31,6 +31,7 @@ class local_store_t():
                 self.b_denom[i][0] = 0.0
                 for m in range(mo.M):
                     self.b_num[i][m] = 0.0
+        self.pi_denom = 0.0
         return self
 
 def reestimate_alloc(mo):
