@@ -92,8 +92,8 @@ def extract_out(lisprobs):
     trans_id = wrapper.int_array_alloc(len(lis))
     trans_prob = wrapper.double_array_alloc(len(lis))
     for i in range(len(lis)):
-        wrapper.int_array_setitem(trans_id, i, lis[i])
-        wrapper.double_array_setitem(trans_prob, i, lisprobs[lis[i]])
+        trans_id[i] = lis[i]
+        trans_prob[i] = lisprobs[lis[i]]
 
     return len(lis), trans_id, trans_prob
 

@@ -34,6 +34,7 @@
 #*
 #******************************************************************************
 from math import log, exp
+from pyLibrary.maths import Math
 from pymix.util.ghmm.wrapper import ARRAY_MALLOC, ARRAY_CALLOC, ARRAY_REALLOC, ighmm_cvector_log_sum
 from pymix.util.logs import Log
 
@@ -79,7 +80,7 @@ def kbest_buildLogMatrix(s, N):
 
 #============================================================================
 def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
-    no_labels = 0
+    num_labels = 0
 
     # logarithmized transition matrix A, log(a(i,j)) => log_a[i*N+j],
     #     1.0 for zero probability
@@ -118,15 +119,15 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
     for i in range(0, mo.N):
         c = mo.label[i]
         states_wlabel[c] += 1
-        if c > no_labels:
-            no_labels = c
+        if c > num_labels:
+            num_labels = c
         if mo.s[i].out_states > label_max_out[c]:
             label_max_out[c] = mo.s[i].out_states
 
     # add one to the maximum label to get the number of labels
-    no_labels += 1
-    states_wlabel = ARRAY_REALLOC(states_wlabel, no_labels)
-    label_max_out = ARRAY_REALLOC(label_max_out, no_labels)
+    num_labels += 1
+    states_wlabel = ARRAY_REALLOC(states_wlabel, num_labels)
+    label_max_out = ARRAY_REALLOC(label_max_out, num_labels)
 
     # initialize h:
     hP = h[0]
@@ -183,7 +184,7 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
         mo.update_emission_history(o_seq[t - 1])
 
         # 2. Propagate hypotheses forward and update gamma:
-        no_oldHyps, h[t] = ighmm_hlist_prop_forward(mo, h[t - 1], h[t], no_labels, states_wlabel, label_max_out)
+        no_oldHyps, h[t] = ighmm_hlist_prop_forward(mo, h[t - 1], h[t], num_labels, states_wlabel, label_max_out)
         # printf("t = %d (%d), no of old hypotheses = %d\n", t, seq_len, no_oldHyps)
 
         # calculate new gamma:
@@ -206,7 +207,14 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
                     else:
                         Log.note("i_id: %d, o_seq[%d]=%d\ninvalid emission index!\n", i_id, t, o_seq[t])
                 else:
-                    hP.gamma_a[i] += log(mo.s[i_id].b[b_index])
+                    try:
+                        p = mo.s[i_id].b[b_index]
+                        if p == 0.0:
+                            hP.gamma_a[i] = -float("inf")
+                        else:
+                            hP.gamma_a[i] += log(p)
+                    except Exception, e:
+                        Log.error("", e)
                     #printf("%g = %g\n", log(mo.s[i_id].b[b_index]), hP.gamma_a[i])
                 if hP.gamma_a[i] > 0.0:
                     Log.error("gamma too large. ghmm_dl_kbest failed\n")
@@ -223,6 +231,7 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
 
         # cycle through hypotheses & calculate the k most probable hypotheses for
         #       each state:
+        # THIS IS MANAGING A SORTED LIST OF CANDIDATES, WITH LENGTH k
         hP = h[t]
         while hP != None:
             for i in range(0, hP.gamma_states):
@@ -231,7 +240,7 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
                     continue
                     # find first best hypothesis that is worse than current hypothesis:
                 for l in range(k):
-                    if maxima[i_id * k + l] < KBEST_EPS and maxima[i_id * k + l] > hP.gamma_a[i]:
+                    if maxima[i_id * k + l] >= KBEST_EPS or maxima[i_id * k + l] <= hP.gamma_a[i]:
                         break
                 else:
                     l = k
@@ -266,7 +275,8 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
         while hP.next != None:
             if 1 == hP.next.chosen:
                 hP = hP.next
-            hP.next = ighmm_hlist_remove(hP.next)
+            else:
+                hP.next = ighmm_hlist_remove(hP.next)
 
 
     # 4. Save the hypothesis with the highest probability over all states:
@@ -300,7 +310,7 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
     while hP != None:
         hP = ighmm_hlist_remove(hP)
 
-    return hypothesis, logp
+    return hypothesis, log_p
 
 
 #================ utility functions ========================================
