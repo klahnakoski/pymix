@@ -86,7 +86,7 @@ def ghmm_cseq_truncate(sqd_in, sqd_fields, trunc_ratio, seed):
             else:
                 trunc_len = ceil((sqd_in[i].seq_len[j] * (1 - trunc_ratio * GHMM_RNG_UNIFORM(RNG))))
             ghmm_cseq_copy(sq[i].seq[j], sqd_in[i].seq[j], trunc_len)
-            ARRAY_REALLOC(sq[i].seq[j], trunc_len)
+            sq[i].seq[j]=ARRAY_REALLOC(sq[i].seq[j], trunc_len)
             sq[i].seq_len[j] = trunc_len
             sq[i].seq_id[j] = sqd_in[i].seq_id[j]
             sq[i].seq_w[j] = sqd_in[i].seq_w[j]
@@ -150,15 +150,15 @@ def ghmm_dseq_realloc(sq, seq_number):
     if seq_number > GHMM_MAX_SEQ_NUMBER:
         Log.error("Number of sequences %ld exceeds possible range", seq_number)
 
-    ARRAY_REALLOC(sq.seq, seq_number)
+    sq.seq=ARRAY_REALLOC(sq.seq, seq_number)
     if sq.flags & kHasLabels and sq.states:
-        ARRAY_REALLOC(sq.states, seq_number)
-    ARRAY_REALLOC(sq.seq_len, seq_number)
+        sq.states=ARRAY_REALLOC(sq.states, seq_number)
+    sq.seq_len=ARRAY_REALLOC(sq.seq_len, seq_number)
     #ifdef GHMM_OBSOLETE
-    ARRAY_REALLOC(sq.seq_label, seq_number)
+    sq.seq_label=ARRAY_REALLOC(sq.seq_label, seq_number)
     #endif # GHMM_OBSOLETE
-    ARRAY_REALLOC(sq.seq_id, seq_number)
-    ARRAY_REALLOC(sq.seq_w, seq_number)
+    sq.seq_id=ARRAY_REALLOC(sq.seq_id, seq_number)
+    sq.seq_w=ARRAY_REALLOC(sq.seq_w, seq_number)
 
     sq.capacity = seq_number
 
@@ -557,13 +557,13 @@ def ghmm_cseq_partition(sqd, sqd_train, sqd_test, train_ratio):
     # reallocs
     sqd_dummy = sqd_train
     for i in range(0, 2):
-        ARRAY_REALLOC(sqd_dummy.seq, sqd_dummy.seq_number)
-        ARRAY_REALLOC(sqd_dummy.seq_len, sqd_dummy.seq_number)
+        sqd_dummy.seq=ARRAY_REALLOC(sqd_dummy.seq, sqd_dummy.seq_number)
+        sqd_dummy.seq_len=ARRAY_REALLOC(sqd_dummy.seq_len, sqd_dummy.seq_number)
         #ifdef GHMM_OBSOLETE
-        ARRAY_REALLOC(sqd_dummy.seq_label, sqd_dummy.seq_number)
+        sqd_dummy.seq_label=ARRAY_REALLOC(sqd_dummy.seq_label, sqd_dummy.seq_number)
         #endif # GHMM_OBSOLETE
-        ARRAY_REALLOC(sqd_dummy.seq_id, sqd_dummy.seq_number)
-        ARRAY_REALLOC(sqd_dummy.seq_w, sqd_dummy.seq_number)
+        sqd_dummy.seq_id=ARRAY_REALLOC(sqd_dummy.seq_id, sqd_dummy.seq_number)
+        sqd_dummy.seq_w=ARRAY_REALLOC(sqd_dummy.seq_w, sqd_dummy.seq_number)
         sqd_dummy = sqd_test
 
 

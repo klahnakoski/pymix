@@ -183,7 +183,7 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
         mo.update_emission_history(o_seq[t - 1])
 
         # 2. Propagate hypotheses forward and update gamma:
-        no_oldHyps = ighmm_hlist_prop_forward(mo, h[t - 1], h[t], no_labels, states_wlabel, label_max_out)
+        no_oldHyps, h[t] = ighmm_hlist_prop_forward(mo, h[t - 1], h[t], no_labels, states_wlabel, label_max_out)
         # printf("t = %d (%d), no of old hypotheses = %d\n", t, seq_len, no_oldHyps)
 
         # calculate new gamma:
@@ -374,7 +374,7 @@ def ighmm_hlist_prop_forward(mo, h, hplus, labels, nr_s, max_out):
                         if j_id == created[c].gamma_id[k]:
                             break
                         # add the state to the gamma list
-                    if k == g_nr:
+                    else:
                         created[c].gamma_id[g_nr] = j_id
                         created[c].gamma_states = g_nr + 1
 
@@ -388,7 +388,7 @@ def ighmm_hlist_prop_forward(mo, h, hplus, labels, nr_s, max_out):
         hP = hP.next
         no_oldHyps += 1
 
-    return no_oldHyps
+    return no_oldHyps, hplus
 
 
 #============================================================================

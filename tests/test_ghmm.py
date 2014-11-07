@@ -994,14 +994,27 @@ class StateLabelHMMTests(FuzzyTestCase):
             'scd', 'fst', 'scd', 'fst'], -35.735009627142446))
 
     def testgradientdescent(self):
-        A2 = [[0.3, 0.2, 0.5], [0.1, 0.8, 0.1], [0.1, 0.4, 0.5]]
-        B2 = [[0.4, 0.2, 0.2, 0.2], [0.4, 0.2, 0.2, 0.2],
-            [0.2, 0.1, 0.1, 0.6, 0.25, 0.25, 0.25, 0.25, 0.5, 0.1, 0.3, 0.1, 0.2, 0.1, 0.1, 0.6]]
+        A2 = [
+            [0.3, 0.2, 0.5],
+            [0.1, 0.8, 0.1],
+            [0.1, 0.4, 0.5]
+        ]
+        B2 = [
+            [0.4, 0.2, 0.2, 0.2],
+            [0.4, 0.2, 0.2, 0.2],
+            [0.2, 0.1, 0.1, 0.6, 0.25, 0.25, 0.25, 0.25, 0.5, 0.1, 0.3, 0.1, 0.2, 0.1, 0.1, 0.6]
+        ]
         pi2 = [0.5, 0.5, 0.0]
 
-        model2 = HMMFromMatrices(DNA, DiscreteDistribution(DNA),
-            A2, B2, pi2,
-            labelDomain=self.l_domain2, labelList=['fst', 'scd', 'thr'])
+        model2 = HMMFromMatrices(
+            DNA,
+            DiscreteDistribution(DNA),
+            A2,
+            B2,
+            pi2,
+            labelDomain=self.l_domain2,
+            labelList=['fst', 'scd', 'thr']
+        )
 
         train = self.model.sample(10, 300, seed=3586662)
         model2.gradientSearch(train)

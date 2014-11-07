@@ -268,7 +268,7 @@ class ghmm_dmodel():
             if self.order[S] > T:
                 return -1
             else:
-                # THE PROBLEM IS THIS MAKING A REF INTO 2D CUBE
+                # THE PROBLEM IS THIS MAKING A REF INTO MULTIDIMENSIONAL CUBE
                 output = (self.emission_history * self.M) % pow(self.M, self.order[S] + 1) + O
                 return output
         else:
@@ -276,7 +276,7 @@ class ghmm_dmodel():
 
     def update_emission_history(self, O):
         if self.model_type & kHigherOrderEmissions:
-            self.emission_history = self.emission_history * self.M % pow(self.M, self.maxorder) + O
+            self.emission_history = (self.emission_history * self.M) % pow(self.M, self.maxorder) + O
 
 
     def logp(self, O, len):
