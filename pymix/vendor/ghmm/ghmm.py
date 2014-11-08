@@ -633,17 +633,17 @@ class HMMFromMatricesFactory(HMMFactory):
             if isinstance(distribution, GaussianDistribution):
                 #initialize emissions
                 for i in range(cmodel.N):
-                    state = wrapper.cstate_array_getRef(cmodel.s, i)
+                    state = cmodel.s[i]
                     state.M = 1
 
                     # set up emission(s), density type is normal
                     emissions = wrapper.c_emission_array_alloc(1)
-                    emission = wrapper.c_emission_array_getRef(emissions, 0)
+                    emission = emissions[0]
                     emission.type = wrapper.normal
                     emission.dimension = 1
                     (mu, sigma) = B[i]
-                    emission.mean.val = mu #mu = mue in GHMM C-lib.
-                    emission.variance.val = sigma
+                    emission.mean = mu #mu = mue in GHMM C-lib.
+                    emission.variance = sigma
                     emission.fixed = 0  # fixing of emission deactivated by default
                     emission.setDensity(0)
 
@@ -668,7 +668,7 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 #initialize states
                 for i in range(cmodel.N):
-                    state = wrapper.cstate_array_getRef(cmodel.s, i)
+                    state = cmodel.s[i]
                     state.M = len(B[0][0])
 
                     # allocate arrays of emmission parameters
@@ -682,7 +682,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     emissions = wrapper.c_emission_array_alloc(state.M)
 
                     for j in range(state.M):
-                        emission = wrapper.c_emission_array_getRef(emissions, j)
+                        emission = emissions[j]
                         emission.type = wrapper.normal
                         emission.dimension = 1
                         mu = mu_list[j]
@@ -715,7 +715,7 @@ class HMMFromMatricesFactory(HMMFactory):
 
                 #initialize states
                 for i in range(cmodel.N):
-                    state = wrapper.cstate_array_getRef(cmodel.s, i)
+                    state = cmodel.s[i]
                     state.M = len(B[i][0])
 
                     # set up emission(s), density type is normal
@@ -726,7 +726,7 @@ class HMMFromMatricesFactory(HMMFactory):
                         for n, first in enumerate(densities[i])]
 
                     for j, parameters in enumerate(combined_map):
-                        emission = wrapper.c_emission_array_getRef(emissions, j)
+                        emission = emissions[j]
                         emission.type = densities[i][j]
                         emission.dimension = 1
                         if (emission.type == wrapper.normal    or emission.type == wrapper.normal_approx):
@@ -1659,10 +1659,15 @@ class DiscreteEmissionHMM(HMM):
 
         #CODE ASSUMES THE ORDER IS ZERO
         self.clearFlags(kHigherOrderEmissions)
-        if self.cmodel.order is not None:
-            self.cmodel.maxorder = max(self.cmodel.order)
-            if self.cmodel.maxorder > 0:
-                self.setFlags(kHigherOrderEmissions)
+        if self.cmodel.order is None:
+            self.cmodel.order = [0] * self.M
+
+        self.cmodel.order[i] = int(math.log(len(distributionParameters), self.M))-1
+        if self.M ** (self.cmodel.order[i]+1) != len(distributionParameters):
+            Log.error("distributionParameters has wrong length")
+        self.cmodel.maxorder = max(self.cmodel.order)
+        if self.cmodel.maxorder > 0:
+            self.setFlags(kHigherOrderEmissions)
 
         #set the emission probabilities
         state.b = distributionParameters

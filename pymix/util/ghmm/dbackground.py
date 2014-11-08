@@ -41,3 +41,11 @@ class dbackground:
 
         return tmp
 
+    def setName(self, i, name):
+        self.name[i] = name
+
+    def getName(self, i):
+        return self.name[i]
+
+    def getOrder(self, i):
+        return self.order[i]

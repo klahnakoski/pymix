@@ -33,7 +33,6 @@
 #*             last change by $Author: grunau $.
 #*
 #******************************************************************************
-from math import sqrt
 from pymix.util.ghmm.randvar import ighmm_rand_normal_density_trunc, ighmm_rand_get_xstepphi, ighmm_rand_get_xfaktphi, ighmm_rand_get_philen
 from pymix.util.ghmm.wrapper import DBL_MIN
 

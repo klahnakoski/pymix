@@ -54,6 +54,7 @@ Testing GHMM
 
 import unittest
 import random
+from pymix.vendor.ghmm import ghmmhelper
 import re
 from pymix.util.ghmm.types import kSilentStates, kDiscreteHMM
 
@@ -716,7 +717,7 @@ class BackgroundDistributionTests(FuzzyTestCase):
     def testprint(self):
         Log.note("BackgroundDistributionTests.testprint")
         s = self.bg.verboseStr()
-        ts = "BackgroundDistribution instance:\nNumber of distributions: 2\n\n<Alphabet:['rot', 'blau', 'gruen', 'gelb']>\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n"
+        ts = "BackgroundDistribution instance:\nNumber of distributions: 2\n\n<Alphabet:['rot', 'blau', 'gruen', 'gelb']>\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.1, 0.2, 0.4, 0.3, 0.2, 0.3, 0.1, 0.4, 0.25, 0.25, 0.25, 0.25, 0.0, 0.5, 0.5, 0.0]\n"
         newSplit(self, s, ts)
 
     def testmodelbackgroundaccessfunctions(self):
@@ -724,9 +725,23 @@ class BackgroundDistributionTests(FuzzyTestCase):
         self.model.setBackgrounds(self.bg, [0, -1, 1])
         # deleting background
         del (self.bg)
-        s = self.model.background.verboseStr()
-        ts = "BackgroundDistribution instance:\nNumber of distributions: 2\n\n<Alphabet:['rot', 'blau', 'gruen', 'gelb']>\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.10000000000000001, 0.20000000000000001, 0.40000000000000002, 0.29999999999999999]\n"
-        newSplit(self, s, ts)
+        # s = self.model.background.verboseStr()
+        # ts = "BackgroundDistribution instance:\nNumber of distributions: 2\n\n<Alphabet:['rot', 'blau', 'gruen', 'gelb']>\nDistributions:\n  Order: 0\n  1: [0.20000000000000001, 0.29999999999999999, 0.10000000000000001, 0.40000000000000002]\n  Order: 1\n  2: [0.1, 0.2, 0.4, 0.3, 0.2, 0.3, 0.1, 0.4, 0.25, 0.25, 0.25, 0.25, 0.0, 0.5, 0.5, 0.0]\n"
+
+        expected = {
+            "cbackground": {
+                "n": 2,
+                "order": [0, 1],
+                "b": [
+                    [0.2, 0.3, 0.1, 0.4],
+                    [0.1, 0.2, 0.4, 0.3, 0.2, 0.3, 0.1, 0.4, 0.25, 0.25, 0.25, 0.25, 0.0, 0.5, 0.5, 0.0]
+                ]
+            },
+            "emissionDomain": {"listOfCharacters": ['rot', 'blau', 'gruen', 'gelb']},
+        }
+        self.assertAlmostEqual(self.model.background, expected)
+
+        # newSplit(self, s, ts)
 
     def testapplybackground(self):
         self.model.setBackgrounds(self.bg, [0, -1, 1])
@@ -1527,15 +1542,15 @@ class MultivariateGaussianEmissionHMMTests(FuzzyTestCase):
         F = Float()
         self.A = [[0.0, 1.0, 0.0], [0.5, 0.0, 0.5], [0.3, 0.3, 0.4]]
         #self.A = [[0.0,1.0,0.0],[0.0,0.0,1.0],[1.0,0.0,0.0]]
-        self.B = [[[1.0, -1.0], [0.9, 0.4, 0.4, 0.3]],
-            [[2.0, 6.0], [1.0, 0.3, 0.3, 0.2]],
-            [[0.0, 1.0], [0.4, 0.3, 0.3, 1.0]]]
+        self.B = [[[1.0, -1.0], [[0.9, 0.4], [0.4, 0.3]]],
+            [[2.0, 6.0], [[1.0, 0.3], [0.3, 0.2]]],
+            [[0.0, 1.0], [[0.4, 0.3], [0.3, 1.0]]]]
         self.pi = [0.5, 0.0, 0.5]
         self.model = HMMFromMatrices(F, MultivariateGaussianDistribution(F), self.A, self.B, self.pi)
 
         self.Abig = [[0.0, 1.0], [1.0, 0.0]]
-        self.Bbig = [[[1.0, 1.0, 1.0], [0.9, 0.4, 0.2, 0.4, 2.2, 0.5, 0.2, 0.5, 1.0]],
-            [[2.0, 2.0, 2.0], [1.0, 0.2, 0.8, 0.2, 2.0, 0.6, 0.8, 0.6, 0.9]]]
+        self.Bbig = [[[1.0, 1.0, 1.0], [[0.9, 0.4, 0.2], [0.4, 2.2, 0.5], [0.2, 0.5, 1.0]]],
+            [[2.0, 2.0, 2.0], [[1.0, 0.2, 0.8], [0.2, 2.0, 0.6], [0.8, 0.6, 0.9]]]]
         self.piBig = [1.0, 0.0]
         self.modelBig = HMMFromMatrices(F, MultivariateGaussianDistribution(F), self.Abig, self.Bbig, self.piBig)
 

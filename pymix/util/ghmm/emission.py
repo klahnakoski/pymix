@@ -7,7 +7,7 @@ from pyLibrary.struct import Struct
 class ghmm_c_emission:
     def __init__(self):
         #* specify the type of the density
-        self.type = None
+        self.type = 0
         #* dimension > 1 for multivariate normals
         self.dimension = None  # int
         #* mean for output functions (pointer to mean vector

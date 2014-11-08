@@ -8,10 +8,12 @@
 # Changes made by: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 ################################################################################
-from math import sqrt, exp, log
+from math import exp, log, sqrt
+
 from pymix.util.ghmm.emission import ghmm_c_emission
 from pymix.util.logs import Log
 from pyLibrary.maths.randoms import Random
+
 
 DBL_MAX = 1e300
 EPS_ITER_BW = 0.0001
@@ -25,7 +27,7 @@ GHMM_EPS_PREC = 1e-8
 GHMM_PENALTY_LOGP = -500.0
 
 
-normal = 0,        #< gaussian
+normal = 0        #< gaussian
 normal_right = 1  #< right tail
 normal_approx = 2 #< approximated gaussian
 normal_left = 3   #< left tail

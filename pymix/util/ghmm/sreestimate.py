@@ -36,9 +36,8 @@
 from math import sqrt
 from pymix.util.ghmm.gauss_tail import ighmm_gtail_pmue_umin
 from pymix.util.ghmm.matrixop import ighmm_invert_det
-from pymix.util.ghmm.randvar import GHMM_EPS_NDT, ighmm_rand_normal_density_pos, ighmm_rand_get_xPHIless1
+from pymix.util.ghmm.randvar import GHMM_EPS_NDT, ighmm_rand_normal_density_pos, ighmm_rand_get_xPHIless1, sqr
 from pymix.util.ghmm.root_finder import ghmm_zbrent_AB
-from pymix.util.ghmm.sdfoba import ghmm_dsmodel_forward
 from pymix.util.ghmm.sfoba import ghmm_cmodel_forward, ghmm_cmodel_backward
 from pymix.util.ghmm.types import kMultivariate
 from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, DBL_MIN, GHMM_EPS_PREC, DBL_MAX, normal_right, matrix_alloc
@@ -127,7 +126,7 @@ def sreestimate_init(r, smo):
             r.sum_gt_otot[i][m] = 0.0
 
 
-def sreestimate_alloc_matvek( T, N, M):
+def sreestimate_alloc_matvek(T, N, M):
     alpha = ighmm_cmatrix_stat_alloc(T, N)
     beta = ighmm_cmatrix_stat_alloc(T, N)
 
@@ -139,6 +138,7 @@ def sreestimate_alloc_matvek( T, N, M):
 
     return alpha, beta, scale, b
 
+
 def sreestimate_free_matvec(alpha, beta, scale, b, T, N):
     pass
 
@@ -149,7 +149,7 @@ def sreestimate_precompute_b(smo, O, T, b):
     for t in range(T):
         for i in range(smo.N):
             b[t][i][smo.M] = 0.0
-    # save c_im * b_im(O_t)  directly in  b[t][i][m]
+        # save c_im * b_im(O_t)  directly in  b[t][i][m]
     for t in range(T):
         pos = t * smo.dim
         for i in range(smo.N):
@@ -271,7 +271,7 @@ def sreestimate_setlambda(r, smo):
 
             else:
                 if smo.model_type & kMultivariate:
-                    for d1 in range(smo.s[i].e[m].dimension ):
+                    for d1 in range(smo.s[i].e[m].dimension):
                         for d2 in range(smo.s[i].e[m].dimension):
                             u_im = r.u_num[i][m][d1][d2] / r.mue_u_denom[i][m]
                             if abs(u_im) <= GHMM_EPS_U:
@@ -319,7 +319,7 @@ def sreestimate_setlambda(r, smo):
                 else:
                     Atil = A + GHMM_EPS_NDT
                     Btil = B + GHMM_EPS_NDT * A
-                    mue_left = (-C_PHI * sqrt(Btil + GHMM_EPS_NDT * Atil                                              + CC_PHI * sqrt(Atil) / 4.0)                                - CC_PHI * Atil / 2.0 - GHMM_EPS_NDT) * 0.99
+                    mue_left = (-C_PHI * sqrt(Btil + GHMM_EPS_NDT * Atil + CC_PHI * sqrt(Atil) / 4.0) - CC_PHI * Atil / 2.0 - GHMM_EPS_NDT) * 0.99
                     mue_right = A
                     if A < Btil * ighmm_rand_normal_density_pos(-GHMM_EPS_NDT, 0, Btil):
                         mue_right = min(GHMM_EPS_NDT, mue_right)
@@ -449,10 +449,11 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
                     r.c_num[i][m] += gamma_ct
 
                     # numerator Mue:
-                    r.mue_num[i][m][0] += (gamma_ct * O[k][t][0])
                     if smo.model_type & kMultivariate:
-                        for d in range(1, state.e[m].dimension):
+                        for d in range(0, state.e[m].dimension):
                             r.mue_num[i][m][d] += (gamma_ct * O[k][t][d])
+                    else:
+                        r.mue_num[i][m][0] += gamma_ct * O[k][t]
 
                     # denom. Mue/U:
                     r.mue_u_denom[i][m] += gamma_ct
@@ -462,13 +463,10 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
                             for dj in range(state.e[m].dimension):
                                 r.u_num[i][m][di][dj] += (gamma_ct * (O[k][t][di] - state.e[m].mean.vec[di]) * (O[k][t][dj] - state.e[m].mean.vec[dj]))
                     else:
-                        r.u_num[i][m][0][0] += (gamma_ct * sqrt(O[k][t] - state.e[m].mean.val))
+                        r.u_num[i][m][0][0] += (gamma_ct * sqr(O[k][t] - state.e[m].mean))
 
                     # sum gamma_ct * O[k][t] * O[k][t] (truncated normal density):
-                    temp=0.0
-                    for d in range(smo.dim):
-                        temp+=O[k][t][d]**2
-                    r.sum_gt_otot[i][m] += (gamma_ct * sqrt(temp))
+                    r.sum_gt_otot[i][m] += (gamma_ct * sqr(O[k][t]))
     if smo.cos > 1:
         smo.class_change.k = -1
 
@@ -492,7 +490,7 @@ def ghmm_cmodel_baum_welch(cs):
         for j in range(cs.smo.s[i].M):
             if cs.smo.s[i].e[j].type == normal_right:
                 globals()["C_PHI"] = ighmm_rand_get_xPHIless1()
-                globals()["CC_PHI"] = sqrt(C_PHI)
+                globals()["CC_PHI"] = sqr(C_PHI)
                 break
 
     # local store for all iterations

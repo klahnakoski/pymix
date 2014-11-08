@@ -83,3 +83,15 @@ class ghmm_cstate:
         for m in range(self.M):
             b += self.c[m] * density_func[self.e[m].type](self.e[m], omega)
         return b
+
+    def getMean(self, i):
+        return self.e[i].mean
+
+    def getStdDev(self, i):
+        return self.e[i].variance
+
+    def setMean(self, i, value):
+        self.e[i].mean = value
+
+    def setStdDev(self, i, value):
+        self.e[i].variance = value

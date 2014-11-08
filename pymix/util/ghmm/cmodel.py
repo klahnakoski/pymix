@@ -1,7 +1,8 @@
+from math import log
 from pymix.util.ghmm.cseq import ghmm_cseq
 from pymix.util.ghmm.cstate import ghmm_cstate
 from pymix.util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal, ighmm_rand_uniform_cont, ighmm_rand_normal_right
-from pymix.util.ghmm.types import kContinuousHMM
+from pymix.util.ghmm.types import kContinuousHMM, kSilentStates
 from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC
 from pymix.util.logs import Log
 from pyLibrary.maths.randoms import Random
@@ -13,7 +14,7 @@ class ghmm_cmodel:
         # Number of states
         self.N = N  # int
         # Maximun number of components in the states
-        self.M = 0  # int
+        self.M = 1  # int
         # Number of dimensions of the emission components.
         # All emissions must have the same number of dimensions
         self.dim = 1  # int
@@ -45,7 +46,7 @@ class ghmm_cmodel:
         # define CUR_PROC "ghmm_cmodel_get_random_var"
         emission = self.s[state].e[m]
         if emission.type in (normal_approx, normal):
-            return ighmm_rand_normal(emission.mean.val, emission.variance.val, 0)
+            return ighmm_rand_normal(emission.mean, emission.variance, 0)
         elif emission.type == binormal:
             #return ighmm_rand_binormal(emission.mean.vec, emission.variance.mat, 0)
             pass
@@ -327,3 +328,72 @@ class ghmm_cmodel:
             for k in range(self.s[i].M):
                 if self.dim != self.s[i].e[k].dimension:
                     Log.error("dim s[%d].e[%d] != dimension of model\n", i, k)
+
+    def get_transition(self, i, j, c=None):
+        if self.s and self.s[i].out_a and self.s[j].in_a:
+            for out in range(self.s[i].out_states):
+                if self.s[i].out_id[out] == j:
+                    if c is None:
+                        return self.s[i].out_a[out]
+                    else:
+                        return self.s[i].out_a[c][out]
+
+        return 0.0
+
+    def set_transition(self, i, j, c, value):
+        if self.s and self.s[i].out_a and self.s[j].in_a:
+            for out in range(self.s[i].out_states):
+                if self.s[i].out_id[out] == j:
+                    self.s[i].out_a[c][out] = value
+
+        return 0.0
+
+    def check_transition(smo, i, j, c=None):
+        if smo.s and smo.s[i].out_a and smo.s[j].in_a:
+            for out in range(smo.s[i].out_states):
+                if smo.s[i].out_id[out] == j:
+                    return 1
+        return 0
+
+    def logp_joint(self, O, len, S, slen):
+        state_pos = 0
+        pos = 0
+        osc = 0
+        dim = self.dim
+
+        prevstate = state = S[0]
+        log_p = log(self.s[state].pi)
+        if not (self.model_type & kSilentStates) or 1: # XXX not mo.silent[state]  :
+            log_p += log(self.s[state].calc_b(O[pos]))
+            pos += 1
+
+        for state_pos in range(1, len):
+            state = S[state_pos]
+            for j in range(self.s[state].in_states):
+                if prevstate == self.s[state].in_id[j]:
+                    break
+            if self.cos > 1:
+                if not self.class_change.get_class:
+                    Log.error("get_class not initialized")
+
+                osc = self.class_change.get_class(self, O, self.class_change.k, pos)
+                if osc >= self.cos:
+                    Log.error("get_class returned index %d but model has only %d classes!", osc, self.cos)
+
+            if (j == self.s[state].in_states or abs(self.s[state].in_a[osc][j]) < GHMM_EPS_PREC):
+                Log.error("Sequence can't be built. There is no transition from state %d to %d.", prevstate, state)
+
+            log_p += log(self.s[state].in_a[osc][j])
+
+            if not (self.model_type & kSilentStates) or 1: # XXX !mo.silent[state]
+                log_p += log(self.s[state].calc_b(O[pos]))
+                pos += 1
+
+            prevstate = state
+
+        if pos < len:
+            Log.note("state sequence too shortnot  processed only %d symbols", pos)
+        if state_pos < slen:
+            Log.note("sequence too shortnot  visited only %d states", state_pos)
+
+        return log_p

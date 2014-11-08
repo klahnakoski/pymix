@@ -10,7 +10,7 @@
 ################################################################################
 
 
-from math import exp, sqrt, log
+from math import exp, log, sqrt
 
 import numpy as np
 import scipy

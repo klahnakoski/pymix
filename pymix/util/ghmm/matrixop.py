@@ -55,10 +55,10 @@ def ighmm_determinant(cov, n):
             for j in range(n):
                 if j == j1:
                     continue
-                m[(i - 1) * (n - 1) + jm] = cov[i * n + j]
+                m[i - 1][jm] = cov[i][j]
                 jm += 1
 
-        det += pow(-1.0, 1.0 + j1 + 1.0) * cov[j1] * ighmm_determinant(m, n - 1)
+        det += pow(-1.0, j1) * cov[0][j1] * ighmm_determinant(m, n - 1)
 
     return det
 

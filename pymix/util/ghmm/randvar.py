@@ -36,10 +36,14 @@
 
 # A list of already calculated values of the density function of a
 #   N(0,1)-distribution, with x in [0.00, 19.99]
-from math import erf, exp, pi, sqrt, log, cos, erfc
+from math import erf, exp, pi, log, cos, erfc, sqrt
 from numpy.random.mtrand import dirichlet
 from pymix.util.ghmm.wrapper import DBL_MIN, RNG, GHMM_RNG_SET, GHMM_RNG_UNIFORM, multinormal, binormal, uniform, normal_left, normal_approx, normal_right, normal
 from pymix.util.logs import Log
+
+def sqr(x):
+    return x*x
+
 
 PDFLEN = 2000
 X_STEP_PDF = 0.01         # step size
@@ -100,7 +104,7 @@ def ighmm_rand_get_1overa(x, mean, u):
     if u <= 0.0:
         Log.error("u <= 0.0 not allowed\n")
 
-    erfc_value = erfc((x - mean) / sqrt(2))
+    erfc_value = erfc((x - mean) / sqrt(u*2))
 
     if erfc_value <= DBL_MIN:
         Log.error("a ~= 0.0 critical!  (mue = %.2f, u =%.2f)\n", mean, u)
@@ -142,8 +146,11 @@ def ighmm_rand_normal_density(x, mean, u):
         Log.error("u <= 0.0 not allowed\n")
 
     # The denominator is possibly < EPS??? Check that ?
-    expo = exp(-1 * sqrt(mean - x) / u)
-    return (1 / (sqrt(2 * pi * u)) * expo)
+    expo = exp (-1 * sqr (abs(mean - x)) / (2 * u))
+    return (1 / (sqrt (2 * pi * u)) * expo)
+
+    # expo = exp(-1 * (mean - x) ** 2 / var / 2)
+    # return expo / (sqrt(2 * pi * var))
 
 
 #============================================================================
@@ -155,9 +162,9 @@ def ighmm_rand_binormal_density(x, mean, cov):
     rho = cov[1] / ( sqrt(cov[0]) * sqrt(cov[2 + 1]) )
     part1 = (x[0] - mean[0]) / sqrt(cov[0])
     part2 = (x[1] - mean[1]) / sqrt(cov[2 + 1])
-    part3 = sqrt(part1) - 2 * part1 * part2 + sqrt(part2)
-    numerator = exp(-1 * (part3) / ( 2 * (1 - sqrt(rho)) ))
-    return (numerator / ( 2 * pi * sqrt(1 - sqrt(rho)) ))
+    part3 = sqr(part1) - 2 * part1 * part2 + sqr(part2)
+    numerator = exp(-1 * (part3) / ( 2 * (1 - sqr(rho)) ))
+    return (numerator / ( 2 * pi * sqrt(1 - sqr(rho)) ))
 
 #============================================================================
 # matrices are linearized
@@ -203,7 +210,7 @@ def ighmm_rand_uniform_density(x, max, min):
 def randvar_init_pdf_stdnormal():
     x = 0.00
     for i in range(PDFLEN):
-        pdf_stdnormal[i] = 1 / (sqrt(pi)) * exp(-1 * x * x / 2)
+        pdf_stdnormal[i] = 1 / (sqrt(2*pi)) * exp(-1 * x * x / 2)
         x += X_STEP_PDF
 
     globals()["pdf_stdnormal_exists"] = 1
@@ -370,7 +377,7 @@ def ighmm_rand_normal_right_cdf(x, mean, u, a):
     #     These routines compute the complementary error function
     #     erfc(x) = 1 - erf(x) = 2/\sqrt(\pi) \int_x^\infty \exp(-t^2).
     #
-    return 1.0 + (erf((x - mean) / sqrt(2)) - 1.0) / erfc((a - mean) / sqrt(2))
+    return 1.0 + (erf((x - mean) / sqrt(2*u)) - 1.0) / erfc((a - mean) / sqrt(u*2))
 
 #============================================================================
 # cumalative distribution function of a uniform distribution in the range [min,max]
@@ -392,7 +399,7 @@ def ighmm_rand_uniform_cdf(x, max, min):
 #===========================================================================
 # defining function with identical signatures for function pointer
 def cmbm_normal(emission, omega):
-    return ighmm_rand_normal_density(omega, emission.mean.val, emission.variance.val)
+    return ighmm_rand_normal_density(omega, emission.mean, emission.variance)
 
 
 def cmbm_binormal(emission, omega):
