@@ -12,7 +12,7 @@ from math import exp, log, sqrt
 
 from pymix.util.ghmm.emission import ghmm_c_emission
 from pymix.util.logs import Log
-from pyLibrary.maths.randoms import Random
+from pymix.util.ghmm.mt19937ar import Random
 
 
 DBL_MAX = 1e300

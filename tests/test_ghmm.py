@@ -54,11 +54,10 @@ Testing GHMM
 
 import unittest
 import random
-from pymix.vendor.ghmm import ghmmhelper
 import re
 from pymix.util.ghmm.types import kSilentStates, kDiscreteHMM
-
 from pymix.util.ghmm.wrapper import ASCI_SEQ_FILE, uniform, normal_right, normal_left, int_array_getitem, normal, SMO_FILE_SUPPORT, SEQ_LABEL_FIELD
+from pymix.util.ghmm.mt19937ar import Random
 from pymix.vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, GaussianMixtureDistribution, GaussianDistribution, DiscreteDistribution
 from pymix.vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphabet, DNA
 from pymix.vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
@@ -78,6 +77,13 @@ def newSplit(self, s, ts):
             self.assertAlmostEqual(q, float(newTS[i]))
         except:
             self.assertEqual(newS[i], newTS[i])
+
+
+class MersenneTwisterTest(FuzzyTestCase):
+    def test5489(self):
+        Random.set_seed(5489)
+        result = [Random.int32() for i in range(10)]
+        self.assertAlmostEqual(result, [-795755684, 581869302, -404620562, -708632711, 545404204, -133711905, -372047867, 949333985, -1579004998, 1323567403])
 
 
 class AlphabetTests(FuzzyTestCase):
@@ -1125,15 +1131,21 @@ class GaussianEmissionHMMTests(FuzzyTestCase):
         del (self.model)
 
     def testforward(self):
-        f = lambda x: round(x, 14)
         seq = self.model.sampleSingle(3, seed=3586662)
         res = self.model.forward(seq)
-        self.assertEqual([map(f, v) for v in res[0]],
-            [[1.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0],
-                [0.81096817099594998, 0.0, 0.18903182900404999]])
-        self.assertEqual(map(f, res[1]),
-            [0.14046138547389, 0.17170494789394, 0.24567463849082999])
+
+        self.assertEqual(
+            res,
+            [
+                [
+                    [1.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0],
+                    [0.81096817099594998, 0.0, 0.18903182900404999]
+                ],
+                [0.14046138547389, 0.17170494789394, 0.24567463849082999]
+            ],
+            places=14
+        )
 
     def testloglikelihoods(self):
         seq = self.model.sampleSingle(100, seed=3586662)

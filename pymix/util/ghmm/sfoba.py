@@ -46,7 +46,7 @@ def sfoba_initforward(smo, alpha_1, omega, scale, b):
     scale[0] = 0.0
     if b == None:
         for i in range(smo.N):
-            alpha_1[i] = smo.s[i].pi * smo.s[1].calc_b(omega)
+            alpha_1[i] = smo.s[i].pi * smo.s[i].calc_b(omega)
             scale[0] += alpha_1[i]
     else:
         for i in range(smo.N):

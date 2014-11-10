@@ -12,10 +12,10 @@ class ghmm_c_emission:
         self.dimension = None  # int
         #* mean for output functions (pointer to mean vector
         #        for multivariate)
-        self.mean = Struct()
+        self.mean = None
         #* variance or pointer to a covariance matrix
         #        for multivariate normals
-        self.variance = Struct()
+        self.variance = None
         #* pointer to inverse of covariance matrix if multivariate normal
         #        else None
         self.sigmainv = None  # double *

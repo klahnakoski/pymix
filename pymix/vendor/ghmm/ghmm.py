@@ -687,8 +687,8 @@ class HMMFromMatricesFactory(HMMFactory):
                         emission.dimension = 1
                         mu = mu_list[j]
                         sigma = sigma_list[j]
-                        emission.mean.val = mu #mu = mue in GHMM C-lib.
-                        emission.variance.val = sigma
+                        emission.mean = mu #mu = mue in GHMM C-lib.
+                        emission.variance = sigma
                         emission.fixed = 0  # fixing of emission deactivated by default
                         emission.setDensity(0)
 
@@ -730,15 +730,15 @@ class HMMFromMatricesFactory(HMMFactory):
                         emission.type = densities[i][j]
                         emission.dimension = 1
                         if (emission.type == wrapper.normal    or emission.type == wrapper.normal_approx):
-                            emission.mean.val = parameters[1]
-                            emission.variance.val = parameters[2]
+                            emission.mean = parameters[1]
+                            emission.variance = parameters[2]
                         elif emission.type == wrapper.normal_right:
-                            emission.mean.val = parameters[1]
-                            emission.variance.val = parameters[2]
+                            emission.mean = parameters[1]
+                            emission.variance = parameters[2]
                             emission.min = parameters[3]
                         elif emission.type == wrapper.normal_left:
-                            emission.mean.val = parameters[1]
-                            emission.variance.val = parameters[2]
+                            emission.mean = parameters[1]
+                            emission.variance = parameters[2]
                             emission.max = parameters[3]
                         elif emission.type == wrapper.uniform:
                             emission.max = parameters[1]
@@ -2393,20 +2393,8 @@ class GaussianEmissionHMM(HMM):
     def getEmissionProbability(self, value, i):
         """ @returns probability of emitting value in state i  """
         i = self.state(i)
-
-        # value can be float or vector of floats
-        try:
-            assert len(value) == self.cmodel.dim
-        except (TypeError):
-            assert 1 == self.cmodel.dim
-            v = [float(value)]
-        else:
-            v = value
-
         state = self.cmodel.getState(i)
-        valueptr = wrapper.list2double_array(v)
-        p = state.calc_b(valueptr)
-        wrapper.free(valueptr)
+        p = state.calc_b(value)
         return p
 
 
@@ -2810,8 +2798,8 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             for outp in range(state.M):
                 emission = state.getEmission(outp)
                 weight += str(wrapper.double_array_getitem(state.c, outp)) + ", "
-                mue += str(emission.mean.val) + ", "
-                u += str(emission.variance.val) + ", "
+                mue += str(emission.mean) + ", "
+                u += str(emission.variance) + ", "
 
             strout.append("    Emissions (")
             strout.append("weights=" + str(weight) + ", ")
@@ -2858,8 +2846,8 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             for outp in range(state.M):
                 emission = state.getEmission(outp)
                 weight += str(wrapper.double_array_getitem(state.c, outp)) + ", "
-                mue += str(emission.mean.val) + ", "
-                u += str(emission.variance.val) + ", "
+                mue += str(emission.mean) + ", "
+                u += str(emission.variance) + ", "
 
             strout.append("  pdf component weights : " + str(weight) + "\n")
             strout.append("  mean vector: " + str(mue) + "\n")
@@ -2893,8 +2881,8 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             siglist = []
             for j in range(state.M):
                 emission = state.getEmission(j)
-                mulist.append(emission.mean.val)
-                siglist.append(emission.variance.val)
+                mulist.append(emission.mean)
+                siglist.append(emission.variance)
 
             B[i].append(mulist)
             B[i].append(siglist)
@@ -2927,12 +2915,12 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         state = self.cmodel.getState(i)
         emission = state.getEmission(comp)
         if (emission.type == wrapper.normal or              emission.type == wrapper.normal_approx):
-            return (emission.type, emission.mean.val, emission.variance.val, state.getWeight(comp))
+            return (emission.type, emission.mean, emission.variance, state.getWeight(comp))
         elif emission.type == wrapper.normal_right:
-            return (emission.type, emission.mean.val, emission.variance.val,
+            return (emission.type, emission.mean, emission.variance,
             emission.min, state.getWeight(comp))
         elif emission.type == wrapper.normal_left:
-            return (emission.type, emission.mean.val, emission.variance.val,
+            return (emission.type, emission.mean, emission.variance,
             emission.max, state.getWeight(comp))
         elif emission.type == wrapper.uniform:
             return (emission.type, emission.max, emission.min, state.getWeight(comp))
@@ -2959,15 +2947,15 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         i = self.state(i)
 
         state = self.cmodel.getState(i)
-        state.setWeight(comp, float(weight))
+        state.setWeight(comp, weight)
         emission = state.getEmission(comp)
         emission.type = distType
         if (emission.type == wrapper.normal or
                 emission.type == wrapper.normal_approx or
                 emission.type == wrapper.normal_right or
                 emission.type == wrapper.normal_left):
-            emission.mean.val = mu
-            emission.variance.val = sigma
+            emission.mean = mu
+            emission.variance = sigma
             if emission.type == wrapper.normal_right:
                 emission.min = a
             if emission.type == wrapper.normal_left:
@@ -3003,15 +2991,15 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
                 emission = state.getEmission(outp)
                 type = emission.type
                 if type == wrapper.normal:
-                    comp_str += "normal(mean = " + str(emission.mean.val)
-                    comp_str += ", variance = " + str(emission.variance.val) + ")"
+                    comp_str += "normal(mean = " + str(emission.mean)
+                    comp_str += ", variance = " + str(emission.variance) + ")"
                 elif type == wrapper.normal_right:
-                    comp_str += "normal right tail(mean = " + str(emission.mean.val)
-                    comp_str += ", variance = " + str(emission.variance.val)
+                    comp_str += "normal right tail(mean = " + str(emission.mean)
+                    comp_str += ", variance = " + str(emission.variance)
                     comp_str += ", minimum = " + str(emission.min) + ")"
                 elif type == wrapper.normal_left:
-                    comp_str += "normal left tail(mean = " + str(emission.mean.val)
-                    comp_str += ", variance = " + str(emission.variance.val)
+                    comp_str += "normal left tail(mean = " + str(emission.mean)
+                    comp_str += ", variance = " + str(emission.variance)
                     comp_str += ", maximum = " + str(emission.max) + ")"
                 elif type == wrapper.uniform:
                     comp_str += "uniform(minimum = " + str(emission.min)
@@ -3057,13 +3045,13 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
                 emission = state.getEmission(j)
                 denList.append(emission.type)
                 if emission.type == wrapper.normal:
-                    parlist.append([emission.mean.val, emission.variance.val,
+                    parlist.append([emission.mean, emission.variance,
                         0, state.getWeight(j)])
                 elif emission.type == wrapper.normal_right:
-                    parlist.append([emission.mean.val, emission.variance.val,
+                    parlist.append([emission.mean, emission.variance,
                         emission.min, state.getWeight(j)])
                 elif emission.type == wrapper.normal_left:
-                    parlist.append([emission.mean.val, emission.variance.val,
+                    parlist.append([emission.mean, emission.variance,
                         emission.max, state.getWeight(j)])
                 elif emission.type == wrapper.uniform:
                     parlist.append([emission.max, emission.min, 0, state.getWeight(j)])

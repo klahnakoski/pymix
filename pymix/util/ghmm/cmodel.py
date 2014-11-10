@@ -6,7 +6,7 @@ from pymix.util.ghmm.sfoba import sfoba_initforward, LOWER_SCALE_BOUND, sfoba_st
 from pymix.util.ghmm.types import kContinuousHMM, kSilentStates
 from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC, DBL_MIN, ighmm_cmatrix_stat_alloc
 from pymix.util.logs import Log
-from pyLibrary.maths.randoms import Random
+from pymix.util.ghmm.mt19937ar import Random
 
 
 class ghmm_cmodel:
@@ -54,9 +54,9 @@ class ghmm_cmodel:
         elif emission.type == multinormal:
             return ighmm_rand_multivariate_normal(emission.dimension, emission.mean.vec, emission.sigmacd, 0)
         elif emission.type == normal_right:
-            return ighmm_rand_normal_right(emission.min, emission.mean.val, emission.variance.val, 0)
+            return ighmm_rand_normal_right(emission.min, emission.mean, emission.variance, 0)
         elif emission.type == normal_left:
-            return -ighmm_rand_normal_right(-emission.max, -emission.mean.val, emission.variance.val, 0)
+            return -ighmm_rand_normal_right(-emission.max, -emission.mean, emission.variance, 0)
         elif emission.type == uniform:
             return ighmm_rand_uniform_cont(0, emission.max, emission.min)
         else:

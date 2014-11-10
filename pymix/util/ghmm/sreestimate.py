@@ -296,7 +296,7 @@ def sreestimate_setlambda(r, smo):
             #         1-dim optimization for mue, calculate u directly
             #         note: if denom == 0 -. mue and u not recalculated above
             if smo.s[i].e[m].type == normal_right and abs(r.mue_u_denom[i][m]) > DBL_MIN:
-                A = smo.s[i].e[m].mean.val
+                A = smo.s[i].e[m].mean
                 B = r.sum_gt_otot[i][m] / r.mue_u_denom[i][m]
 
                 # A^2 ~ B . search max at border of EPS_U
@@ -328,10 +328,10 @@ def sreestimate_setlambda(r, smo):
                     u_im = Btil - mue_im * Atil
 
                 # set modified values of mue and u
-                smo.s[i].e[m].mean.val = mue_im
+                smo.s[i].e[m].mean = mue_im
                 if u_im < GHMM_EPS_U:
                     u_im = GHMM_EPS_U
-                smo.s[i].e[m].variance.val = u_im
+                smo.s[i].e[m].variance = u_im
                 # end modifikation truncated density
 
                 # for (m ..)

@@ -149,7 +149,7 @@ def ighmm_rand_normal_density(x, mean, variance):
     try:
         expo = exp(-1 * sqr(mean - x) / (2 * variance))
         return expo / sqrt(2 * pi * variance)
-    except:
+    except Exception, e:
         Log.error("Calculation problem")
 
 
@@ -411,15 +411,15 @@ def cmbm_multinormal(emission, omega):
 
 
 def cmbm_normal_right(emission, omega):
-    return ighmm_rand_normal_density_trunc(omega, emission.mean.val, emission.variance.val, emission.min)
+    return ighmm_rand_normal_density_trunc(omega, emission.mean, emission.variance, emission.min)
 
 
 def cmbm_normal_left(emission, omega):
-    return ighmm_rand_normal_density_trunc(-omega, -emission.mean.val, emission.variance.val, -emission.max)
+    return ighmm_rand_normal_density_trunc(-omega, -emission.mean, emission.variance, -emission.max)
 
 
 def cmbm_normal_approx(emission, omega):
-    return ighmm_rand_normal_density_approx(omega, emission.mean.val, emission.variance.val)
+    return ighmm_rand_normal_density_approx(omega, emission.mean, emission.variance)
 
 
 def cmbm_uniform(emission, omega):
