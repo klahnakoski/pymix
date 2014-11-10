@@ -2,8 +2,9 @@ from math import log
 from pymix.util.ghmm.cseq import ghmm_cseq
 from pymix.util.ghmm.cstate import ghmm_cstate
 from pymix.util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal, ighmm_rand_uniform_cont, ighmm_rand_normal_right
+from pymix.util.ghmm.sfoba import sfoba_initforward, LOWER_SCALE_BOUND, sfoba_stepforward
 from pymix.util.ghmm.types import kContinuousHMM, kSilentStates
-from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC
+from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC, DBL_MIN, ighmm_cmatrix_stat_alloc
 from pymix.util.logs import Log
 from pyLibrary.maths.randoms import Random
 
@@ -397,3 +398,154 @@ class ghmm_cmodel:
             Log.note("sequence too shortnot  visited only %d states", state_pos)
 
         return log_p
+
+
+    def forward(self, O, T, b, alpha, scale):
+        t = 0
+        osc = 0
+
+        # T is length of sequence divide by dimension to represent the number of time points
+        T /= self.dim
+        # calculate alpha and scale for t = 0
+        if b == None:
+            sfoba_initforward(self, alpha[0], O[0], scale, None)
+        else:
+            sfoba_initforward(self, alpha[0], O[0], scale, b[0])
+
+        if scale[0] <= DBL_MIN:
+            Log.error(" means f(O[0], mue, u) << 0, first symbol very unlikely")
+
+        log_p = log(scale[0])
+
+        if self.cos == 1:
+            osc = 0
+        else:
+            if not self.class_change.get_class:
+                Log.error("get_class not initialized\n")
+
+            # printf("1: cos = %d, k = %d, t = %d\n",smo.cos,smo.class_change.k,t)
+            osc = self.class_change.get_class(self, O, self.class_change.k, t)
+            if osc >= self.cos:
+                Log.error("get_class returned index %d but model has only %d classes not \n", osc, self.cos)
+
+        for t in range(1, T):
+            scale[t] = 0.0
+            # b not calculated yet
+            if b == None:
+                for i in range(self.N):
+                    alpha[t][i] = sfoba_stepforward(self.s[i], alpha[t - 1], osc, self.s[i].calc_b(O[t]))
+                    scale[t] += alpha[t][i]
+
+            # b precalculated
+            else:
+                for i in range(self.N):
+                    alpha[t][i] = sfoba_stepforward(self.s[i], alpha[t - 1], osc, b[t][i][self.M])
+                    scale[t] += alpha[t][i]
+
+            if scale[t] <= DBL_MIN:        #
+                Log.error(" seq. can't be build")
+
+            c_t = 1 / scale[t]
+            # scale alpha
+            for i in range(self.N):
+                alpha[t][i] *= c_t
+                # summation of log(c[t]) for calculation of log( P(O|lambda) )
+            log_p -= log(c_t)
+
+            if self.cos == 1:
+                osc = 0
+
+            else:
+                if not self.class_change.get_class:
+                    Log.error("get_class not initialized\n")
+
+                # printf("1: cos = %d, k = %d, t = %d\n",smo.cos,smo.class_change.k,t)
+                osc = self.class_change.get_class(self, O, self.class_change.k, t)
+                if osc >= self.cos:
+                    Log.error("get_class returned index %d but model has only %d classes not \n", osc, self.cos)
+        return log_p
+
+
+    def backward(self, O, T, b, beta, scale):
+        # T is length of sequence divide by dimension to represent the number of time points
+        T /= self.dim
+
+        beta_tmp = ARRAY_CALLOC(self.N)
+
+        for t in range(T):
+            # try differenent bounds here in case of problems
+            #       like beta[t] = NaN
+            if scale[t] < LOWER_SCALE_BOUND:
+                Log.error("error")
+
+        # initialize
+        c_t = 1 / scale[T - 1]
+        for i in range(self.N):
+            beta[T - 1][i] = 1
+            beta_tmp[i] = c_t
+
+        # Backward Step for t = T-2, ..., 0
+        # beta_tmp: Vector for storage of scaled beta in one time step
+
+        if self.cos == 1:
+            osc = 0
+
+        else:
+            if not self.class_change.get_class:
+                Log.error("get_class not initialized\n")
+
+            osc = self.class_change.get_class(self, O, self.class_change.k, T - 2)
+            # printf("osc(%d) = %d\n",T-2,osc)
+            if osc >= self.cos:
+                Log.error("get_class returned index %d but model has only %d classes not \n", osc, self.cos)
+
+        for t in reversed(range(T - 1)):
+            if b == None:
+                for i in range(self.N):
+                    sum = 0.0
+                    for j in range(self.s[i].out_states):
+                        j_id = self.s[i].out_id[j]
+                        sum += self.s[i].out_a[osc][j] * self.s[j_id].calc_b(O[t+1]) * beta_tmp[j_id]
+
+                    beta[t][i] = sum
+
+            else:
+                for i in range(self.N):
+                    sum = 0.0
+                    for j in range(self.s[i].out_states):
+                        j_id = self.s[i].out_id[j]
+                        sum += self.s[i].out_a[osc][j] * b[t + 1][j_id][self.M] * beta_tmp[j_id]
+
+                        #printf("  smo.s[%d].out_a[%d][%d] * b[%d] * beta_tmp[%d] = %f * %f *
+                        #            %f\n",i,osc,j,t+1,j_id,smo.s[i].out_a[osc][j], b[t + 1][j_id][smo.M], beta_tmp[j_id])
+
+                    beta[t][i] = sum
+                    # printf(" .   beta[%d][%d] = %f\n",t,i,beta[t][i])
+
+            c_t = 1 / scale[t]
+            for i in range(self.N):
+                beta_tmp[i] = beta[t][i] * c_t
+
+            if self.cos == 1:
+                osc = 0
+
+            else:
+                if not self.class_change.get_class:
+                    Log.error("get_class not initialized\n")
+
+                # if t=1 the next iteration will be the last
+                if t >= 1:
+                    osc = self.class_change.get_class(self, O, self.class_change.k, t - 1)
+                    # printf("osc(%d) = %d\n",t-1,osc)
+                    if osc >= self.cos:
+                        Log.error("get_class returned index %d but model has only %d classes not \n", osc, self.cos)
+
+
+
+    def logp(self, O, T):
+        alpha = ighmm_cmatrix_stat_alloc(T, self.N)
+        scale = ARRAY_CALLOC(T)
+        # run forward alg.
+        return self.forward(O, T, None, alpha, scale)
+
+

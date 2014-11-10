@@ -1139,7 +1139,7 @@ class GaussianEmissionHMMTests(FuzzyTestCase):
         seq = self.model.sampleSingle(100, seed=3586662)
         res = self.model.loglikelihoods(seq)
 
-        self.assertEqual(str(res), '[-138.66374870816287]')
+        self.assertEqual(res, [-138.66374870816287])
 
 
     def testviterbi(self):

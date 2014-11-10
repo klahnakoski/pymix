@@ -2508,9 +2508,7 @@ class GaussianEmissionHMM(HMM):
 
         seq = emissionSequence.cseq.getSequence(0)
 
-        error, logp = self.cmodel.forward(seq, t, None, calpha, cscale)
-        if error == -1:
-            Log.error("Forward finished with -1: Sequence " + str(seq) + " cannot be build.")
+        logp = self.cmodel.forward(seq, t, None, calpha, cscale)
 
         # translate alpha / scale to python lists
         pyscale = wrapper.double_array2list(cscale, t) # XXX return Python2.5 arrays???

@@ -38,7 +38,6 @@ from pymix.util.ghmm.gauss_tail import ighmm_gtail_pmue_umin
 from pymix.util.ghmm.matrixop import ighmm_invert_det
 from pymix.util.ghmm.randvar import GHMM_EPS_NDT, ighmm_rand_normal_density_pos, ighmm_rand_get_xPHIless1, sqr
 from pymix.util.ghmm.root_finder import ghmm_zbrent_AB
-from pymix.util.ghmm.sfoba import ghmm_cmodel_forward, ghmm_cmodel_backward
 from pymix.util.ghmm.types import kMultivariate
 from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, DBL_MIN, GHMM_EPS_PREC, DBL_MAX, normal_right, matrix_alloc
 from pymix.util.logs import Log
@@ -262,7 +261,7 @@ def sreestimate_setlambda(r, smo):
                     for d in range(smo.s[i].e[m].dimension):
                         smo.s[i].e[m].mean.vec[d] = r.mue_num[i][m][d] / r.mue_u_denom[i][m]
                 else:
-                    smo.s[i].e[m].mean.val = r.mue_num[i][m][0] / r.mue_u_denom[i][m]
+                    smo.s[i].e[m].mean = r.mue_num[i][m][0] / r.mue_u_denom[i][m]
 
             # TEST: u_denom == 0.0 ?
             if abs(r.mue_u_denom[i][m]) <= DBL_MIN:     # < EPS_PREC ?
@@ -289,7 +288,7 @@ def sreestimate_setlambda(r, smo):
                     u_im = r.u_num[i][m][0][0] / r.mue_u_denom[i][m]
                     if u_im <= GHMM_EPS_U:
                         u_im = GHMM_EPS_U
-                    smo.s[i].e[m].variance.val = u_im
+                    smo.s[i].e[m].variance = u_im
 
 
 
@@ -369,8 +368,8 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
         if smo.cos > 1:
             smo.class_change.k = k
 
-        log_p_k = ghmm_cmodel_forward(smo, O[k], T[k], b, alpha, scale)
-        ghmm_cmodel_backward(smo, O[k], T[k], b, beta, scale)
+        log_p_k = smo.forward(O[k], T[k], b, alpha, scale)
+        smo.backward(O[k], T[k], b, beta, scale)
 
         # printf("\n\nalpha:\n")
         #    ighmm_cmatrix_print(stdout,alpha,T_k,smo.N,"\t", ",", "")

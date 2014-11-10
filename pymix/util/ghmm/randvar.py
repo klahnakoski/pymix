@@ -141,16 +141,16 @@ def ighmm_rand_normal_density_trunc(x, mean, u, a):
     return c * ighmm_rand_normal_density(x, mean, u)
 
 
-def ighmm_rand_normal_density(x, mean, u):
-    if u <= 0.0:
+def ighmm_rand_normal_density(x, mean, variance):
+    if variance <= 0.0:
         Log.error("u <= 0.0 not allowed\n")
 
     # The denominator is possibly < EPS??? Check that ?
-    expo = exp (-1 * sqr (abs(mean - x)) / (2 * u))
-    return (1 / (sqrt (2 * pi * u)) * expo)
-
-    # expo = exp(-1 * (mean - x) ** 2 / var / 2)
-    # return expo / (sqrt(2 * pi * var))
+    try:
+        expo = exp(-1 * sqr(mean - x) / (2 * variance))
+        return expo / sqrt(2 * pi * variance)
+    except:
+        Log.error("Calculation problem")
 
 
 #============================================================================
