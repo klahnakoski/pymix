@@ -51,7 +51,7 @@ class ghmm_cstate:
         #* y coordinate position for graph representation plotting *
         self.yPosition = 0.0  # int
 
-        self.weight=None
+        self.c=None
 
     def setDensity(self, i, type):
         self.e[i].type = type
@@ -74,7 +74,8 @@ class ghmm_cstate:
 
     def calc_cmbm(self, m, omega):
         emission = self.e[m]
-        return self.c[m] * density_func[emission.type](emission, omega)
+        # return self.c[m] * density_func[emission.type](emission, omega)
+        return density_func[emission.type](emission, omega)
 
 
     #============================================================================
@@ -99,9 +100,9 @@ class ghmm_cstate:
         self.e[i].variance = value
 
     def setWeight(self, i, value):
-        if not self.weight:
-            self.weight = [None] * self.M
-        self.weight[i] = value
+        if not self.c:
+            self.c = [None] * self.M
+        self.c[i] = value
 
     def getWeight(self, i):
-        return self.weight[i]
+        return self.c[i]

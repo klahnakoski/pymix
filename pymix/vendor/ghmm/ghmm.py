@@ -676,7 +676,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     sigma_list = B[i][1]
                     weight_list = B[i][2]
 
-                    state.c = wrapper.list2double_array(weight_list)
+                    state.c = weight_list
 
                     # set up emission(s), density type is normal
                     emissions = wrapper.c_emission_array_alloc(state.M)
@@ -1180,11 +1180,9 @@ class HMM(object):
         if not isinstance(emissionSequence, EmissionSequence):
             Log.error("EmissionSequence required, got " + str(emissionSequence.__class__.__name__))
 
-        seqdim = 1
-        if emissionSequence.emissionDomain == Float():
-            seqdim = emissionSequence.cseq.dim
-            if seqdim < 1:
-                seqdim = 1
+        seqdim = emissionSequence.emissionDomain.dimension
+        if seqdim < 1:
+            Log.error("not expected")
 
         t = len(emissionSequence)
         s = len(stateSequence)
@@ -1432,9 +1430,7 @@ class HMM(object):
         """
         Log.note("Normalizing now.")
 
-        i_error = self.cmodel.normalize()
-        if i_error == -1:
-            Log.error("normalization failed")
+        self.cmodel.normalize()
 
     def randomize(self, noiseLevel):
         """ to be defined in derived class """

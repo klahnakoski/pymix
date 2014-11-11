@@ -82,9 +82,8 @@ def newSplit(self, s, ts):
 class MersenneTwisterTest(FuzzyTestCase):
     def test5489(self):
         Random.set_seed(5489)
-        result = [Random.int32() for i in range(10)]
-        [x if x>0 else 0x100000000+x for x in [-795755684, 581869302, -404620562, -708632711, 545404204, -133711905, -372047867, 949333985, -1579004998, 1323567403]]
-        self.assertAlmostEqual(result, [-795755684, 581869302, -404620562, -708632711, 545404204, -133711905, -372047867, 949333985, -1579004998, 1323567403])
+        result = [Random.int32() for i in range(10)]  #unsigned 32 bit
+        self.assertAlmostEqual(result, [3499211612, 581869302, 3890346734, 3586334585, 545404204, 4161255391, 3922919429, 949333985, 2715962298, 1323567403])
 
 
 class AlphabetTests(FuzzyTestCase):
@@ -1174,9 +1173,11 @@ class GaussianMixtureHMMTests(FuzzyTestCase):
         Log.note("GaussianMixtureHMMTests.setUp")
         F = Float()
         self.A = [[0.25, 0.5, 0.25], [0.3, 0.2, 0.5], [0.3, 0.3, 0.4]]
-        self.B = [[[0.0, 1.0, 2.0], [1.0, 2.5, 5.5], [0.5, 0.3, 0.2]],
+        self.B = [
+            [[0.0, 1.0, 2.0], [1.0, 2.5, 5.5], [0.5, 0.3, 0.2]],
             [[2.0, 6.0, 1.0], [1.0, 0.5, 0.7], [0.1, 0.5, 0.4]],
-            [[4.0, 5.0, 1.0], [1.0, 2.5, 2.0], [0.3, 0.3, 0.4]]]
+            [[4.0, 5.0, 1.0], [1.0, 2.5, 2.0], [0.3, 0.3, 0.4]]
+        ]
         self.pi = [1.0, 0.0, 0.0]
         self.model = HMMFromMatrices(F, GaussianMixtureDistribution(F), self.A, self.B, self.pi)
         #print "** GaussianMixtureHMMTests **"
@@ -1232,14 +1233,14 @@ class GaussianMixtureHMMTests(FuzzyTestCase):
         Log.note("GaussianMixtureHMMTests.testprobfunctions")
         # get probability of emitting value 1.0 in state 0
         p = self.model.getEmissionProbability(1.0, 0)
-        self.assertAlmostEqual(p, 0.227744770124)
+        self.assertAlmostEqual(p, 0.227744770124, places=12)
 
         # generated from:
         #seq = self.model.sampleSingle(5, seed=3586662)
         rawseq = [-1.44491116077, 7.4388652602, -2.00813586086, -1.19351833806, 5.769548633]
         seq = EmissionSequence(Float(), rawseq)
         lp = self.model.joined(seq, [0, 2, 1, 2, 0, ])
-        self.assertAlmostEqual(lp, -26.552408895488998)
+        self.assertAlmostEqual(lp, -26.552408895488998, places=14)
 
         #obsolete test
 
@@ -1288,7 +1289,8 @@ class GaussianMixtureHMMTests(FuzzyTestCase):
         seq = self.model.sample(100, 100, seed=3586662)
         v = self.model.viterbi(seq)
         # generated from: seq = self.model.sampleSingle(50,seed=3586662)
-        seqinput = [-1.44491116077, 7.4388652602, -2.00813586086, -1.19351833806,
+        seqinput = [
+            -1.44491116077, 7.4388652602, -2.00813586086, -1.19351833806,
             5.769548633, -0.0299348626825, 5.16913512582, 2.47047233331,
             -1.56652946341, -2.20375608388, -0.544078807922, 3.7648231202,
             1.92916868929, 5.3841368104, 4.90730467721, 5.73251862946,
@@ -1300,14 +1302,15 @@ class GaussianMixtureHMMTests(FuzzyTestCase):
             3.63469202961, 0.0524576668747, -0.638426945936, -1.39516103111,
             6.04061711898, 0.249633099145, 0.908077203606, 4.29058819985,
             3.36880550569, 6.15300077452, 2.72713083613, 7.04041334509,
-            0.825709274023, 2.4727376639]
+            0.825709274023, 2.4727376639
+        ]
         seq = EmissionSequence(Float(), seqinput)
         stateseq, loglik = self.model.viterbi(seq)
         truesseq = [0, 1, 0, 0, 1, 0, 1, 2, 0, 0, 0, 2, 0, 1, 2, 1, 2, 2, 1,
             2, 1, 2, 1, 0, 0, 1, 2, 0, 1, 0, 1, 0, 1, 2, 2, 2, 2, 0,
             0, 0, 1, 0, 1, 2, 2, 1, 2, 1, 2, 2]
         self.assertEqual(stateseq, truesseq)
-        self.assertAlmostEqual(loglik, -145.168819756)
+        self.assertAlmostEqual(loglik, -145.168819756, places=12)
 
     def testbaumwelch(self):
         Log.note("GaussianMixtureHMMTests.baumwelch")

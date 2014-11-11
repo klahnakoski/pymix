@@ -3,8 +3,8 @@ from pymix.util.ghmm.cseq import ghmm_cseq
 from pymix.util.ghmm.cstate import ghmm_cstate
 from pymix.util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal, ighmm_rand_uniform_cont, ighmm_rand_normal_right
 from pymix.util.ghmm.sfoba import sfoba_initforward, LOWER_SCALE_BOUND, sfoba_stepforward
-from pymix.util.ghmm.types import kContinuousHMM, kSilentStates
-from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC, DBL_MIN, ighmm_cmatrix_stat_alloc
+from pymix.util.ghmm.types import kContinuousHMM, kSilentStates, kHigherOrderEmissions
+from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC, DBL_MIN, ighmm_cmatrix_stat_alloc, ighmm_cvector_normalize
 from pymix.util.logs import Log
 from pymix.util.ghmm.mt19937ar import Random
 
@@ -541,6 +541,38 @@ class ghmm_cmodel:
                         Log.error("get_class returned index %d but model has only %d classes not \n", osc, self.cos)
 
 
+    def normalize(self):
+    # Scales the output and transitions probs of all states in a given model
+        pi_sum = 0.0
+        i_id = 0
+        res = 0
+        size = 1
+
+        for i in range(self.N):
+            if self.s[i].pi >= 0.0:
+                pi_sum += self.s[i].pi
+            else:
+                self.s[i].pi = 0.0
+
+            # normalize transition probabilities
+            for c in range(self.cos):
+                ighmm_cvector_normalize(self.s[i].out_a[c], 0, self.s[i].out_states)
+
+                # for every outgoing probability update the corrosponding incoming probability
+                for j in range(self.s[i].out_states):
+                    j_id = self.s[i].out_id[j]
+                    for m in range(self.s[j_id].in_states):
+                        if i == self.s[j_id].in_id[m]:
+                            i_id = m
+                            break
+
+                    if i_id == self.s[j_id].in_states:
+                        Log.error("Outgoing transition from state %d to state %d has no corresponding incoming transition.", i, j_id)
+
+                    self.s[j_id].in_a[c][i_id] = self.s[i].out_a[c][j]
+
+        for i in range(self.N):
+            self.s[i].pi /= pi_sum
 
     def logp(self, O, T):
         alpha = ighmm_cmatrix_stat_alloc(T, self.N)
