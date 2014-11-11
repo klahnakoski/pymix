@@ -1764,15 +1764,23 @@ class MultivariateMixtureHMMTests(FuzzyTestCase):
         # create a continuous multivariate mixture model from matrices
         F = Float()
         self.A = [[0.25, 0.5, 0.25], [0.3, 0.2, 0.5], [0.3, 0.3, 0.4]]
-        self.B = [[[1.0, -1.0], [0.9, 0.4, 0.4, 0.3],
-            [2.0, -1.0], [0.9, 0.4, 0.4, 0.3],
-            [0.2, 0.8]],
-            [[2.0, 6.0], [1.0, 0.3, 0.3, 0.2],
-                [2.0, 4.0], [1.0, 0.3, 0.3, 0.2],
-                [0.1, 0.9]],
-            [[0.0, 1.0], [0.4, 0.3, 0.3, 1.0],
-                [0.0, 1.0], [0.4, 0.3, 0.3, 1.0],
-                [0.7, 0.3]]]
+        self.B = [
+            [
+                [1.0, -1.0], [[0.9, 0.4], [0.4, 0.3]],
+                [2.0, -1.0], [[0.9, 0.4],[ 0.4, 0.3]],
+                [0.2, 0.8]
+            ],
+            [
+                [2.0, 6.0], [[1.0, 0.3],[ 0.3, 0.2]],
+                [2.0, 4.0], [[1.0, 0.3], [0.3, 0.2]],
+                [0.1, 0.9]
+            ],
+            [
+                [0.0, 1.0], [[0.4, 0.3], [0.3, 1.0]],
+                [0.0, 1.0], [[0.4, 0.3], [0.3, 1.0]],
+                [0.7, 0.3]
+            ]
+        ]
         self.pi = [1.0, 0.0, 0.0]
         self.CMMmodel = HMMFromMatrices(F, MultivariateGaussianDistribution(F), self.A, self.B, self.pi)
 
@@ -1797,9 +1805,9 @@ class MultivariateMixtureHMMTests(FuzzyTestCase):
 
     def testbaumwelch(self):
         seq = self.CMMmodel.sample(100, 100, seed=3586662)
-        self.CMMmodel.setEmission(0, 0, [[0.0, 1.0], [0.4, 0.3, 0.3, 1.0]])
-        self.CMMmodel.setEmission(1, 0, [[1.0, -1.0], [0.9, 0.4, 0.4, 0.3]])
-        self.CMMmodel.setEmission(2, 0, [[2.0, 6.0], [1.0, 0.3, 0.3, 0.2]])
+        self.CMMmodel.setEmission(0, 0, [[0.0, 1.0], [[0.4, 0.3], [0.3, 1.0]]])
+        self.CMMmodel.setEmission(1, 0, [[1.0, -1.0], [[0.9, 0.4], [0.4, 0.3]]])
+        self.CMMmodel.setEmission(2, 0, [[2.0, 6.0], [[1.0, 0.3], [0.3, 0.2]]])
         self.CMMmodel.normalize()
         self.CMMmodel.baumWelch(seq, 10, 0.0000001)
 
