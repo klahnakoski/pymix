@@ -10,10 +10,8 @@
 ################################################################################
 from copy import deepcopy
 from math import exp, log, sqrt
-
 from pymix.util.ghmm.emission import ghmm_c_emission
 from pymix.util.logs import Log
-from pymix.util.ghmm.mt19937ar import Random
 
 
 DBL_MAX = 1e300
@@ -45,7 +43,6 @@ def fake_random_number_generator():
     pass
 
 
-RNG = fake_random_number_generator
 GHMM_MAX_SEQ_NUMBER = 1500000
 
 def int_array_getitem(array, index):
@@ -68,14 +65,6 @@ def set_pylogging(logwrapper):
     pass
 
 
-def GHMM_RNG_SET(rng, seed):
-    Random.set_seed(seed)
-
-
-def ghmm_rng_init():
-    pass
-
-
 def time_seed():
     pass
 
@@ -88,7 +77,7 @@ def double_matrix_alloc(rows, cols):
     try:
         return [[0.0] * cols for r in range(rows)]
     except Exception, e:
-        Log.unexpected(e)
+        Log.error("not expected", e)
 
 
 ighmm_dmatrix_stat_alloc = double_matrix_alloc
@@ -448,11 +437,6 @@ def ighmm_cholesky_decomposition(dim, cov):
             for k in range(row, dim):
                 sigmacd[row][k] = 0.0
     return sigmacd
-
-
-def GHMM_RNG_UNIFORM(rng):
-    return Random.float()
-
 
 class ghmm_dsmodel():
     def __init__(self):

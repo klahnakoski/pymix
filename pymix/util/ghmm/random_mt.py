@@ -66,21 +66,17 @@ class Random(object):
     def uint31(self):
         return self._next() >> 1
 
-
     # generates a random number on [0,1]-real-interval
     def real1(self):
         return self._next() * (1.0 / 4294967295.0)    # divided by 2^32-1
-
 
     # generates a random number on [0,1)-real-interval
     def float23(self):
         return self._next() / 4294967296.0    # divided by 2^32
 
-
     # generates a random number on (0,1)-real-interval
     def real3(self):
         return (self._next() + 0.5) * (1.0 / 4294967296.0)    # divided by 2^32
-
 
     # generates a random number on [0,1) with 53-bit resolution
     def float53(self):
@@ -92,7 +88,19 @@ class Random(object):
 
 
 SEED = Random()
-set_seed = lambda(seed): SEED._reset(seed)
-float23 = lambda(): SEED.float23()
-float53 = lambda(): SEED.float53()
-uint32 = lambda(): SEED.uint32()
+
+
+def set_seed(seed):
+    SEED._reset(seed)
+
+
+def float23():
+    return SEED.float23()
+
+
+def float53():
+    return SEED.float53()
+
+
+def uint32():
+    SEED.uint32()

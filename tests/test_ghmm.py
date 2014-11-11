@@ -55,9 +55,8 @@ Testing GHMM
 import unittest
 import random
 import re
-from pymix.util.ghmm.types import kSilentStates, kDiscreteHMM
+from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.wrapper import ASCI_SEQ_FILE, uniform, normal_right, normal_left, int_array_getitem, normal, SMO_FILE_SUPPORT, SEQ_LABEL_FIELD
-from pymix.util.ghmm.mt19937ar import Random
 from pymix.vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, GaussianMixtureDistribution, GaussianDistribution, DiscreteDistribution
 from pymix.vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphabet, DNA
 from pymix.vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
@@ -81,8 +80,8 @@ def newSplit(self, s, ts):
 
 class MersenneTwisterTest(FuzzyTestCase):
     def test5489(self):
-        Random.set_seed(5489)
-        result = [Random.int32() for i in range(10)]  #unsigned 32 bit
+        random_mt.set_seed(5489)
+        result = [random_mt.uint32() for i in range(10)]  #unsigned 32 bit
         self.assertAlmostEqual(result, [3499211612, 581869302, 3890346734, 3586334585, 545404204, 4161255391, 3922919429, 949333985, 2715962298, 1323567403])
 
 
@@ -401,7 +400,7 @@ class SequenceSetTests(FuzzyTestCase):
         if not ASCI_SEQ_FILE:
             return True
         Log.note("SequenceSetTests.testfilereading")
-        dom = Integerrange(12)
+        dom = IntegerRange(0, 12)
         seqs = SequenceSetOpen(dom, 'testdata/d_seq.sqd')
         seqs = SequenceSetOpen(self.d_alph, 'testdata/test10.sqd')
         seqs = SequenceSetOpen(Float(), 'testdata/tiny.txt.sqd')

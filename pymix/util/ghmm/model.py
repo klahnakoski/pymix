@@ -38,7 +38,7 @@ from pymix.util.ghmm.dseq import ghmm_dseq, ghmm_dseq_add
 from pymix.util.ghmm.dstate import ghmm_dstate
 from pymix.util.ghmm.sequence import ghmm_dseq_free
 from pymix.util.ghmm.types import kDiscreteHMM, kBackgroundDistributions, kSilentStates, kNoBackgroundDistribution, kTiedEmissions, kUntied, kHigherOrderEmissions, kLabeledStates, kLeftRight, kPairHMM, kTransitionClasses
-from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, ghmm_dseq_max_symbol, RNG, GHMM_RNG_UNIFORM, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN, ghmm_xmlfile_parse, ighmm_cvector_normalize
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, ghmm_dseq_max_symbol, GHMM_MAX_SEQ_LEN, ghmm_xmlfile_parse, ighmm_cvector_normalize
 from pymix.util.logs import Log
 
 DONE = 0
@@ -322,7 +322,7 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
 def get_random_output(mo, i, position):
     sum = 0.0
 
-    p = GHMM_RNG_UNIFORM(RNG)
+    p = random_mt.float23()
 
     for m in range(0, mo.M):
         # get the right index for higher order emission models
@@ -358,7 +358,7 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
         len = GHMM_MAX_SEQ_LEN
 
     if seed > 0:
-        GHMM_RNG_SET(RNG, seed)
+        random_mt.set_seed( seed)
 
 
     # initialize the emission history
@@ -377,7 +377,7 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
         pos = label_pos = 0
 
         # Get a random initial state i
-        p = GHMM_RNG_UNIFORM(RNG)
+        p = random_mt.float23()
         sum = 0.0
         for state in range(mo.N):
             sum += mo.s[state].pi
@@ -398,7 +398,7 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
 
 
             # get next state
-            p = GHMM_RNG_UNIFORM(RNG)
+            p = random_mt.float23()
             if pos < mo.maxorder:
                 max_sum = 0.0
                 for j in range(0, mo.s[state].out_states):
@@ -673,7 +673,7 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
         len = GHMM_MAX_SEQ_LEN
 
     if seed > 0:
-        GHMM_RNG_SET(RNG, seed)
+        random_mt.set_seed( seed)
 
 
     # initialize the emission history
@@ -695,7 +695,7 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
         pos = label_pos = 0
 
         # Get a random initial state i
-        p = GHMM_RNG_UNIFORM(RNG)
+        p = random_mt.float23()
         sum = 0.0
         for state in range(mo.N):
             sum += mo.s[state].pi
@@ -717,7 +717,7 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
 
 
             # get next state
-            p = GHMM_RNG_UNIFORM(RNG)
+            p = random_mt.float23()
             if pos < mo.maxorder:
                 max_sum = 0.0
                 for j in range(0, mo.s[state].out_states):
@@ -807,13 +807,13 @@ def ghmm_dmodel_add_noise(mo, level, seed):
     for i in range(0, mo.N):
         for j in range(0, mo.s[i].out_states):
             # add noise only to out_a, in_a is updated on normalisation
-            mo.s[i].out_a[j] *= (1 - level) + (GHMM_RNG_UNIFORM(RNG) * 2 * level)
+            mo.s[i].out_a[j] *= (1 - level) + (random_mt.float23() * 2 * level)
 
         if mo.model_type & kHigherOrderEmissions:
             size = pow(mo, mo.M, mo.order[i])
         for hist in range(size):
             for h in range(hist * mo.M, hist * mo.M + mo.M):
-                mo.s[i].b[h] *= (1 - level) + (GHMM_RNG_UNIFORM(RNG) * 2 * level)
+                mo.s[i].b[h] *= (1 - level) + (random_mt.float23() * 2 * level)
 
     ghmm_dmodel_normalize(mo)
 

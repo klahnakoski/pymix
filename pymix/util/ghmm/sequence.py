@@ -34,7 +34,7 @@
 #*
 #******************************************************************************
 from math import ceil, exp, log
-from pymix.util.ghmm.wrapper import ARRAY_CALLOC, GHMM_RNG_SET, RNG, GHMM_RNG_UNIFORM, ARRAY_REALLOC, GHMM_MAX_SEQ_NUMBER, DBL_MAX, ighmm_cmatrix_alloc, GHMM_PENALTY_LOGP
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_REALLOC, GHMM_MAX_SEQ_NUMBER, DBL_MAX, ighmm_cmatrix_alloc, GHMM_PENALTY_LOGP
 from pymix.util.logs import Log
 
 kBlockAllocation = 1 << 0,
@@ -73,7 +73,7 @@ def ghmm_cseq_truncate(sqd_in, sqd_fields, trunc_ratio, seed):
 
     sq = ARRAY_CALLOC(sqd_fields)
 
-    GHMM_RNG_SET(RNG, seed)
+    random_mt.set_seed( seed)
 
     for i in range(0, sqd_fields):
         sq[i] = ghmm_cseq_calloc(sqd_in[i].seq_number)
@@ -84,7 +84,7 @@ def ghmm_cseq_truncate(sqd_in, sqd_fields, trunc_ratio, seed):
             if trunc_ratio == -1:
                 trunc_len = 0
             else:
-                trunc_len = ceil((sqd_in[i].seq_len[j] * (1 - trunc_ratio * GHMM_RNG_UNIFORM(RNG))))
+                trunc_len = ceil((sqd_in[i].seq_len[j] * (1 - trunc_ratio * random_mt.float23())))
             ghmm_cseq_copy(sq[i].seq[j], sqd_in[i].seq[j], trunc_len)
             sq[i].seq[j]=ARRAY_REALLOC(sq[i].seq[j], trunc_len)
             sq[i].seq_len[j] = trunc_len
@@ -542,7 +542,7 @@ def ghmm_cseq_partition(sqd, sqd_train, sqd_test, train_ratio):
         sqd_dummy = sqd_test
 
     for i in range(0, total_seqs):
-        p = GHMM_RNG_UNIFORM(RNG)
+        p = random_mt.float23()
         if p <= train_ratio:
             sqd_dummy = sqd_train
         else:

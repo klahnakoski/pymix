@@ -1,8 +1,6 @@
-from pymix import mixture
-import random
 from pymix.parse import readMixture
-from pymix.util.emission_domain import Alphabet
 from pymix.util.dataset import DataSet
+from pymix.vendor.ghmm.emission_domain import Alphabet
 
 VNTR = Alphabet(['.', '2/4', '2/7', '3/4', '3/7', '4/4', '4/6', '4/7', '4/8', '4/9', '7/7'])
 DIAG = Alphabet(['.', '0', '8', '1'])

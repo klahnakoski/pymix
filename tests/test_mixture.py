@@ -63,12 +63,11 @@ from pymix.priors.dirichlet import DirichletPrior
 from pymix.priors.dirichlet_mixture import DirichletMixturePrior
 from pymix.priors.mixture_model import MixtureModelPrior
 from pymix.priors.product import ProductDistributionPrior
-from pymix.util.emission_domain import Alphabet
 from pymix.util.candidate_group import CandidateGroup
 from pymix.util.constrained_dataset import ConstrainedDataSet
 from pymix.util.dataset import DataSet
-from pymix.pyLibrary.thread.threads import Thread
-from pymix.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
+from pyLibrary.thread.threads import Thread
+from pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
 
@@ -120,6 +119,7 @@ from pymix.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 #            print ' '*14 ,row,','
 #    print ' '*8 +'data.fromList(l)'
 #    print ' '*8 +'data.internalInit(gen)'
+from pymix.vendor.ghmm.emission_domain import Alphabet
 
 
 def _testLists(tcase, list1, list2, places):

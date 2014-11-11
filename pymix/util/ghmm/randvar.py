@@ -38,7 +38,8 @@
 #   N(0,1)-distribution, with x in [0.00, 19.99]
 from math import erf, exp, pi, log, cos, erfc, sqrt
 from numpy.random.mtrand import dirichlet
-from pymix.util.ghmm.wrapper import DBL_MIN, RNG, GHMM_RNG_SET, GHMM_RNG_UNIFORM, multinormal, binormal, uniform, normal_left, normal_approx, normal_right, normal
+from pymix.util.ghmm import random_mt
+from pymix.util.ghmm.wrapper import DBL_MIN, multinormal, binormal, uniform, normal_left, normal_approx, normal_right, normal
 from pymix.util.logs import Log
 
 def sqr(x):
@@ -245,30 +246,30 @@ def ighmm_rand_dirichlet(seed, len, alpha, theta):
 #============================================================================
 def ighmm_rand_std_normal(seed):
     if seed != 0:
-        GHMM_RNG_SET(RNG, seed)
+        random_mt.set_seed( seed)
 
     # Use the polar Box-Mueller transform
     #
     #       double x, y, r2
     #
     #       do :
-    #       x = 2.0 * GHMM_RNG_UNIFORM(RNG) - 1.0
-    #       y = 2.0 * GHMM_RNG_UNIFORM(RNG) - 1.0
+    #       x = 2.0 * random_mt.float23() - 1.0
+    #       y = 2.0 * random_mt.float23() - 1.0
     #       r2 = (x) + (y)
     #        while (r2 >= 1.0)
     #
     #       return x * sqrt((-2.0 * log(r2)) / r2)
     #
 
-    r2 = -2.0 * log(GHMM_RNG_UNIFORM(RNG))   # r2 ~ chi-square(2)
-    theta = 2.0 * pi * GHMM_RNG_UNIFORM(RNG)  # theta ~ uniform(0, 2 \pi)
+    r2 = -2.0 * log(random_mt.float23())   # r2 ~ chi-square(2)
+    theta = 2.0 * pi * random_mt.float23()  # theta ~ uniform(0, 2 \pi)
     return sqrt(r2) * cos(theta)
 
 
 #============================================================================
 def ighmm_rand_normal(mue, u, seed):
     if seed != 0:
-        GHMM_RNG_SET(RNG, seed)
+        random_mt.set_seed( seed)
 
     x = sqrt(u) * ighmm_rand_std_normal(seed) + mue
     return x
@@ -285,7 +286,7 @@ def ighmm_rand_multivariate_normal(dim, mue, sigmacd, seed):
     #   *
     #   *     see Barr & Slezak, A Comparison of Multivariate Normal Generators
     if seed != 0:
-        GHMM_RNG_SET(RNG, seed)
+        random_mt.set_seed( seed)
         # do something here
         return 0
 
@@ -316,11 +317,11 @@ def ighmm_rand_normal_right(a, mue, u, seed):
     sigma = sqrt(u)
 
     if seed != 0:
-        GHMM_RNG_SET(RNG, seed)
+        random_mt.set_seed( seed)
 
 
     # Inverse transformation with restricted sampling by Fishman
-    U = GHMM_RNG_UNIFORM(RNG)
+    U = random_mt.float23()
     Feps = ighmm_rand_get_PHI((a - mue) / sigma)
 
     Us = Feps + (1 - Feps) * U
@@ -342,9 +343,9 @@ def ighmm_rand_normal_right(a, mue, u, seed):
 #============================================================================
 def ighmm_rand_uniform_int(seed, K):
     if seed != 0:
-        GHMM_RNG_SET(RNG, seed)
+        random_mt.set_seed( seed)
 
-        return K * GHMM_RNG_UNIFORM(RNG)
+        return K * random_mt.float23()
 
 #===========================================================================
 def ighmm_rand_uniform_cont(seed, max, min):
@@ -352,9 +353,9 @@ def ighmm_rand_uniform_cont(seed, max, min):
         Log.error("max <= min not allowed\n")
 
     if seed != 0:
-        GHMM_RNG_SET(RNG, seed)
+        random_mt.set_seed( seed)
 
-        return GHMM_RNG_UNIFORM(RNG) * (max - min) + min
+        return random_mt.float23() * (max - min) + min
 
 
 #============================================================================

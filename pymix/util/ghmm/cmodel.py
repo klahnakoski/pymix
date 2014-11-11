@@ -1,12 +1,12 @@
 from math import log
+from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.cseq import ghmm_cseq
 from pymix.util.ghmm.cstate import ghmm_cstate
 from pymix.util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal, ighmm_rand_uniform_cont, ighmm_rand_normal_right
 from pymix.util.ghmm.sfoba import sfoba_initforward, LOWER_SCALE_BOUND, sfoba_stepforward
-from pymix.util.ghmm.types import kContinuousHMM, kSilentStates, kHigherOrderEmissions
-from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_RNG_UNIFORM, RNG, GHMM_MAX_SEQ_LEN, ghmm_rng_init, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC, DBL_MIN, ighmm_cmatrix_stat_alloc, ighmm_cvector_normalize
+from pymix.util.ghmm.types import kContinuousHMM, kSilentStates
+from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_MAX_SEQ_LEN, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC, DBL_MIN, ighmm_cmatrix_stat_alloc, ighmm_cvector_normalize
 from pymix.util.logs import Log
-from pymix.util.ghmm.mt19937ar import Random
 
 
 class ghmm_cmodel:
@@ -89,9 +89,8 @@ class ghmm_cmodel:
         # rng is also used by ighmm_rand_std_normal
         # seed == -1: Initialization, has already been done outside the function
         if seed >= 0:
-            ghmm_rng_init()
             if seed > 0:
-                Random.set_seed(seed)
+                random_mt.set_seed(seed)
             else:                        # Random initialization!
                 pass
 
@@ -107,12 +106,11 @@ class ghmm_cmodel:
 
         while n < seq_number:
             # Test: A new seed for each sequence
-            # ghmm_rng_timeseed(RNG)
             stillbadseq = badseq = 0
             sq.seq[n] = matrix_alloc(len, self.dim)
 
             # Get a random initial state i
-            p = GHMM_RNG_UNIFORM(RNG)
+            p = random_mt.float23()
             sum = 0.0
             for i in range(self.N):
                 sum += self.s[i].pi
@@ -128,7 +126,7 @@ class ghmm_cmodel:
 
             # Get a random initial output
             # . get a random m and then respectively a pdf omega.
-            p = GHMM_RNG_UNIFORM(RNG)
+            p = random_mt.float23()
             sum = 0.0
             for m in range(self.s[i].M):
                 sum += self.s[i].c[m]
@@ -160,7 +158,7 @@ class ghmm_cmodel:
 
             while pos < len:
                 # Get a new state
-                p = GHMM_RNG_UNIFORM(RNG)
+                p = random_mt.float23()
                 sum = 0.0
                 for j in range(self.s[i].out_states):
                     sum += self.s[i].out_a[clazz][j]
@@ -207,7 +205,7 @@ class ghmm_cmodel:
                 # fprintf(stderr, "%d\n", i)
 
                 # Get output from state i
-                p = GHMM_RNG_UNIFORM(RNG)
+                p = random_mt.float23()
                 sum = 0.0
                 for m in range(self.s[i].M):
                     sum += self.s[i].c[m]

@@ -1,11 +1,12 @@
 from math import log
+from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.dseq import ghmm_dseq
 from pymix.util.ghmm.dstate import model_state_alloc
 from pymix.util.ghmm.local_store_t import reestimate_alloc
 from pymix.util.ghmm.reestimate import ighmm_reestimate_alloc_matvek, ighmm_reestimate_free_matvek, nologSum
 from pymix.util.ghmm.topological_sort import topological_sort
 from pymix.util.ghmm.types import kHigherOrderEmissions, kSilentStates, kUntied, kTiedEmissions, kNoBackgroundDistribution, kBackgroundDistributions, kLabeledStates
-from pymix.util.ghmm.wrapper import RNG, GHMM_RNG_SET, GHMM_MAX_SEQ_LEN, GHMM_RNG_UNIFORM, GHMM_EPS_PREC, ARRAY_REALLOC, double_matrix_alloc, double_array_alloc, ARRAY_CALLOC, ARRAY_MALLOC, MAX_ITER_BW, EPS_ITER_BW, ighmm_cvector_normalize
+from pymix.util.ghmm.wrapper import GHMM_MAX_SEQ_LEN, GHMM_EPS_PREC, ARRAY_REALLOC, double_matrix_alloc, double_array_alloc, ARRAY_CALLOC, ARRAY_MALLOC, MAX_ITER_BW, EPS_ITER_BW, ighmm_cvector_normalize
 from pymix.util.logs import Log
 
 
@@ -154,7 +155,7 @@ class ghmm_dmodel():
             global_len = GHMM_MAX_SEQ_LEN
 
         if seed > 0:
-            GHMM_RNG_SET(RNG, seed)
+            random_mt.set_seed( seed)
 
 
         # initialize the emission history
@@ -173,7 +174,7 @@ class ghmm_dmodel():
             pos = label_pos = 0
 
             # Get a random initial state i
-            p = GHMM_RNG_UNIFORM(RNG)
+            p = random_mt.float23()
             sum = 0.0
             for state in range(self.N):
                 sum += self.s[state].pi
@@ -196,7 +197,7 @@ class ghmm_dmodel():
 
 
                 # get next state
-                p = GHMM_RNG_UNIFORM(RNG)
+                p = random_mt.float23()
                 if pos < self.maxorder:
                     max_sum = 0.0
                     for j in range(self.s[state].out_states):
@@ -245,7 +246,7 @@ class ghmm_dmodel():
         #define CUR_PROC "get_random_output"
         sum = 0.0
 
-        p = GHMM_RNG_UNIFORM(RNG)
+        p = random_mt.float23()
 
         for m in range(self.M):
             # get the right index for higher order emission models
@@ -1675,7 +1676,7 @@ class ghmm_dmodel():
             len = GHMM_MAX_SEQ_LEN
 
         if seed > 0:
-            GHMM_RNG_SET(RNG, seed)
+            random_mt.set_seed( seed)
 
 
         # initialize the emission history
@@ -1697,7 +1698,7 @@ class ghmm_dmodel():
             pos = label_pos = 0
 
             # Get a random initial state i
-            p = GHMM_RNG_UNIFORM(RNG)
+            p = random_mt.float23()
             sum = 0.0
             for state in range(self.N):
                 sum += self.s[state].pi
@@ -1719,7 +1720,7 @@ class ghmm_dmodel():
 
 
                 # get next state
-                p = GHMM_RNG_UNIFORM(RNG)
+                p = random_mt.float23()
                 if pos < self.maxorder:
                     max_sum = 0.0
                     for j in range(0, self.s[state].out_states):

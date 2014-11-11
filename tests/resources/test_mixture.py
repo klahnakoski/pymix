@@ -1,6 +1,6 @@
 import random
 from time import clock
-from pandas.core.expressions import evaluate
+# from pandas.core.expressions import evaluate
 from pymix.distributions.exponential import ExponentialDistribution
 from pymix.distributions.multinomial import MultinomialDistribution
 from pymix.distributions.normal import NormalDistribution
