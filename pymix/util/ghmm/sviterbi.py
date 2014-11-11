@@ -45,7 +45,7 @@ class local_store_t:
 
         self.phi = ARRAY_CALLOC(smo.N)
         self.phi_new = ARRAY_CALLOC(smo.N)
-        self.psi = ighmm_dmatrix_alloc(T, smo.N)
+        self.psi = [[0]*smo.N for i in range(T)]
 
 
 def sviterbi_precompute(smo, O, T, v):

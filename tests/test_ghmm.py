@@ -83,6 +83,7 @@ class MersenneTwisterTest(FuzzyTestCase):
     def test5489(self):
         Random.set_seed(5489)
         result = [Random.int32() for i in range(10)]
+        [x if x>0 else 0x100000000+x for x in [-795755684, 581869302, -404620562, -708632711, 545404204, -133711905, -372047867, 949333985, -1579004998, 1323567403]]
         self.assertAlmostEqual(result, [-795755684, 581869302, -404620562, -708632711, 545404204, -133711905, -372047867, 949333985, -1579004998, 1323567403])
 
 
@@ -215,6 +216,7 @@ class EmissionSequenceTests(FuzzyTestCase):
         self.assertEqual(w2, 2.0)
 
         #obsolete test
+
     def testlabelaccess(self):
         if not SEQ_LABEL_FIELD:
             return True;
@@ -395,6 +397,7 @@ class SequenceSetTests(FuzzyTestCase):
         self.assertEqual(l, 8)
 
         #obsolete test
+
     def testfilereading(self):
         if not ASCI_SEQ_FILE:
             return True
@@ -1239,6 +1242,7 @@ class GaussianMixtureHMMTests(FuzzyTestCase):
         self.assertAlmostEqual(lp, -26.552408895488998)
 
         #obsolete test
+
     def testSMO(self):
         if not SMO_FILE_SUPPORT:
             return True;
@@ -1561,14 +1565,18 @@ class MultivariateGaussianEmissionHMMTests(FuzzyTestCase):
         self.model = HMMFromMatrices(F, MultivariateGaussianDistribution(F), self.A, self.B, self.pi)
 
         self.Abig = [[0.0, 1.0], [1.0, 0.0]]
-        self.Bbig = [[[1.0, 1.0, 1.0], [[0.9, 0.4, 0.2], [0.4, 2.2, 0.5], [0.2, 0.5, 1.0]]],
-            [[2.0, 2.0, 2.0], [[1.0, 0.2, 0.8], [0.2, 2.0, 0.6], [0.8, 0.6, 0.9]]]]
+        self.Bbig = [
+            [[1.0, 1.0, 1.0], [[0.9, 0.4, 0.2], [0.4, 2.2, 0.5], [0.2, 0.5, 1.0]]],
+            [[2.0, 2.0, 2.0], [[1.0, 0.2, 0.8], [0.2, 2.0, 0.6], [0.8, 0.6, 0.9]]]
+        ]
         self.piBig = [1.0, 0.0]
         self.modelBig = HMMFromMatrices(F, MultivariateGaussianDistribution(F), self.Abig, self.Bbig, self.piBig)
 
         # a model with negative entries in covariance matrix
-        self.Bn = [[[1.0, 1.0, 1.0], [0.9, -0.4, -0.2, -0.4, 2.2, -0.5, -0.2, -0.5, 1.0]],
-            [[7.0, 7.0, 7.0], [1.0, 0.2, 0.8, 0.2, 2.0, 0.6, 0.8, 0.6, 0.9]]]
+        self.Bn = [
+            [[1.0, 1.0, 1.0], [[0.9, -0.4, -0.2], [-0.4, 2.2, -0.5], [-0.2, -0.5, 1.0]]],
+            [[7.0, 7.0, 7.0], [[1.0, 0.2, 0.8], [0.2, 2.0, 0.6], [0.8, 0.6, 0.9]]]
+        ]
         self.modelN = HMMFromMatrices(F, MultivariateGaussianDistribution(F), self.Abig, self.Bn, self.piBig)
 
     def testaccessfunctions(self):
@@ -1592,10 +1600,10 @@ class MultivariateGaussianEmissionHMMTests(FuzzyTestCase):
         self.assertEqual(pi, 0.5)
 
         emission = self.model.getEmission(1, 0)
-        self.assertEqual(emission, ([2.0, 6.0], [1.0, 0.3, 0.3, 0.2]))
-        self.model.setEmission(2, 0, ([1.0, 3.3], [0.4, 1.0, 2.2, 3.3]))
+        self.assertEqual(emission, ([2.0, 6.0], [[1.0, 0.3], [0.3, 0.2]]))
+        self.model.setEmission(2, 0, ([1.0, 3.3], [[0.4, 1.0], [2.2, 3.3]]))
         emission = self.model.getEmission(2, 0)
-        self.assertEqual(emission, ([1.0, 3.3], [0.4, 1.0, 2.2, 3.3]))
+        self.assertEqual(emission, ([1.0, 3.3], [[0.4, 1.0], [2.2, 3.3]]))
 
         statefix = self.model.getStateFix(2)
         self.assertEqual(statefix, 0)
@@ -1623,7 +1631,7 @@ class MultivariateGaussianEmissionHMMTests(FuzzyTestCase):
         seq = self.modelN.sampleSingle(12, seed=3586662)
 
     def testviterbi(self):
-        seq = EmissionSequence(Float(),
+        seq = EmissionSequence(Float(2),
             [-0.446764027008, -1.67669258354, 1.54243204186, 5.10291012334, 0.16663584276, -1.08911606914, 1.51323067443, 5.41423654658, 2.75119210291, 0.150056139472, 1.75942438763, 5.27955237255,
                 -0.50950798174, -1.46888515673, 1.47047450768, 5.56208907379, 1.12890512691, -0.807407439164, 2.41946196608, 6.44994015578, 0.90855637552, -0.803921163396, 4.22205173845,
                 7.71314950408])
@@ -1633,7 +1641,7 @@ class MultivariateGaussianEmissionHMMTests(FuzzyTestCase):
         trueloglik = -33.038810793953203
         self.assertEqual(loglik, trueloglik)
 
-        seq = EmissionSequence(Float(),
+        seq = EmissionSequence(Float(3),
             [-0.370763085392, 0.134444772573, 2.08363391797, -0.127073265947, 4.17398320102, 0.402649013907, 0.69081704673, 0.695541512162, -0.252178782835, 3.35132375811, 3.82823836258,
                 3.61971585598, -0.721680303934, 2.35777520392, -0.624824238932, 0.908171404232, 1.36840026088, 0.720099095506, 0.971347324035, 1.51865821976, 0.288360805808, 2.90730467721,
                 0.479281322341, 2.19183358505, 2.11731465552, 3.40659077698, 4.37235098261, 2.54984519095, 3.00231727097, 2.83427054214, 0.521964649348, 0.0909455176534, 0.841292909463, 1.36782285107,
@@ -1644,7 +1652,7 @@ class MultivariateGaussianEmissionHMMTests(FuzzyTestCase):
         trueloglik = -55.803120721082003
         self.assertAlmostEqual(loglik, trueloglik)
 
-        seq = EmissionSequence(Float(),
+        seq = EmissionSequence(Float(3),
             [-0.619944178469, 0.790639633002, 2.88691532776, 4.28945461421, 8.69400675736, 5.80379170949, 0.999864691944, 1.37110378231, -0.0794259777465, 8.95026928346, 9.04366026542, 8.98865674342,
                 -0.9732497063, 4.54448981993, -1.13568629153, 5.22418241227, 6.03277214798, 5.55110425433, 0.99740444873, 1.85994098591, -0.0321874498019, 7.36151553553, 5.30151104566, 6.80345463395,
                 0.933360128975, 1.53348662442, 2.95675092235, 8.06398937464, 8.21643741741, 8.06876320835, 0.708380394308, 0.442809615927, 1.43901750259, 6.15450653445, 8.91718554325, 7.13734866723])
@@ -1655,19 +1663,19 @@ class MultivariateGaussianEmissionHMMTests(FuzzyTestCase):
 
     def testbaumwelch(self):
         seq = self.model.sample(100, 100, seed=3586662)
-        self.model.setEmission(0, 0, ([2.0, -2.0], [1.0, 0.1, 0.1, 1.0]))
-        self.model.setEmission(1, 0, ([0.0, 4.0], [1.0, 0.1, 0.1, 1.0]))
-        self.model.setEmission(2, 0, ([0.0, 0.0], [1.0, 0.1, 0.1, 1.0]))
+        self.model.setEmission(0, 0, ([2.0, -2.0], [[1.0, 0.1], [0.1, 1.0]]))
+        self.model.setEmission(1, 0, ([0.0, 4.0], [[1.0, 0.1], [0.1, 1.0]]))
+        self.model.setEmission(2, 0, ([0.0, 0.0], [[1.0, 0.1], [0.1, 1.0]]))
         self.model.baumWelch(seq, 10, 0.000001)
 
         seq = self.modelBig.sample(100, 100, seed=3586662)
-        self.modelBig.setEmission(0, 0, ([0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))
-        self.modelBig.setEmission(1, 0, ([3.0, 3.0, 3.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))
+        # self.modelBig.setEmission(0, 0, ([0.0, 0.0, 0.0], [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]))
+        # self.modelBig.setEmission(1, 0, ([3.0, 3.0, 3.0], [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]))
         self.modelBig.baumWelch(seq, 10, 0.000001)
 
         seq = self.modelN.sample(100, 100, seed=3586662)
-        self.modelN.setEmission(0, 0, ([0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))
-        self.modelN.setEmission(1, 0, ([9.0, 9.0, 9.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]))
+        # self.modelN.setEmission(0, 0, ([0.0, 0.0, 0.0], [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]))
+        # self.modelN.setEmission(1, 0, ([9.0, 9.0, 9.0], [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]))
         self.modelN.baumWelch(seq, 10, 0.000001)
 
 
@@ -1676,9 +1684,9 @@ class MultivariateGaussianMixtureHMMTests(FuzzyTestCase):
         F = Float()
         self.A = [[0.0, 1.0, 0.0], [0.5, 0.0, 0.5], [0.3, 0.3, 0.4]]
         self.B = [
-            [[1.0, -1.0], [[0.9, 0.4],[ 0.4, 0.3]], [2.0, -1.0], [[0.9, 0.4],[ 0.4, 0.3]], [0.5, 0.5]],
-            [[2.0,  6.0], [[1.0, 0.3],[ 0.3, 0.2]], [2.0,  4.0], [[1.0, 0.3],[ 0.3, 0.2]], [0.2, 0.8]],
-            [[0.0,  1.0], [[0.4, 0.3],[ 0.3, 1.0]], [0.0,  1.0], [[0.4, 0.3],[ 0.3, 1.0]], [0.3, 0.7]]
+            [[1.0, -1.0], [[0.9, 0.4], [0.4, 0.3]], [2.0, -1.0], [[0.9, 0.4], [0.4, 0.3]], [0.5, 0.5]],
+            [[2.0, 6.0], [[1.0, 0.3], [0.3, 0.2]], [2.0, 4.0], [[1.0, 0.3], [0.3, 0.2]], [0.2, 0.8]],
+            [[0.0, 1.0], [[0.4, 0.3], [0.3, 1.0]], [0.0, 1.0], [[0.4, 0.3], [0.3, 1.0]], [0.3, 0.7]]
         ]
         self.pi = [0.5, 0.0, 0.5]
         self.model = HMMFromMatrices(F, MultivariateGaussianDistribution(F), self.A, self.B, self.pi)

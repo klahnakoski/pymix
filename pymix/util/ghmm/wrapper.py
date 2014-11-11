@@ -8,6 +8,7 @@
 # Changes made by: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 ################################################################################
+from copy import deepcopy
 from math import exp, log, sqrt
 
 from pymix.util.ghmm.emission import ghmm_c_emission
@@ -427,7 +428,7 @@ class ghmm_dpseq():
 
 
 def ighmm_cholesky_decomposition(dim, cov):
-    sigmacd = [row.copy() for row in cov]
+    sigmacd = deepcopy(cov)
 
     for row in range(dim):
         # First compute U[row][row]

@@ -49,10 +49,10 @@ class ghmm_cmodel:
         if emission.type in (normal_approx, normal):
             return ighmm_rand_normal(emission.mean, emission.variance, 0)
         elif emission.type == binormal:
-            #return ighmm_rand_binormal(emission.mean.vec, emission.variance.mat, 0)
+            #return ighmm_rand_binormal(emission.mean, emission.variance, 0)
             pass
         elif emission.type == multinormal:
-            return ighmm_rand_multivariate_normal(emission.dimension, emission.mean.vec, emission.sigmacd, 0)
+            return ighmm_rand_multivariate_normal(emission.dimension, emission.mean, emission.sigmacd, 0)
         elif emission.type == normal_right:
             return ighmm_rand_normal_right(emission.min, emission.mean, emission.variance, 0)
         elif emission.type == normal_left:
@@ -103,7 +103,7 @@ class ghmm_cmodel:
         if self.dim > 1:
             for i in range(self.N):
                 for m in range(self.s[i].M):
-                    self.s[i].e[m].sigmacd = ighmm_cholesky_decomposition(self.dim, self.s[i].e[m].variance.mat)
+                    self.s[i].e[m].sigmacd = ighmm_cholesky_decomposition(self.dim, self.s[i].e[m].variance)
 
         while n < seq_number:
             # Test: A new seed for each sequence

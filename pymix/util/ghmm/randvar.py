@@ -182,11 +182,11 @@ def ighmm_rand_multivariate_normal_density(length, x, mean, sigmainv, det):
     for i in range(length):
         tempv = 0
         for j in range(length):
-            tempv += (x[j] - mean[j]) * sigmainv[j][i]
+            tempv += (x[j] - mean[j]) * sigmainv[j][i]  # sigmainv == transpose(sigmainv) so i, j mixup has no effect
 
         ay += tempv * (x[i] - mean[i])
 
-    ay = exp(-0.5 * ay) / sqrt(pow(pi, length) * det)
+    ay = exp(-0.5 * ay) / sqrt(pow(2*pi, length) * det)
 
     return ay
 
@@ -403,11 +403,11 @@ def cmbm_normal(emission, omega):
 
 
 def cmbm_binormal(emission, omega):
-    return ighmm_rand_binormal_density(omega, emission.mean.vec, emission.variance.mat)
+    return ighmm_rand_binormal_density(omega, emission.mean, emission.variance)
 
 
 def cmbm_multinormal(emission, omega):
-    return ighmm_rand_multivariate_normal_density(emission.dimension, omega, emission.mean.vec, emission.sigmainv, emission.det)
+    return ighmm_rand_multivariate_normal_density(emission.dimension, omega, emission.mean, emission.sigmainv, emission.det)
 
 
 def cmbm_normal_right(emission, omega):

@@ -34,6 +34,9 @@ from pymix.util.ghmm.wrapper import matrix_alloc, DBL_MIN
 
 
 # RETURN inverse, det PAIR
+from pymix.util.logs import Log
+
+
 def ighmm_invert_det(length, cov):
     det = ighmm_determinant(cov, length)
     return ighmm_inverse(cov, length, det), det
@@ -74,38 +77,41 @@ def ighmm_determinant(cov, n):
 #  the j'th row.
 #
 def ighmm_inverse(cov, n, det):
-    inv = matrix_alloc(n, n)
-    if n == 1:
-        inv[0][0] = 1 / cov[0][0]
-        return inv
+    try:
+        inv = matrix_alloc(n, n)
+        if n == 1:
+            inv[0][0] = 1 / cov[0][0]
+            return inv
 
-    if n == 2:
-        inv[0][0] =   cov[1][1] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
-        inv[0][1] = - cov[0][1] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
-        inv[1][0] = - cov[1][0] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
-        inv[1][1] =   cov[0][0] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
-        return inv
+        if n == 2:
+            inv[0][0] =   cov[1][1] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
+            inv[0][1] = - cov[0][1] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
+            inv[1][0] = - cov[1][0] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
+            inv[1][1] =   cov[0][0] / (cov[0][0] * cov[1][1] - cov[0][1] * cov[1][0])
+            return inv
 
-    for i in range(n):
-        for j in range(n):
-            # calculate minor i,j
-            m = matrix_alloc(n - 1, n - 1)
-            actrow = 0
-            for ic in range(n):
-                if ic == i:
-                    continue
-                actcol = 0
-                for jc in range(n):
-                    if jc == j:
+        for i in range(n):
+            for j in range(n):
+                # calculate minor i,j
+                m = matrix_alloc(n - 1, n - 1)
+                actrow = 0
+                for ic in range(n):
+                    if ic == i:
                         continue
-                    m[actrow][actcol] = cov[ic][jc]
-                    actcol += 1
+                    actcol = 0
+                    for jc in range(n):
+                        if jc == j:
+                            continue
+                        m[actrow][actcol] = cov[ic][jc]
+                        actcol += 1
 
-                actrow += 1
+                    actrow += 1
 
-            # cofactor i,j is determinant of m times -1^(i+j)
-            inv[j][i] = pow(-1.0, i + j + 2.0) * ighmm_determinant(m, n - 1) / det
-    return inv
+                # cofactor i,j is determinant of m times -1^(i+j)
+                inv[j][i] = pow(-1.0, i + j + 2.0) * ighmm_determinant(m, n - 1) / det
+        return inv
+    except Exception, e:
+        Log.error("no inverse")
 
 #============================================================================
 def ighmm_cholesky_decomposition(sigmacd, dim, cov):

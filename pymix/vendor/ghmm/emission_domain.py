@@ -38,6 +38,7 @@
 #-------------------------------------------------------------------------------
 # NOTE: code in this file is a mild modification of code from the GHMM library (www.ghmm.org)
 import copy
+from pyLibrary.queries import Q
 from pymix.util.ghmm import wrapper
 from pymix.util.logs import Log
 
@@ -64,7 +65,7 @@ class EmissionDomain:
     def internalSequence(self, emissionSequence):
         """ Given a emissionSequence return the internal representation
         """
-        return emissionSequence
+        Log.error("not implemented")
 
     def external(self, internal):
         """ Given an internal representation return the external representation
@@ -271,3 +272,11 @@ class Float(EmissionDomain):
         """
         return isinstance(emission, float)
 
+    def internalSequence(self, emissionSequence):
+        """ Given a emissionSequence return the internal representation
+        """
+        if self.dimension==1:
+            return emissionSequence
+        else:
+            # return zip(*[c for i, c in Q.groupby(emissionSequence, size=len(emissionSequence)/self.dimension)])
+            return [c for i, c in Q.groupby(emissionSequence, size=self.dimension)]

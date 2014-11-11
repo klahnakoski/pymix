@@ -150,7 +150,6 @@ def sreestimate_precompute_b(smo, O, T, b):
             b[t][i][smo.M] = 0.0
         # save c_im * b_im(O_t)  directly in  b[t][i][m]
     for t in range(T):
-        pos = t * smo.dim
         for i in range(smo.N):
             for m in range(smo.s[i].M):
                 b[t][i][m] = smo.s[i].calc_cmbm(m, O[t])
@@ -259,7 +258,7 @@ def sreestimate_setlambda(r, smo):
                 # set mue_im
                 if smo.model_type & kMultivariate:
                     for d in range(smo.s[i].e[m].dimension):
-                        smo.s[i].e[m].mean.vec[d] = r.mue_num[i][m][d] / r.mue_u_denom[i][m]
+                        smo.s[i].e[m].mean[d] = r.mue_num[i][m][d] / r.mue_u_denom[i][m]
                 else:
                     smo.s[i].e[m].mean = r.mue_num[i][m][0] / r.mue_u_denom[i][m]
 
@@ -279,10 +278,10 @@ def sreestimate_setlambda(r, smo):
                                 else:
                                     u_im = GHMM_EPS_U
 
-                            smo.s[i].e[m].variance.mat[d1][d2] = u_im
+                            smo.s[i].e[m].variance[d1][d2] = u_im
 
                     # update the inverse and the determinant of covariance matrix
-                    smo.s[i].e[m].sigmainv, smo.s[i].e[m].det = ighmm_invert_det(smo.dim, smo.s[i].e[m].variance.mat)
+                    smo.s[i].e[m].sigmainv, smo.s[i].e[m].det = ighmm_invert_det(smo.dim, smo.s[i].e[m].variance)
 
                 else:
                     u_im = r.u_num[i][m][0][0] / r.mue_u_denom[i][m]
@@ -460,12 +459,13 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
                     if smo.model_type & kMultivariate:
                         for di in range(state.e[m].dimension):
                             for dj in range(state.e[m].dimension):
-                                r.u_num[i][m][di][dj] += (gamma_ct * (O[k][t][di] - state.e[m].mean.vec[di]) * (O[k][t][dj] - state.e[m].mean.vec[dj]))
+                                r.u_num[i][m][di][dj] += (gamma_ct * (O[k][t][di] - state.e[m].mean[di]) * (O[k][t][dj] - state.e[m].mean[dj]))
+                                r.sum_gt_otot[i][m] += (gamma_ct * O[k][t][di] * O[k][t][dj])
                     else:
                         r.u_num[i][m][0][0] += (gamma_ct * sqr(O[k][t] - state.e[m].mean))
+                        r.sum_gt_otot[i][m] += (gamma_ct * sqr(O[k][t]))
 
                     # sum gamma_ct * O[k][t] * O[k][t] (truncated normal density):
-                    r.sum_gt_otot[i][m] += (gamma_ct * sqr(O[k][t]))
     if smo.cos > 1:
         smo.class_change.k = -1
 

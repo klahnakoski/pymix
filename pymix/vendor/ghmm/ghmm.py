@@ -804,13 +804,13 @@ class HMMFromMatricesFactory(HMMFactory):
                         emission.dimension = len(B[0][0]) # dimension must be same in all states and emissions
                         mu = B[i][em * 2]
                         sigma = B[i][em * 2 + 1]
-                        emission.mean.vec = wrapper.list2double_array(mu)
-                        emission.variance.mat = sigma
+                        emission.mean = mu
+                        emission.variance = sigma
                         emission.sigmacd = matrix_alloc(len(sigma), len(sigma[0])) # just for allocating the space
                         emission.fixed = 0  # fixing of emission deactivated by default
                         emission.setDensity(6)
                         # calculate inverse and determinant of covariance matrix
-                        emission.sigmainv, emission.det = ighmm_invert_det(emission.dimension, emission.variance.mat)
+                        emission.sigmainv, emission.det = ighmm_invert_det(emission.dimension, emission.variance)
 
                     # append emissions to state
                     state.e = emissions
@@ -3091,8 +3091,8 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         assert 0 <= m < state.M, "Index " + str(m) + " out of bounds."
 
         emission = state.getEmission(m)
-        mu = wrapper.double_array2list(emission.mean.vec, emission.dimension)
-        sigma = wrapper.double_array2list(emission.variance.mat, emission.dimension * emission.dimension)
+        mu = wrapper.double_array2list(emission.mean, emission.dimension)
+        sigma = wrapper.double_array2list(emission.variance, emission.dimension * emission.dimension)
         return (mu, sigma)
 
     def setEmission(self, i, m, values):
@@ -3111,8 +3111,14 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         assert 0 <= m < state.M, "Index " + str(m) + " out of bounds."
 
         emission = state.getEmission(m)
-        emission.mean.vec = wrapper.list2double_array(mu)
-        emission.variance.mat = wrapper.list2double_array(sigma)
+        emission.mean = mu
+        emission.variance = sigma
+
+        emission.sigmacd = matrix_alloc(len(sigma), len(sigma[0])) # just for allocating the space
+        emission.fixed = 0  # fixing of emission deactivated by default
+        emission.setDensity(6)
+        emission.sigmainv, emission.det = ighmm_invert_det(emission.dimension, emission.variance)
+
 
     def __str__(self):
         hmm = self.cmodel
@@ -3139,8 +3145,8 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
                 weight += str(wrapper.double_array_getitem(state.c, m))
 
                 emission = state.getEmission(m)
-                mue += str(wrapper.double_array2list(emission.mean.vec, emission.dimension))
-                u += str(wrapper.double_array2list(emission.variance.mat, emission.dimension * emission.dimension))
+                mue += str(wrapper.double_array2list(emission.mean, emission.dimension))
+                u += str(wrapper.double_array2list(emission.variance, emission.dimension * emission.dimension))
                 uinv += str(wrapper.double_array2list(emission.sigmainv, emission.dimension * emission.dimension))
                 ucd += str(wrapper.double_array2list(emission.sigmacd, emission.dimension * emission.dimension))
 
@@ -3176,8 +3182,8 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
             pi.append(state.pi)
             for m in range(state.M):
                 emission = state.getEmission(m)
-                mu = wrapper.double_array2list(emission.mean.vec, emission.dimension)
-                sigma = wrapper.double_array2list(emission.variance.mat, (emission.dimension * emission.dimension))
+                mu = wrapper.double_array2list(emission.mean, emission.dimension)
+                sigma = wrapper.double_array2list(emission.variance, (emission.dimension * emission.dimension))
                 emissionparams.append(mu)
                 emissionparams.append(sigma)
 
