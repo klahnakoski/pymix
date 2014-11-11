@@ -103,4 +103,4 @@ def float53():
 
 
 def uint32():
-    SEED.uint32()
+    return SEED.uint32()
