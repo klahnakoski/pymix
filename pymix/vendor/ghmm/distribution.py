@@ -19,6 +19,7 @@ class DiscreteDistribution(Distribution):
     def __init__(self, alphabet):
         self.alphabet = alphabet
         self.prob_vector = None
+        self.dimension = 1
 
     def set(self, prob_vector):
         self.prob_vector = prob_vector

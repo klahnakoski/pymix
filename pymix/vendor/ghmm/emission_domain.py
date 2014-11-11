@@ -127,6 +127,7 @@ class Alphabet(EmissionDomain):
                 self._lengthOfCharacters = None
 
         self.CDataType = "int" # flag indicating which C data type should be used
+        self.dimension = 1
 
 
     def __str__(self):

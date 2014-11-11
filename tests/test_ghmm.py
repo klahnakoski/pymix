@@ -1490,7 +1490,7 @@ class ContinuousMixtureHMM2Tests(FuzzyTestCase):
         self.assertEqual(round(p, 12), round(0.212143793508, 12))
         seq = self.CMmodel.sampleSingle(5, seed=3586662)
         lp = self.CMmodel.joined(seq, [0, 2, 1, 2, 0, ])
-        self.assertAlmostEqual(lp, -14.990634258963)
+        self.assertAlmostEqual(lp, -14.990634258963, places=14)
 
         # test model with uniform and truncated normals as emissions
         self.assertEqual(self.CM1model.getEmissionProbability(0.5, 0), 0)
@@ -1812,19 +1812,19 @@ class MultivariateMixtureHMMTests(FuzzyTestCase):
         self.CMMmodel.baumWelch(seq, 10, 0.0000001)
 
 
-class HMMERReadTests(unittest.TestCase):
-    def testSingleRead(self):
-        model = HMMOpen('testdata/tk.hmm')
-        self.assertEqual(model.N, 38)
-        self.assertEqual(len(model.emissionDomain), 20)
-        self.assert_(model.hasFlags(kSilentStates))
-        self.assert_(model.hasFlags(kDiscreteHMM))
-
-    def testMultipleRead(self):
-        models = HMMOpen("testdata/multiple_hmmer.hmm")
-        self.assertEqual(len(models), 5)
-        self.assertEqual(str(models[0]), str(models[3]))
-        self.assertEqual(str(models[1]), str(models[4]))
+# class HMMERReadTests(unittest.TestCase):
+#     def testSingleRead(self):
+#         model = HMMOpen('testdata/tk.hmm')
+#         self.assertEqual(model.N, 38)
+#         self.assertEqual(len(model.emissionDomain), 20)
+#         self.assert_(model.hasFlags(kSilentStates))
+#         self.assert_(model.hasFlags(kDiscreteHMM))
+#
+#     def testMultipleRead(self):
+#         models = HMMOpen("testdata/multiple_hmmer.hmm")
+#         self.assertEqual(len(models), 5)
+#         self.assertEqual(str(models[0]), str(models[3]))
+#         self.assertEqual(str(models[1]), str(models[4]))
 
 
 class XMLIOTests(unittest.TestCase):
@@ -1958,7 +1958,7 @@ suiteContinuousMixtureHMM2 = unittest.makeSuite(ContinuousMixtureHMM2Tests, 'tes
 suiteMultivariateGaussianEmissionHMM = unittest.makeSuite(MultivariateGaussianEmissionHMMTests, 'test')
 suiteMultivariateGaussianMixtureHMM = unittest.makeSuite(MultivariateGaussianMixtureHMMTests, 'test')
 suiteMultivariateMixtureHMM = unittest.makeSuite(MultivariateMixtureHMMTests, 'test')
-suiteHMMER = unittest.makeSuite(HMMERReadTests, 'test')
+# suiteHMMER = unittest.makeSuite(HMMERReadTests, 'test')
 suiteXMLIO = unittest.makeSuite(XMLIOTests, 'test')
 suiteComplexSequence = unittest.makeSuite(ComplexEmissionSequenceTests, 'test')
 
