@@ -61,12 +61,7 @@ def ARRAY_MALLOC(n):
     return [0] * n
 
 
-def set_pylogging(logwrapper):
-    pass
 
-
-def time_seed():
-    pass
 
 
 def ghmm_xmlfile_validate(filename):

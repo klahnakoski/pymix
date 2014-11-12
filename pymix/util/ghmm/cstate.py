@@ -9,8 +9,9 @@ class ghmm_cstate:
     def __init__(self, M, in_states, out_states, cos):
         #* Number of output densities per state
         self.M = M  # int
-        #* vector of Emission
-        #      (type and parameters of output function components)
+        #* weight vector for output function components
+        self.c = ARRAY_CALLOC(M)  # double *
+        #* vector of Emission (type and parameters of output function components)
         self.e = ARRAY_CALLOC(M)  # Emission *
 
 
@@ -38,9 +39,6 @@ class ghmm_cstate:
         if in_states > 0:
             self.in_id = ARRAY_CALLOC(in_states)
             self.in_a = ighmm_cmatrix_alloc(cos, in_states)
-
-        #* weight vector for output function components
-        self.c = ARRAY_CALLOC(M)  # double *
 
         #* flag for fixation of parameter. If fix = 1 do not change parameters of
         #      output functions, if fix = 0 do normal training. Default is 0.

@@ -34,7 +34,6 @@
 #*
 #******************************************************************************
 from math import log, exp
-from pyLibrary.maths import Math
 from pymix.util.ghmm.wrapper import ARRAY_MALLOC, ARRAY_CALLOC, ARRAY_REALLOC, ighmm_cvector_log_sum
 from pymix.util.logs import Log
 

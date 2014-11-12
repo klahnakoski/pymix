@@ -145,12 +145,7 @@ class MultinomialDistribution(ProbDistribution):
         return map(self.alphabet.external, sample)
 
     def sampleSet(self, nr):
-        res = []
-
-        for i in range(nr):
-            res.append(self.sample())
-
-        return res
+        return [self.sample() for i in range(nr)]
 
     def MStep(self, posterior, data, mix_pi=None):
         if isinstance(data, DataSet):
