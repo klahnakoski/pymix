@@ -18,7 +18,7 @@ for i in range(10):
 
     dList.append(MultinomialDistribution(6, 3, par))
 
-mix = MixtureModel(1000, piList, dList)
+mix = MixtureModel(10, piList, dList)
 
 s = mix.sample()
 

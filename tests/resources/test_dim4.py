@@ -1,5 +1,8 @@
+from pymix.distributions.multinomial import MultinomialDistribution
 from pymix.mixture import *
 import random
+from pymix.models.mixture import MixtureModel
+from pymix.util.ghmm import random_mt
 
 N = 50
 M = 40
@@ -10,12 +13,12 @@ mList1 = []
 for j in range(G):
     p = []
     for i in range(N):
-        p.append(random())
+        p.append(random_mt.float23())
 
     g = lambda x: x/sum(p)
-    p = map(g,p)
+    p = map(g, p)
 
-    pi1.append(random())
+    pi1.append(random_mt.float23())
     mList1.append( MultinomialDistribution(M,N,p))
 
 fpi =lambda x: x/sum(pi1)

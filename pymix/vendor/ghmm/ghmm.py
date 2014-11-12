@@ -115,27 +115,24 @@ import StringIO
 import math
 import os
 from string import join
-from textwrap import fill
 
 from pymix.util.ghmm import types
 from pymix.util.ghmm import wrapper
 from pymix.util.ghmm.cmodel import ghmm_cmodel
-from pymix.util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
 from pymix.util.ghmm.dbackground import dbackground
 from pymix.util.ghmm.dmodel import ghmm_dmodel
-from pymix.util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
 from pymix.util.ghmm.dstate import ghmm_dstate
 from pymix.util.ghmm.gradescent import ghmm_dmodel_label_gradient_descent
 from pymix.util.ghmm.kbest import ghmm_dmodel_label_kbest
 from pymix.util.ghmm.matrixop import ighmm_invert_det
 from pymix.util.ghmm.sreestimate import ghmm_cmodel_baum_welch
 from pymix.util.ghmm.sviterbi import ghmm_cmodel_viterbi
-from pymix.util.ghmm.types import kSilentStates, kHigherOrderEmissions, kTiedEmissions, kBackgroundDistributions, kLabeledStates, kNotSpecified, kMultivariate, kContinuousHMM, kDiscreteHMM, kTransitionClasses, kPairHMM
-from pymix.util.ghmm.wrapper import ARRAY_MALLOC, matrix_alloc
+from pymix.util.ghmm.types import kSilentStates, kHigherOrderEmissions, kTiedEmissions, kBackgroundDistributions, kLabeledStates, kNotSpecified, kMultivariate, kContinuousHMM, kDiscreteHMM, \
+    kTransitionClasses, kPairHMM
+from pymix.util.ghmm.wrapper import matrix_alloc
 from pymix.util.ghmm.viterbi import ghmm_dmodel_viterbi
 from pymix.vendor.ghmm import ghmmhelper
 import modhmmer
-from pymix.vendor.ghmm.class_change import class_change_context
 from pymix.vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, DiscreteDistribution, GaussianMixtureDistribution, GaussianDistribution
 from pymix.vendor.ghmm.emission_domain import LabelDomain, Float, Alphabet, IntegerRange, AminoAcids, DNA
 from pymix.vendor.ghmm.sequence_set import SequenceSet, EmissionSequence
@@ -144,66 +141,10 @@ from pymix.util.logs import Log
 
 
 
-
-def SequenceSetOpen(emissionDomain, fileName):
-    # XXX Name doof
-    """ Reads a sequence file with multiple sequence sets.
-
-    @returns a list of SequenceSet objects.
-
-    """
-    #checks if supports asci sequence files, deprecated
-    if not wrapper.ASCI_SEQ_FILE:
-        Log.error("asci sequence files are deprecated. Please convert your files"
-                                 + " to the new xml-format or rebuild the GHMM with"
-                                 + " the conditional \"GHMM_OBSOLETE\".")
-
-    if not os.path.exists(fileName):
-        Log.error('File ' + str(fileName) + ' not found.')
-
-    if emissionDomain.CDataType == "int":
-        seq_read_func_ptr = ghmm_dseq_read
-        seq_ctor_func_ptr = ghmm_dseq
-    elif emissionDomain.CDataType == "double":
-        seq_read_func_ptr = ghmm_cseq_read
-        seq_ctor_func_ptr = ghmm_cseq
-    else:
-        Log.error("Invalid c data type " + str(emissionDomain.CDataType))
-
-    seqs = seq_read_func_ptr(fileName)
-    # ugly workaround for swig bug. swig is not always creating a proxy class
-    seqs = [seq_ctor_func_ptr(ptr) for ptr in seqs]
-    sequenceSets = [SequenceSet(emissionDomain, seq_ptr) for seq_ptr in seqs]
-    return sequenceSets
-
-
-def writeToFasta(seqSet, fn):
-    """
-    Writes a SequenceSet into a fasta file.
-    """
-    if not isinstance(seqSet, SequenceSet):
-        Log.error("SequenceSet expected.")
-    f = open(fn, 'w')
-
-    for i in range(len(seqSet)):
-        rseq = []
-        for j in range(seqSet.sequenceLength(i)):
-            rseq.append(str(seqSet.emissionDomain.external(
-                seqSet.cseq.seq[i][j]
-            )))
-
-        f.write('>seq' + str(i) + '\n')
-        f.write(fill(join(rseq, '')))
-        f.write('\n')
-
-    f.close()
-
-
-#-------------------------------------------------------------------------------
-# HMMFactory and derived  -----------------------------------------------------
 class HMMFactory(object):
-    """ A HMMFactory is the base class of HMM factories.
-        A HMMFactory has just a constructor and a call method
+    """
+    A HMMFactory is the base class of HMM factories.
+    A HMMFactory has just a constructor and a call method
     """
 
 
@@ -1034,7 +975,7 @@ class HMM(object):
         (numarray) vector of floats
 
         """
-        Log.note("HMM.loglikelihoods() -- begin")
+        # Log.note("HMM.loglikelihoods() -- begin")
         emissionSequences = emissionSequences.asSequenceSet()
         seqNumber = len(emissionSequences)
 
@@ -1061,7 +1002,7 @@ class HMM(object):
                 likelihoodList.append(-float('Inf'))
 
         del emissionSequences
-        Log.note("HMM.loglikelihoods() -- end")
+        # Log.note("HMM.loglikelihoods() -- end")
         return likelihoodList
 
     # Further Marginals ...
@@ -3559,237 +3500,3 @@ class PairHMM(HMM):
                     Log.note("Outgoing transitions in state %s (%s) do not sum to 1 (%s) for class %s" % (state.id, state.label, outSum, tclass))
                     allok = 0
         return allok
-
-
-class PairHMMOpenFactory(HMMOpenFactory):
-    """
-    factory to create PairHMM objects from XML files
-    """
-
-    def __call__(self, fileName_file_or_dom, modelIndex=None):
-        """
-        a call to the factory loads a model from a file specified by the
-        filename or from a file object or from a XML Document object and
-        initializes the model on the C side (libghmm).
-        @param fileName_file_or_dom load the model from a file specified by
-        a filename, a file object or a XML Document object
-        @param modelIndex not used (inherited from HMMOpenFactory)
-        @return PairHMM object
-        """
-        import xml.dom.minidom
-        from ghmm_gato import xmlutil
-
-        if not (isinstance(fileName_file_or_dom, StringIO.StringIO) or
-            isinstance(fileName_file_or_dom, xml.dom.minidom.Document)):
-            if not os.path.exists(fileName_file_or_dom):
-                Log.error('File ' + str(fileName_file_or_dom) + ' not found.')
-
-        hmm_dom = xmlutil.HMM(fileName_file_or_dom)
-        if not hmm_dom.modelType == "pairHMM":
-            Log.error("Model type specified in the XML file (%s) is not pairHMM" % hmm_dom.modelType)
-            # obviously it's a pair HMM
-        [alphabets, A, B, pi, state_orders] = hmm_dom.buildMatrices()
-        if not len(A) == len(A[0]):
-            Log.error("A is not quadratic.")
-        if not len(pi) == len(A):
-            Log.error("Length of pi does not match length of A.")
-        if not len(A) == len(B):
-            Log.error("Different number of entries in A and B.")
-
-        cmodel = ghmm_cmodel()
-        cmodel.N = len(A)
-        cmodel.M = -1 # no use anymore len(emissionDomain)
-
-        # tie groups are deactivated by default
-        cmodel.tied_to = None
-
-        # assign model identifier (if specified)
-        if hmm_dom.name != None:
-            cmodel.name = hmm_dom.name
-        else:
-            cmodel.name = 'Unused'
-
-        alphabets = hmm_dom.getAlphabets()
-        cmodel.number_of_alphabets = len(alphabets.keys())
-        sizes = [len(alphabets[k]) for k in alphabets.keys()]
-        cmodel.size_of_alphabet = wrapper.list2int_array(sizes)
-
-        # set number of d_seqs to zero. If you want to use them you have to
-        # set them manually
-        cmodel.number_of_d_seqs = 0
-
-        # c array of states allocated
-        cstates = ARRAY_MALLOC(cmodel.N)
-        # python list of states from xml
-        pystates = hmm_dom.state.values()
-
-        silent_flag = 0
-        silent_states = []
-
-        maxOffsetX = 0
-        maxOffsetY = 0
-
-        transitionClassFlag = 0
-        maxTransitionIndexDiscrete = len(alphabets.keys())
-        maxTransitionIndexContinuous = 0
-
-        # from build matrices in xmlutil:
-        orders = {}
-        k = 0 # C style index
-        for s in pystates: # ordering from XML
-            orders[s.index] = k
-            k = k + 1
-
-        #initialize states
-        for i in range(cmodel.N):
-            cstate = wrapper.dpstate_array_getitem(cstates, i)
-            pystate = pystates[i]
-            size = len(pystate.itsHMM.hmmAlphabets[pystate.alphabet_id])
-            if pystate.offsetX != 0 and pystate.offsetY != 0:
-                size = size ** 2
-            if len(B[i]) != size:
-                Log.error("in state %s len(emissions) = %i size should be %i" % (pystate.id, len(B[i]), size))
-            cstate.b = wrapper.list2double_array(B[i])
-            cstate.pi = pi[i]
-            if pi[i] != 0:
-                cstate.log_pi = math.log(pi[i])
-            else:
-                cstate.log_pi = 1
-
-            cstate.alphabet = pystate.alphabet_id
-            cstate.offset_x = pystate.offsetX
-            cstate.offset_y = pystate.offsetY
-            cstate.kclasses = pystate.kclasses
-
-            if pystate.offsetX > maxOffsetX:
-                maxOffsetX = pystate.offsetX
-            if pystate.offsetY > maxOffsetY:
-                maxOffsetY = pystate.offsetY
-
-            if sum(B[i]) == 0 :
-                silent_states.append(1)
-                silent_flag = 4
-            else:
-                silent_states.append(0)
-
-                # transition probability
-                # cstate.out_states, cstate.out_id, out_a = ghmmhelper.extract_out(A[i])
-                v = pystate.index
-                #print "C state index: %i pystate index: %i order: %i" % (i, v, orders[v])
-                outprobs = []
-                for j in range(len(hmm_dom.G.OutNeighbors(v))):
-                    outprobs.append([0.0] * pystate.kclasses)
-                myoutid = []
-                j = 0
-                for outid in hmm_dom.G.OutNeighbors(v):
-                    myorder = orders[outid]
-                    myoutid.append(myorder)
-                    for tclass in range(pystate.kclasses):
-                        outprobs[j][tclass] = hmm_dom.G.edgeWeights[tclass][(v, outid)]
-                    j += 1
-                cstate.out_states = len(myoutid)
-                cstate.out_id = wrapper.list2int_array(myoutid)
-                (cstate.out_a, col_len) = ghmmhelper.list2double_matrix(outprobs)
-                #set "in" probabilities
-                # A_col_i = map( lambda x: x[i], A)
-                # Numarray use A[,:i]
-                # cstate.in_states, cstate.in_id, cstate.in_a = ghmmhelper.extract_out(A_col_i)
-                inprobs = []
-                for inid in hmm_dom.G.InNeighbors(v):
-                    myorder = orders[inid]
-                    # for every class in source
-                    inprobs.append([0.0] * pystates[myorder].kclasses)
-                myinid = []
-                j = 0
-                for inid in hmm_dom.G.InNeighbors(v):
-                    myorder = orders[inid]
-                    myinid.append(myorder)
-                    # for every transition class of the source state add a prob
-                    for tclass in range(pystates[myorder].kclasses):
-                        inprobs[j][tclass] = hmm_dom.G.edgeWeights[tclass][(inid, v)]
-                    j += 1
-
-                j = 0
-                #for inid in myinid:
-                #    print "Transitions (%i, %i)" % (inid ,i)
-                #    print inprobs[j]
-                #    j += 1
-
-                cstate.in_states = len(myinid)
-                cstate.in_id = wrapper.list2int_array(myinid)
-                (cstate.in_a, col_len) = ghmmhelper.list2double_matrix(inprobs)
-                #fix probabilities by reestimation, else 0
-                cstate.fix = 0
-
-                # set the class determination function
-                cstate.class_change = class_change_context()
-                if pystate.transitionFunction != -1:
-                    transitionClassFlag = 1
-                    tf = hmm_dom.transitionFunctions[pystate.transitionFunction]
-                    # for the moment: do not use the offsets because they
-                    # add the risk of segmentation faults at the ends of
-                    # the loops or neccessitate index checks at every query
-                    # which is not desirable because the transition
-                    # functions are used in every iteration. Instead use
-                    # shifted input values!
-                    if tf.type == "lt_sum":
-                        wrapper.set_to_lt_sum(
-                            cstate.class_change,
-                            int(tf.paramDict["seq_index"]),
-                            float(tf.paramDict["threshold"]),
-                            0, # int(tf.paramDict["offset_x"]),
-                            0) # int(tf.paramDict["offset_y"]))
-                        maxTransitionIndexContinuous = max(
-                            int(tf.paramDict["seq_index"]),
-                            maxTransitionIndexContinuous)
-                    elif tf.type == "gt_sum":
-                        wrapper.set_to_gt_sum(
-                            cstate.class_change,
-                            int(tf.paramDict["seq_index"]),
-                            float(tf.paramDict["threshold"]),
-                            0, # int(tf.paramDict["offset_x"]),
-                            0) # int(tf.paramDict["offset_y"]))
-                        maxTransitionIndexContinuous = max(
-                            int(tf.paramDict["seq_index"]),
-                            maxTransitionIndexContinuous)
-                    elif tf.type == "boolean_and":
-                        wrapper.set_to_boolean_and(
-                            cstate.class_change,
-                            int(tf.paramDict["seq_index"]),
-                            0, # int(tf.paramDict["offset_x"]),
-                            0) # int(tf.paramDict["offset_y"]))
-                        maxTransitionIndexDiscrete = max(
-                            int(tf.paramDict["seq_index"]),
-                            maxTransitionIndexDiscrete)
-                    elif tf.type == "boolean_or":
-                        wrapper.set_to_boolean_or(
-                            cstate.class_change,
-                            int(tf.paramDict["seq_index"]),
-                            0,  # int(tf.paramDict["offset_x"]),
-                            0)  # int(tf.paramDict["offset_y"]))
-                        maxTransitionIndexDiscrete = max(
-                            int(tf.paramDict["seq_index"]),
-                            maxTransitionIndexDiscrete)
-                else:
-                    wrapper.ghmm_dp_set_to_default_transition_class(cstate.class_change)
-
-        cmodel.s = cstates
-
-        cmodel.max_offset_x = maxOffsetX
-        cmodel.max_offset_y = maxOffsetY
-
-        cmodel.model_type += silent_flag
-        cmodel.silent = wrapper.list2int_array(silent_states)
-        distribution = DiscreteDistribution(DNA)
-        emissionDomains = [Alphabet(hmm_dom.hmmAlphabets[alphabet].name.values()) for alphabet in alphabets]
-        model = PairHMM(emissionDomains, distribution, cmodel)
-        model.states = pystates
-        model.transitionFunctions = hmm_dom.transitionFunctions
-        model.usesTransitionClasses = transitionClassFlag
-        model.alphabetSizes = sizes
-        model.maxTransitionIndexContinuous = maxTransitionIndexContinuous
-        model.maxTransitionIndexDiscrete = maxTransitionIndexDiscrete
-        return model
-
-
-PairHMMOpenXML = PairHMMOpenFactory()

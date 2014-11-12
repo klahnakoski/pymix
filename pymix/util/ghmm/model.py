@@ -35,7 +35,7 @@
 #******************************************************************************
 from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.dmodel import ghmm_dmodel
-from pymix.util.ghmm.dseq import ghmm_dseq, ghmm_dseq_add
+from pymix.util.ghmm.dseq import ghmm_dseq
 from pymix.util.ghmm.dstate import ghmm_dstate
 from pymix.util.ghmm.types import kDiscreteHMM, kBackgroundDistributions, kSilentStates, kNoBackgroundDistribution, kTiedEmissions, kUntied, kHigherOrderEmissions, kLabeledStates, kLeftRight, kPairHMM, kTransitionClasses
 from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, ghmm_dseq_max_symbol, GHMM_MAX_SEQ_LEN, ghmm_xmlfile_parse, ighmm_cvector_normalize
@@ -535,7 +535,7 @@ def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose):
                 if tmp == None:
                     Log.error(" generate_sequences failed not ")
 
-                ghmm_dseq_add(seq0, tmp)
+                seq.add(tmp)
 
                 total = 0
                 for i in range(0, seq0.seq_number):

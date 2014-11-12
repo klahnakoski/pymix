@@ -138,7 +138,7 @@ for i in range(2):
 for i in range(2):
     compPrior.append(NormalGammaPrior(1.0, 2.0, 3.0, 4.0))
 
-mixPrior = BayesMixtureModel(0.7, 0.7, piPrior, compPrior)
+mixPrior = BayesMixtureModel(G,[0.7, 0.7], [piPrior, compPrior])
 
 DNA = Alphabet(['A', 'C', 'G', 'T'])
 comps = []

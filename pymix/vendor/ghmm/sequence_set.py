@@ -1,8 +1,8 @@
 import os
 from string import join
 from pymix.util.ghmm import wrapper
-from pymix.util.ghmm.cseq import ghmm_cseq, ghmm_cseq_read
-from pymix.util.ghmm.dseq import ghmm_dseq, ghmm_dseq_read
+from pymix.util.ghmm.cseq import ghmm_cseq
+from pymix.util.ghmm.dseq import ghmm_dseq
 from pymix.util.ghmm.wrapper import double_matrix_getitem
 from pymix.vendor.ghmm import ghmmhelper
 from pymix.vendor.ghmm.emission_domain import LabelDomain

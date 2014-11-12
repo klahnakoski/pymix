@@ -1,34 +1,31 @@
-from pymix.util.ghmm.wrapper import double_array_alloc, ARRAY_CALLOC, matrix_alloc
-
 
 class ghmm_cseq():
     """
-    Sequence structure for double sequences.
+    Sequence structure for sequences.
 
     Contains an array of sequences and corresponding
     data like sequnce label, sequence weight, etc. Sequences may have
-    different length. Multi-dimension sequences are linearized.
+    different length.
     """
 
     def __init__(self, seq):
-        if not isinstance(seq, list):
-            seq=matrix_alloc(seq, 0)
+        if isinstance(seq, int):
+            seq = [[]] * seq
+
         # sequence array. sequence[i][j] = j-th symbol of i-th seq.
-        # sequence[i][D * j] = first dimension of j-th observation of i-th sequence
         self.seq = seq # int **
 
         # matrix of state ids, can be used to save the viterbi path during sequence generation.
         # ATTENTION: is NOT allocated by ghmm_dseq_calloc
-        self.states = double_array_alloc(len(seq))  # int **
+        self.states = [None] * len(seq)  # int **
 
         # array of sequence length
         self.seq_len = [len(s) for s in seq]  # int*
-
         # array of state path lengths
-        self.states_len = double_array_alloc(len(seq))
+        self.states_len = [0]*len(seq)
 
         ## array of sequence IDs
-        self.seq_id = double_array_alloc(len(seq)) # double *
+        self.seq_id = [0]*len(seq)
         # positive! sequence weights.  default is 1 = no weight
         self.seq_w = [1.0] * len(seq) # double*
         ## total number of sequences
@@ -89,6 +86,12 @@ class ghmm_cseq():
     def write(self, filename):
         pass
 
+
+    def copyStateLabel(self, index, target, no):
+        target.state_labels_len[no] = self.state_labels_len[index]
+        target.state_labels[no] = list(self.state_labels[index])
+
+
     def add(self, source):
         old_seq = self.seq
         old_seq_len = self.seq_len
@@ -119,7 +122,3 @@ class ghmm_cseq():
             self.seq_id[i + old_seq_number] = source.seq_id[i]
             self.seq_w[i + old_seq_number] = source.seq_w[i]
 
-
-
-def ghmm_cseq_read(filename):
-    pass

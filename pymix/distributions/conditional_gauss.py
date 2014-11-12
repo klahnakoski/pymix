@@ -39,7 +39,8 @@ from random import random
 import math
 import numpy as np
 from .prob import ProbDistribution
-from ...pymix_util.errors import InvalidDistributionInput
+from pymix.util.errors import InvalidDistributionInput
+from pymix.util.ghmm import randvar
 
 
 class ConditionalGaussDistribution(ProbDistribution):
@@ -79,13 +80,13 @@ class ConditionalGaussDistribution(ProbDistribution):
 
     def sample(self):
         s = [None] * self.p
-        s[0] = random.normalvariate(self.mu[0], self.sigma[0])
+        s[0] = randvar.cmbm_normal(self.mu[0], self.sigma[0])
 
         for i in range(1, self.p):
             pid = self.parents[i]
             assert s[pid] != None   # XXX assumes that the features are in topological order
             shift_mu = self.mu[i] - (self.w[i] * self.mu[pid])
-            s[i] = random.normalvariate(shift_mu + (self.w[i] * s[pid]), self.sigma[i])
+            s[i] = randvar.cmbm_normal(shift_mu + (self.w[i] * s[pid]), self.sigma[i])
 
         return s
 

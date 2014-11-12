@@ -55,14 +55,13 @@ Testing GHMM
 import unittest
 import random
 import re
-from pyLibrary import convert
 from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.wrapper import ASCI_SEQ_FILE, uniform, normal_right, normal_left, int_array_getitem, normal, SMO_FILE_SUPPORT, SEQ_LABEL_FIELD
 from pymix.vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, GaussianMixtureDistribution, GaussianDistribution, DiscreteDistribution
 from pymix.vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphabet, DNA
-from pymix.vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
+from pymix.vendor.ghmm.ghmm import HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
 from pymix.vendor.ghmm.sequence_set import EmissionSequence, SequenceSet, ComplexEmissionSequence
-from pyLibrary.env.logs import Log, Except
+from pyLibrary.env.logs import Log
 from pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
@@ -211,7 +210,7 @@ class EmissionSequenceTests(FuzzyTestCase):
 
     def testlabelaccess(self):
         if not SEQ_LABEL_FIELD:
-            return True;
+            return True
         Log.note("EmissionSequenceTests.testlabelaccess")
         self.i_seq.setSeqLabel(8)
         l = self.i_seq.getSeqLabel()
