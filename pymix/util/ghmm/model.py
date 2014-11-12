@@ -35,10 +35,10 @@
 #******************************************************************************
 from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.dmodel import ghmm_dmodel
-from pymix.util.ghmm.dseq import ghmm_dseq
+from pymix.util.ghmm.sequences import sequence
 from pymix.util.ghmm.dstate import ghmm_dstate
 from pymix.util.ghmm.types import kDiscreteHMM, kBackgroundDistributions, kSilentStates, kNoBackgroundDistribution, kTiedEmissions, kUntied, kHigherOrderEmissions, kLabeledStates, kLeftRight, kPairHMM, kTransitionClasses
-from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, ghmm_dseq_max_symbol, GHMM_MAX_SEQ_LEN, ghmm_xmlfile_parse, ighmm_cvector_normalize
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, sequence_max_symbol, GHMM_MAX_SEQ_LEN, ghmm_xmlfile_parse, ighmm_cvector_normalize
 from pymix.util.logs import Log
 
 DONE = 0
@@ -82,7 +82,7 @@ def ghmm_dmodel_direct_read(s, multip):
 # Produces models from given sequences
 def ghmm_dmodel_from_sequence(sq):
     mo = ARRAY_CALLOC(sq.seq_number)
-    max_symb = ghmm_dseq_max_symbol(sq)
+    max_symb = sequence_max_symbol(sq)
     for i in range(0, sq.seq_number):
         mo[i] = ghmm_dmodel_generate_from_sequence(sq.seq[i], sq.seq_len[i], max_symb + 1)
     return mo
@@ -326,9 +326,9 @@ def get_random_output(mo, i, position):
 def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
     n = 0
 
-    sq = ghmm_dseq(seq_number)
+    sq = sequence(seq_number)
 
-    # allocating additional fields for the state sequence in the ghmm_dseq class
+    # allocating additional fields for the state sequence in the sequence class
     sq.states = ARRAY_CALLOC(seq_number)
     sq.states_len = ARRAY_CALLOC(seq_number)
 
@@ -636,13 +636,13 @@ def ghmm_dstate_clean(my_state):
 
 def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax):
     n = 0
-    sq = ghmm_dseq(seq_number)
+    sq = sequence(seq_number)
 
-    # allocating additional fields for the state sequence in the ghmm_dseq class
+    # allocating additional fields for the state sequence in the sequence class
     sq.states = ARRAY_CALLOC(seq_number)
     sq.states_len = ARRAY_CALLOC(seq_number)
 
-    # allocating additional fields for the labels in the ghmm_dseq class
+    # allocating additional fields for the labels in the sequence class
     sq.state_labels = ARRAY_CALLOC(seq_number)
     sq.state_labels_len = ARRAY_CALLOC(seq_number)
 

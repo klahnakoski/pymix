@@ -1,6 +1,6 @@
 from math import log
 from pymix.util.ghmm import random_mt
-from pymix.util.ghmm.cseq import ghmm_cseq
+from pymix.util.ghmm.sequences import sequence
 from pymix.util.ghmm.cstate import ghmm_cstate
 from pymix.util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal, ighmm_rand_uniform_cont, ighmm_rand_normal_right
 from pymix.util.ghmm.sfoba import sfoba_initforward, LOWER_SCALE_BOUND, sfoba_stepforward
@@ -71,7 +71,7 @@ class ghmm_cmodel:
         stillbadseq = 0
         reject_os_tmp = 0
 
-        sq = ghmm_cseq([[] for i in range(seq_number)])
+        sq = sequence([[] for i in range(seq_number)])
 
         # set dimension of the sequence to match dimension of the model (multivariate)
         sq.dim = self.dim

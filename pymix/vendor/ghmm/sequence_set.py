@@ -1,8 +1,7 @@
 import os
 from string import join
 from pymix.util.ghmm import wrapper
-from pymix.util.ghmm.cseq import ghmm_cseq
-from pymix.util.ghmm.dseq import ghmm_dseq
+from pymix.util.ghmm.sequences import sequence
 from pymix.util.ghmm.wrapper import double_matrix_getitem
 from pymix.vendor.ghmm import ghmmhelper
 from pymix.vendor.ghmm.emission_domain import LabelDomain
@@ -33,22 +32,16 @@ class SequenceSet(object):
         self.cseq = None
 
         if self.emissionDomain.CDataType == "int":
-            # necessary C functions for accessing the ghmm_dseq struct
-            self.sequenceAllocationFunction = ghmm_dseq
+            # necessary C functions for accessing the sequence struct
+            self.sequenceAllocationFunction = sequence
             self.allocSingleSeq = wrapper.int_array_alloc
             #obsolete
-            if wrapper.ASCI_SEQ_FILE:
-                self.seq_read = ghmm_dseq_read
-            self.seq_ptr_array_getitem = wrapper.dseq_ptr_array_getitem
             self.sequence_cmatrix = ghmmhelper.list2int_matrix
         elif self.emissionDomain.CDataType == "double":
-            # necessary C functions for accessing the ghmm_cseq struct
-            self.sequenceAllocationFunction = ghmm_cseq
+            # necessary C functions for accessing the sequence struct
+            self.sequenceAllocationFunction = sequence
             self.allocSingleSeq = wrapper.double_array_alloc
             #obsolete
-            if wrapper.ASCI_SEQ_FILE:
-                self.seq_read = ghmm_cseq_read
-            self.seq_ptr_array_getitem = wrapper.cseq_ptr_array_getitem
             self.sequence_cmatrix = ghmmhelper.list2double_matrix
         else:
             Log.error("C data type " + str(self.emissionDomain.CDataType) + " invalid.")
@@ -59,7 +52,7 @@ class SequenceSet(object):
             if sequenceSetInput[-3:] == ".fa" or sequenceSetInput[-6:] == ".fasta":
                 # assuming FastA file:
                 alfa = emissionDomain.toCstruct()
-                cseq = ghmm_dseq(sequenceSetInput, alfa)
+                cseq = sequence(sequenceSetInput, alfa)
                 if cseq is None:
                     Log.error("invalid FastA file: " + sequenceSetInput)
                 self.cseq = cseq
@@ -74,7 +67,7 @@ class SequenceSet(object):
                 else:
                     tmp = self.seq_read(sequenceSetInput)
                     if len(tmp) > 0:
-                        self.cseq = ghmm_cseq(tmp[0])
+                        self.cseq = sequence(tmp[0])
                     else:
                         Log.error('File ' + str(sequenceSetInput) + ' not valid.')
 
@@ -95,7 +88,7 @@ class SequenceSet(object):
                 self.cseq.init_labels(label, lens)
 
         #internal use
-        elif isinstance(sequenceSetInput, ghmm_dseq) or isinstance(sequenceSetInput, ghmm_cseq):
+        elif isinstance(sequenceSetInput, sequence) or isinstance(sequenceSetInput, sequence):
             Log.note("SequenceSet.__init__()" + str(sequenceSetInput))
             self.cseq = sequenceSetInput
             if labelDomain is not None:
@@ -332,16 +325,14 @@ class EmissionSequence(object):
         self.ParentSequenceSet = ParentSequenceSet
 
         if self.emissionDomain.CDataType == "int":
-            # necessary C functions for accessing the ghmm_dseq struct
-            self.sequenceAllocationFunction = ghmm_dseq
+            # necessary C functions for accessing the sequence struct
+            self.sequenceAllocationFunction = sequence
             self.allocSingleSeq = wrapper.int_array_alloc
-            self.seq_ptr_array_getitem = wrapper.dseq_ptr_array_getitem
             self.sequence_carray = wrapper.list2int_array
         elif self.emissionDomain.CDataType == "double":
-            # necessary C functions for accessing the ghmm_cseq struct
-            self.sequenceAllocationFunction = ghmm_cseq
+            # necessary C functions for accessing the sequence struct
+            self.sequenceAllocationFunction = sequence
             self.allocSingleSeq = wrapper.double_array_alloc
-            self.seq_ptr_array_getitem = wrapper.cseq_ptr_array_getitem
             self.sequence_carray = wrapper.list2double_array
         else:
             Log.error("C data type " + str(self.emissionDomain.CDataType) + " invalid.")
@@ -364,7 +355,7 @@ class EmissionSequence(object):
                                          + " to the new xml-format or rebuild the GHMM with"
                                          + " the conditional \"GHMM_OBSOLETE\".")
 
-        #create a ghmm_dseq with state_labels, if the appropiate parameters are set
+        #create a sequence with state_labels, if the appropiate parameters are set
         elif isinstance(sequenceInput, list):
             internalInput = self.emissionDomain.internalSequence(sequenceInput)
             seq = [internalInput]
@@ -382,7 +373,7 @@ class EmissionSequence(object):
                 self.cseq.init_labels([internalLabel], [len(internalInput)])
 
         # internal use
-        elif isinstance(sequenceInput, (ghmm_dseq, ghmm_cseq)):
+        elif isinstance(sequenceInput, (sequence, sequence)):
             if sequenceInput.seq_number > 1:
                 Log.error("Use SequenceSet for multiple sequences.")
             self.cseq = sequenceInput

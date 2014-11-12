@@ -1410,20 +1410,6 @@ class HMM(object):
         return self.cmodel.getStateName(index)
 
 
-def HMMwriteList(fileName, hmmList, fileType=GHMM_FILETYPE_XML):
-    if fileType == GHMM_FILETYPE_XML:
-        if os.path.exists(fileName):
-            Log.warning("HMMwriteList: File " + str(fileName) + " already exists. Model will be overwritted.")
-        models = wrapper.cmodel_ptr_array_alloc(len(hmmList))
-        for i, model in enumerate(hmmList):
-            wrapper.cmodel_ptr_array_setitem(models, i, model.cmodel)
-        wrapper.ghmm_cmodel_xml_write(models, fileName, len(hmmList))
-    elif fileType == GHMM_FILETYPE_SMO:
-        Log.error("the smo file format is deprecated, use xml instead")
-    else:
-        Log.error("unknown file format" + str(fileType))
-
-
 class DiscreteEmissionHMM(HMM):
     """ HMMs with discrete emissions.
 
@@ -3140,17 +3126,17 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps=50, gradient=0):
         HMMList[i].baumWelch(SeqList[i], 3, 1e-9)
 
     HMMArray = wrapper.dmodel_ptr_array_alloc(inplen)
-    SeqArray = wrapper.dseq_ptr_array_alloc(inplen)
+    SeqArray = wrapper.sequences_ptr_array_alloc(inplen)
 
     for i in range(inplen):
-        wrapper.dmodel_ptr_array_setitem(HMMArray, i, HMMList[i].cmodel)
-        wrapper.dseq_ptr_array_setitem(SeqArray, i, SeqList[i].cseq)
+        HMMArray[i]= HMMList[i].cmodel
+        SeqArray[i]=SeqList[i].cseq
 
     wrapper.ghmm_dmodel_label_discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
 
     for i in range(inplen):
-        HMMList[i].cmodel = wrapper.dmodel_ptr_array_getitem(HMMArray, i)
-        SeqList[i].cseq = wrapper.dseq_ptr_array_getitem(SeqArray, i)
+        HMMList[i].cmodel = HMMArray[i]
+        SeqList[i].cseq = SeqArray[i]
 
     return HMMDiscriminativePerformance(HMMList, SeqList)
 

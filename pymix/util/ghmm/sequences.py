@@ -1,5 +1,5 @@
 
-class ghmm_cseq():
+class sequence():
     """
     Sequence structure for sequences.
 
@@ -12,22 +12,22 @@ class ghmm_cseq():
         if isinstance(seq, int):
             seq = [[]] * seq
 
-        # sequence array. sequence[i][j] = j-th symbol of i-th seq.
-        self.seq = seq # int **
+        # sequence array. sequence[i] [j] = j-th symbol of i-th seq.
+        self.seq = seq  # int **
 
         # matrix of state ids, can be used to save the viterbi path during sequence generation.
-        # ATTENTION: is NOT allocated by ghmm_dseq_calloc
+        # ATTENTION: is NOT allocated by sequence_calloc
         self.states = [None] * len(seq)  # int **
 
         # array of sequence length
-        self.seq_len = [len(s) for s in seq]  # int*
+        self.seq_len = [len(s) for s in seq]
         # array of state path lengths
         self.states_len = [0]*len(seq)
 
         ## array of sequence IDs
         self.seq_id = [0]*len(seq)
-        # positive! sequence weights.  default is 1 = no weight
-        self.seq_w = [1.0] * len(seq) # double*
+        ## positiv! sequence weights.  default is 1 = no weight
+        self.seq_w = [1.0] * len(seq)  # double *
         ## total number of sequences
         self.seq_number = len(seq)
         ## reserved space for sequences is always >= seq_number
@@ -40,8 +40,9 @@ class ghmm_cseq():
         ## number of labels for each sequence
         self.state_labels_len = None # int*
 
-        # flags (internal)
-        self.flags = 0 # int
+        ## flags internal
+        self.flags = 0
+
 
     def init_labels(self, labels, length):
         self.state_labels = labels
@@ -69,10 +70,11 @@ class ghmm_cseq():
         return self.seq_w[index]
 
     def setWeight(self, index, value):
-        self.seq_w[index]=value
+        self.seq_w[index] = value
+
 
     def get_singlesequence(self, index):
-        res = ghmm_cseq([self.seq[index]])
+        res = sequence([self.seq[index]])
 
         res.seq_id[0] = self.seq_id[index]
         res.seq_w[0] = self.seq_w[index]
@@ -103,7 +105,7 @@ class ghmm_cseq():
         self.total_w += source.total_w
 
         self.seq = ARRAY_CALLOC(self.seq_number)
-        # ARRAY_CALLOC (self.states, self.seq_number)
+        # self.states=ARRAY_CALLOC( self.seq_number)
         self.seq_len = ARRAY_CALLOC(self.seq_number)
         self.seq_id = ARRAY_CALLOC(self.seq_number)
         self.seq_w = ARRAY_CALLOC(self.seq_number)
@@ -121,4 +123,6 @@ class ghmm_cseq():
             self.seq_len[i + old_seq_number] = source.seq_len[i]
             self.seq_id[i + old_seq_number] = source.seq_id[i]
             self.seq_w[i + old_seq_number] = source.seq_w[i]
+
+
 

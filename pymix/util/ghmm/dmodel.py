@@ -1,6 +1,6 @@
 from math import log
 from pymix.util.ghmm import random_mt
-from pymix.util.ghmm.dseq import ghmm_dseq
+from pymix.util.ghmm.sequences import sequence
 from pymix.util.ghmm.dstate import model_state_alloc
 from pymix.util.ghmm.local_store_t import reestimate_alloc
 from pymix.util.ghmm.reestimate import ighmm_reestimate_alloc_matvek, nologSum
@@ -146,7 +146,7 @@ class ghmm_dmodel():
     ):
 
 
-        sq = ghmm_dseq([[]] * seq_number)
+        sq = sequence([[]] * seq_number)
         n = 0
 
         # A specific length of the sequences isn't given. As a model should have
@@ -1657,13 +1657,13 @@ class ghmm_dmodel():
     def label_generate_sequences(self, seed, len, seq_number, Tmax):
         n = 0
 
-        sq = ghmm_dseq(seq_number)
+        sq = sequence(seq_number)
 
-        # allocating additional fields for the state sequence in the ghmm_dseq class
+        # allocating additional fields for the state sequence in the sequence class
         sq.states = ARRAY_CALLOC(seq_number)
         sq.states_len = ARRAY_CALLOC(seq_number)
 
-        # allocating additional fields for the labels in the ghmm_dseq class
+        # allocating additional fields for the labels in the sequence class
         sq.state_labels = ARRAY_CALLOC(seq_number)
         sq.state_labels_len = ARRAY_CALLOC(seq_number)
 

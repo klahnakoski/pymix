@@ -171,16 +171,8 @@ def list2int_array(array):
     return array
 
 
-def dseq_ptr_array_getitem(array, index):
-    return array[index]
-
-
 def dpstate_array_getitem(states, i):
     return states[i]
-
-
-def cseq_ptr_array_getitem(array, index):
-    return array[index]
 
 
 def double_matrix_alloc_row(length):
@@ -554,7 +546,7 @@ class ghmm_cmodel_baum_welch_context():
     def __init__(self, model, seq):
         #* pointer of continuous model
         self.smo = model
-        #* ghmm_cseq pointer
+        #* sequence pointer
         self.sqd = seq
         #* calculated log likelihood
         self.logp = 0
@@ -587,7 +579,7 @@ def ighmm_cvector_log_sum(a, length):
     return result
 
 
-def ghmm_dseq_max_symbol(sq):
+def sequence_max_symbol(sq):
     max_symb = -1
     for i in range(sq.seq_number):
         for j in range(sq.seq_len[i]):
