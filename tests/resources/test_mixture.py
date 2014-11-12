@@ -108,7 +108,7 @@ mc2 = MixtureModel(1, [1.0], [MultinomialDistribution(6, 3, [0.5, 0.3, 0.2])])
 
 m7 = MixtureModel(2, [0.5, 0.5], [mc1, mc2])
 
-seq6 = m7.sampleSet(150)
+seq6 = DataSet().fromArray(m7.sampleSet(150))
 
 mc3 = MixtureModel(1, [1.0], [MultinomialDistribution(6, 3, [0.4, 0.5, 0.1])])
 mc4 = MixtureModel(1, [1.0], [MultinomialDistribution(6, 3, [0.2, 0.1, 0.7])])
@@ -116,52 +116,6 @@ mc4 = MixtureModel(1, [1.0], [MultinomialDistribution(6, 3, [0.2, 0.1, 0.7])])
 m8 = MixtureModel(2, [0.1, 0.9], [mc3, mc4])
 m8.EM(seq6, 30, 0.3)
 #print m8
-
-
-# -----------------------------  Example 6 -----------------------------
-
-mult = MultinomialDistribution(6, 3, [0.25, 0.25, 0.5])
-phi = NormalDistribution(2.0, 0.5)
-phi2 = NormalDistribution(0.5, 1.5)
-pd = ProductDistribution([mult, phi, phi2])
-
-mult2 = MultinomialDistribution(6, 3, [0.1, 0.7, 0.2])
-phi3 = NormalDistribution(0.0, 1.5)
-phi4 = NormalDistribution(-0.0, 0.5)
-pd2 = ProductDistribution([mult2, phi3, phi4])
-
-pd_mix = MixtureModel(2, [0.5, 0.5], [pd, pd2])
-
-
-#[classes, pd_seq] = pd_mix.labelled_sample(1000)
-
-pd_seq = pd_mix.sampleSet(100)
-
-mult3 = MultinomialDistribution(6, 3, [0.6, 0.1, 0.3])
-phi5 = NormalDistribution(1.0, 1.5)
-phi6 = NormalDistribution(-1.0, 1.0)
-pd3 = ProductDistribution([mult3, phi5, phi6])
-
-mult4 = MultinomialDistribution(6, 3, [0.4, 0.3, 0.3])
-phi7 = NormalDistribution(-2.0, 0.2)
-phi8 = NormalDistribution(1.5, 3.5)
-pd4 = ProductDistribution([mult4, phi7, phi8])
-
-pd_mix2 = MixtureModel(2, [0.2, 0.8], [pd3, pd4])
-pd_mix2.randParams(pd_seq)
-
-cluster = pd_mix2.cluster(pd_seq, 50, 0.2)
-
-evaluate(cluster, classes)
-print "----------- True Model--------- "
-print pd_mix
-print "--------------------------------\n\n"
-print "----------- Trained Model--------- "
-print pd_mix2
-print "--------------------------------"
-pd_mix2.EM(pd_seq, 30, 0.0)
-print pd_mix
-print pd_mix2
 
 
 # -----------------------------  Example 5 -----------------------------

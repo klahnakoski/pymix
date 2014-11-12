@@ -214,7 +214,7 @@ def specificity(classes, clusters):
         return 0.0
 
 
-def random_vector(nr, normal=1.0):
+def random_vector(nr):
     """
     Returns a random probability vector of length 'nr'.
     Can be used to generate random parametrizations of a multinomial distribution with
@@ -227,11 +227,7 @@ def random_vector(nr, normal=1.0):
     """
 
     alpha = np.array([1.0] * nr)
-
     p = mixextend.wrap_gsl_dirichlet_sample(alpha, nr)
-
-    if float(normal) != 1.0:
-        p = p * normal
     return p.tolist()
 
 

@@ -47,7 +47,7 @@ from pyLibrary.env.logs import Log
 
 class DataSet(object):
     """
-        Class DataSet is the central data object.
+    Class DataSet is the central data object.
     """
 
     def __init__(self):
@@ -258,7 +258,7 @@ class DataSet(object):
             self.row_headers = row_headers
 
         self.dataMatrix = array
-
+        return self
 
     def fromList(self, List, IDs=None, headers=None, col_headers=None, row_headers=None):
         """
