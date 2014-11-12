@@ -55,27 +55,21 @@ Testing GHMM
 import unittest
 import random
 import re
+from pyLibrary import convert
 from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.wrapper import ASCI_SEQ_FILE, uniform, normal_right, normal_left, int_array_getitem, normal, SMO_FILE_SUPPORT, SEQ_LABEL_FIELD
 from pymix.vendor.ghmm.distribution import MultivariateGaussianDistribution, ContinuousMixtureDistribution, GaussianMixtureDistribution, GaussianDistribution, DiscreteDistribution
 from pymix.vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphabet, DNA
 from pymix.vendor.ghmm.ghmm import SequenceSetOpen, HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
 from pymix.vendor.ghmm.sequence_set import EmissionSequence, SequenceSet, ComplexEmissionSequence
-from pyLibrary.env.logs import Log
+from pyLibrary.env.logs import Log, Except
 from pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
 def newSplit(self, s, ts):
-    newS = re.sub("[^0-9.]", " ", s)
-    newS = newS.split(" ")
-    newTS = re.sub("[^0-9.]", " ", ts)
-    newTS = newTS.split(" ")
-    for i in range(len(newS)):
-        try:
-            q = float(newS[i])
-            self.assertAlmostEqual(q, float(newTS[i]))
-        except:
-            self.assertEqual(newS[i], newTS[i])
+    test = [float(s) for s in re.sub("[^0-9.]", " ", s).split(" ") if s != ""]
+    expected = [float(s) for s in re.sub("[^0-9.]", " ", ts).split(" ") if s != ""]
+    self.assertAlmostEqual(test, expected)
 
 
 class MersenneTwisterTest(FuzzyTestCase):
@@ -100,9 +94,9 @@ class AlphabetTests(FuzzyTestCase):
         for l in self.dna:
             self.assertEqual(l, self.dnaAlphabet.external(self.dnaAlphabet.internal(l)))
 
-        self.assertRaises(KeyError, self.dnaAlphabet.internal, '')
+        self.assertRaises(Exception, self.dnaAlphabet.internal, '')
 
-        self.assertRaises(KeyError, self.dnaAlphabet.internal, 'x')
+        self.assertRaises(Exception, self.dnaAlphabet.internal, 'x')
         # remove this assertion because -1 now represents a gap '-'
         # self.assertRaises(KeyError, self.dnaAlphabet.external, -1)
 

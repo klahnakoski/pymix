@@ -132,7 +132,7 @@ class BayesMixtureModel(MixtureModel):
         else:
             if data.internalData is None:
                 data.internalInit(self)
-            # reset structure if applicable
+                # reset structure if applicable
         if self.struct:
             self.initStructure()
             # generate 'random posteriors'
@@ -158,7 +158,7 @@ class BayesMixtureModel(MixtureModel):
                 fix_flag = 1
             else:
                 #self.pi[i] =  l[i,:].sum() / len(data)
-                self.pi[i] = ( l[i, :].sum() + self.prior.piPrior.alpha[i] - 1.0 ) / (len(data) + ( self.prior.piPrior.alpha_sum - self.G) )
+                self.pi[i] = (l[i, :].sum() + self.prior.piPrior.alpha[i] - 1.0) / (len(data) + ( self.prior.piPrior.alpha_sum - self.G))
                 unfix_pi += self.pi[i]
             if self.compFix[i] == 1 or self.compFix[i] == 2:
                 # fixed component
@@ -789,7 +789,7 @@ class BayesMixtureModel(MixtureModel):
                 kappa, max_kappa = ret
 
 
-            #---------------------------------------------------------------------------------------------------------------
+                #---------------------------------------------------------------------------------------------------------------
 
     def updateStructureBayesianBottomUp(self, data, objFunction='MAP', silent=1):
         """

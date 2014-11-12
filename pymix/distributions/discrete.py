@@ -39,6 +39,7 @@ import copy
 import random
 import numpy as np
 from .multinomial import MultinomialDistribution
+from pyLibrary.env.logs import Log
 from ..util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from ..util.dataset import DataSet
 
@@ -156,20 +157,25 @@ class DiscreteDistribution(MultinomialDistribution):
         self.isValid(x)
         if type(x) == list:
             assert len(x) == 1
-            internal = self.alphabet.internal(str(x[0]))
+            internal = self.alphabet.internal(x[0])
         else:
-            internal = self.alphabet.internal(str(x))
+            internal = self.alphabet.internal(x)
         return [1, [internal]]
 
     def isValid(self, x):
-        if type(x) == str or type(x) == int or type(x) == float:
-            if not self.alphabet.isAdmissable(str(x)):
-                raise InvalidDistributionInput, "\n\tInvalid data: " + str(x) + " in DiscreteDistribution(" + str(self.alphabet.listOfCharacters) + ")."
+        if isinstance(x, (basestring, int, float)):
+            if not self.alphabet.isAdmissable(x):
+                Log.error("Invalid data: {{x}} in DiscreteDistribution({{chars}})", {
+                    "chars": self.alphabet.listOfCharacters,
+                    "x": repr(x)
+                })
+        elif type(x) == list and len(x) == 1:
+            self.isValid(x[0])
         else:
-            if type(x) == list and len(x) == 1:
-                self.isValid(x[0])
-            else:
-                raise InvalidDistributionInput, "\n\tInvalid data: " + str(x) + " in DiscreteDistribution(" + str(self.alphabet.listOfCharacters) + ")."
+            Log.error("Invalid data: {{x}} in DiscreteDistribution({{chars}})", {
+                "chars": self.alphabet.listOfCharacters,
+                "x": repr(x)
+            })
 
     def flatStr(self, offset):
         offset += 1

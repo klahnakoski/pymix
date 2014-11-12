@@ -123,7 +123,7 @@ from pymix.distributions.normal import NormalDistribution
 from pymix.distributions.product import ProductDistribution
 from pymix.models.bayes import BayesMixtureModel
 from pymix.parse import readMixture
-from pymix.util.emission_domain import Alphabet
+from pymix.vendor.ghmm.emission_domain import Alphabet
 from pymix.util.stats import random_vector
 
 G = 3

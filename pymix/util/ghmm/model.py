@@ -33,6 +33,7 @@
 #*             last change by $Author: ejb177 $.
 #*
 #******************************************************************************
+from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.dmodel import ghmm_dmodel
 from pymix.util.ghmm.dseq import ghmm_dseq, ghmm_dseq_add
 from pymix.util.ghmm.dstate import ghmm_dstate

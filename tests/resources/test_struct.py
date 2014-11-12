@@ -5,7 +5,7 @@ from pymix.mixture import *
 from numpy import numarray
 from Graph import *
 from pymix.models.mixture import MixtureModel
-from pymix.util.emission_domain import Alphabet
+from pymix.vendor.ghmm.emission_domain import Alphabet
 
 # DOES NOTHING??
 # def compStructure(v1, v2):

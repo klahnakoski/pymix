@@ -34,6 +34,7 @@
 #*
 #******************************************************************************
 from math import ceil, exp, log
+from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_REALLOC, GHMM_MAX_SEQ_NUMBER, DBL_MAX, ighmm_cmatrix_alloc, GHMM_PENALTY_LOGP
 from pymix.util.logs import Log
 

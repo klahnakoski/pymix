@@ -42,6 +42,7 @@ import sys
 from .errors import InvalidDistributionInput
 from ..parse import numerize
 from ..parse import chomp, strTabList
+from pyLibrary.env.logs import Log
 
 
 class DataSet(object):
@@ -524,12 +525,7 @@ class DataSet(object):
             try:
                 [t, dat] = m.components[0].formatData(self.dataMatrix[i])
             except InvalidDistributionInput, ex:
-
-                # XXX broken in Python 2.6
-                #ex.message += ' ( Sample '+str(self.sampleIDs[i])+', index = '+str(i)+' )'
-                print ' ( Sample ' + str(self.sampleIDs[i]) + ', index = ' + str(i) + ' )'
-
-                raise ex
+                Log.error(' ( Sample ' + str(self.sampleIDs[i]) + ', index = {{i}} )', locals(), ex )
 
             templist.append(dat)
 

@@ -109,7 +109,7 @@ class Alphabet(EmissionDomain):
         if isinstance(listOfCharacters, wrapper.ghmm_alphabet):
             self.listOfCharacters = [listOfCharacters.getSymbol(i) for i in range(listOfCharacters.size)]
         else:
-            self.listOfCharacters = listOfCharacters
+            self.listOfCharacters = copy.deepcopy(listOfCharacters)
 
         for i, c in enumerate(self.listOfCharacters):
             self.index[c] = i
@@ -170,21 +170,20 @@ class Alphabet(EmissionDomain):
         return len(self.listOfCharacters)
 
     def internal(self, emission):
-        """ Given a emission return the internal representation
         """
-        return self.index[emission]
+        Given a emission return the internal representation
+        """
+        try:
+            return self.index[emission]
+        except Exception, e:
+            Log.error("key error", e)
 
     def internalSequence(self, emissionSequence):
-        """ Given a emission_sequence return the internal representation
-
-        Raises KeyError
         """
-        result = copy.deepcopy(emissionSequence)
-        try:
-            result = map(lambda i: self.index[i], result)
-        except IndexError:
-            raise KeyError
-        return result
+        Given a emission_sequence return the internal representation
+        """
+        return [self.index[c] for c in emissionSequence]
+
 
     def external(self, internal):
         """ Given an internal representation return the external representation
