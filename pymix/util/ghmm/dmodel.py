@@ -3,7 +3,7 @@ from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.dseq import ghmm_dseq
 from pymix.util.ghmm.dstate import model_state_alloc
 from pymix.util.ghmm.local_store_t import reestimate_alloc
-from pymix.util.ghmm.reestimate import ighmm_reestimate_alloc_matvek, ighmm_reestimate_free_matvek, nologSum
+from pymix.util.ghmm.reestimate import ighmm_reestimate_alloc_matvek, nologSum
 from pymix.util.ghmm.topological_sort import topological_sort
 from pymix.util.ghmm.types import kHigherOrderEmissions, kSilentStates, kUntied, kTiedEmissions, kNoBackgroundDistribution, kBackgroundDistributions, kLabeledStates
 from pymix.util.ghmm.wrapper import GHMM_MAX_SEQ_LEN, GHMM_EPS_PREC, ARRAY_REALLOC, double_matrix_alloc, double_array_alloc, ARRAY_CALLOC, ARRAY_MALLOC, MAX_ITER_BW, EPS_ITER_BW, ighmm_cvector_normalize
@@ -1423,9 +1423,6 @@ class ghmm_dmodel():
                             gamma = seq_w[k] * alpha[t][i] * beta[t][i]
                             r.b_num[i][e_index] += gamma
                             r.b_denom[i][e_index / self.M] += gamma
-            ighmm_reestimate_free_matvek(alpha, beta, scale, T_k)
-            # for (k = 0 k < seq_number k+=1) :
-
         if valid:
             # new parameter lambda: set directly in model
             self.reestimate_setlambda(r)

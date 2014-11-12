@@ -123,6 +123,7 @@ from pymix.distributions.normal import NormalDistribution
 from pymix.distributions.product import ProductDistribution
 from pymix.models.bayes import BayesMixtureModel
 from pymix.parse import readMixture
+from pymix.priors.normal_gamma import NormalGammaPrior
 from pymix.vendor.ghmm.emission_domain import Alphabet
 from pymix.util.stats import random_vector
 
@@ -135,9 +136,9 @@ compPrior = []
 for i in range(2):
     compPrior.append(DirichletDistribution(4, [1.02, 1.02, 1.02, 1.02]))
 for i in range(2):
-    compPrior.append(NormalGammaDistribution(1.0, 2.0, 3.0, 4.0))
+    compPrior.append(NormalGammaPrior(1.0, 2.0, 3.0, 4.0))
 
-mixPrior = MixturePrior(0.7, 0.7, piPrior, compPrior)
+mixPrior = BayesMixtureModel(0.7, 0.7, piPrior, compPrior)
 
 DNA = Alphabet(['A', 'C', 'G', 'T'])
 comps = []

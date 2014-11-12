@@ -40,10 +40,6 @@ from pymix.util.ghmm.wrapper import ARRAY_CALLOC, GHMM_EPS_PREC
 from pymix.util.logs import Log
 
 
-def gradient_descent_gfree(matrix_b, matrix_a, matrix_pi, N):
-    pass
-
-
 #* allocates memory for m and n matrices:
 def gradient_descent_galloc(mo):
     matrix_b = ARRAY_CALLOC(mo.N)

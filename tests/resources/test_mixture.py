@@ -71,7 +71,7 @@ e1 = MixtureModel(2, [0.7, 0.3],
     [NormalDistribution(0.0, 0.4), ExponentialDistribution(0.5)]
 )
 
-seq2 = e1.sample(500)
+seq2 = e1.sampleSet(500)
 
 e2 = MixtureModel(2, [0.5, 0.5],
     [NormalDistribution(2.0, 0.4), ExponentialDistribution(0.1)]
@@ -80,41 +80,11 @@ e2 = MixtureModel(2, [0.5, 0.5],
 #e2.EM(seq2,60,5)
 
 
-#  ----------------------------- Example 3 -----------------------------
-m3 = MixtureModel(2, [0.3, 0.7],
-    [NormalDistribution(0.0, 0.5),
-        NormalDistribution(1.3, 0.5)
-    ])
-
-(true, seq3) = m3.sampleSetLabels(380)
-
-m4 = MixtureModel(2, [0.5, 0.5],
-    [NormalDistribution(-1.5, 1.5),
-        NormalDistribution(1.5, 1.5)
-    ])
-
-dat = DataSet()
-dat.fromArray(seq3)
-
-print "vorher ------\n", m4
-pred = m4.cluster(dat, nr_runs=5, nr_init=9, max_iter=30, delta=0.1, labels=None, entropy_cutoff=None)
-
-classes = m4.classify(dat)
-
-m4.shortInitEM(dat, 5, 5, 5, 0.1)
-m4.EM(seq3, 20, 0.1)
-print "####Finish\n", m4
-
-dat.printClustering(2, pred)
-
-evaluate(pred, true)
-
-
 #  ----------------------------- Example 4 -----------------------------
 m5 = MixtureModel(1, [1.0],
     [NormalDistribution(3.0, 2.5)])
 
-seq4 = m5.sample(1800)
+seq4 = m5.sampleSet(1800)
 
 #print "var = ", variance(seq4)
 

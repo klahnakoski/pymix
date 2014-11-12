@@ -204,15 +204,6 @@ def ghmm_dseq_get_singlesequence(sq, index):
         res.state_labels_len[0] = sq.state_labels_len[index]
     return res
 
-#XXX TEST: frees everything but the seq field
-def ghmm_dseq_subseq_free(sq):
-    pass
-
-
-def ghmm_cseq_subseq_free(sqd):
-    pass
-
-
 def ghmm_dseq_lexWords(n, M):
     cnt = 0
     j = n - 1
@@ -405,18 +396,6 @@ def ghmm_cseq_mathematica_print(sqd, file, name):
 
 
 def ghmm_dseq_clean(sq):
-    pass
-
-
-def ghmm_cseq_clean(sqd):
-    pass
-
-
-def ghmm_dseq_free(sq):
-    pass
-
-
-def ghmm_cseq_free(sqd):
     pass
 
 

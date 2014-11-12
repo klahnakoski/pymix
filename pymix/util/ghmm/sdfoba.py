@@ -43,7 +43,6 @@ EPS_PREC = 1E-8
 
 
 def sdfoba_initforward(mo, alpha_1, symb, scale):
-# define CUR_PROC "sdfoba_initforward"
     clazz = 0
     scale[0] = 0.0
     #iterate over non-silent states

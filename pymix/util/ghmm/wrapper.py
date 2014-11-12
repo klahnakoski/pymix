@@ -213,15 +213,6 @@ def double_array_setitem(array, index, value):
     except Exception, e:
         raise e
 
-
-def free(cscale):
-    pass
-
-
-def double_matrix_free(calpha, t):
-    pass
-
-
 # if the sum of the ka values is less than the threshold return 1
 def lt_sum(
     mo, #ghmm_dpmodel *

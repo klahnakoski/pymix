@@ -37,7 +37,6 @@ from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.dmodel import ghmm_dmodel
 from pymix.util.ghmm.dseq import ghmm_dseq, ghmm_dseq_add
 from pymix.util.ghmm.dstate import ghmm_dstate
-from pymix.util.ghmm.sequence import ghmm_dseq_free
 from pymix.util.ghmm.types import kDiscreteHMM, kBackgroundDistributions, kSilentStates, kNoBackgroundDistribution, kTiedEmissions, kUntied, kHigherOrderEmissions, kLabeledStates, kLeftRight, kPairHMM, kTransitionClasses
 from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC, ARRAY_REALLOC, GHMM_EPS_PREC, ghmm_dseq_max_symbol, GHMM_MAX_SEQ_LEN, ghmm_xmlfile_parse, ighmm_cvector_normalize
 from pymix.util.logs import Log
@@ -89,27 +88,7 @@ def ghmm_dmodel_from_sequence(sq):
     return mo
 
 
-#============================================================================
-# Produces models form given sequences
-def ghmm_dmodel_from_sequence_ascii(s, mo_number):
-    pass
 
-
-def ghmm_alphabet_free(a):
-    pass
-
-
-#============================================================================
-def ghmm_dmodel_free(mo):
-    pass
-
-
-#============================================================================
-def ghmm_dbackground_free(bg):
-    pass
-
-
-#============================================================================
 def ghmm_dmodel_copy(mo):
     m2 = ghmm_dmodel(mo.M, mo.N, mo.model_type, [0]*mo.N, [0]*mo.N)
     m2.s = [ ghmm_dstate() for i in range(mo.N)]
@@ -640,7 +619,6 @@ def ghmm_dmodel_prob_distance(m0, m, maxT, symmetric, verbose):
             seq0.seq_len[0] = true_len
 
         if symmetric:
-            ghmm_dseq_free(seq0)
             mo1 = m
             mo2 = m0
 

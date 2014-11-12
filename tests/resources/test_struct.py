@@ -3,7 +3,6 @@ from pymix.distributions.normal import NormalDistribution
 from pymix.distributions.product import ProductDistribution
 from pymix.mixture import *
 from numpy import numarray
-from Graph import *
 from pymix.models.mixture import MixtureModel
 from pymix.vendor.ghmm.emission_domain import Alphabet
 

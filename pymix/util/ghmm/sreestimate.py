@@ -97,11 +97,6 @@ def sreestimate_alloc(smo):
     r.sum_gt_otot = ighmm_cmatrix_stat_alloc(smo.N, smo.M)
     return r
 
-
-def sreestimate_free(r, N):
-    pass
-
-
 def sreestimate_init(r, smo):
     r.pi_denom = 0.0
     for i in range(smo.N):
@@ -136,10 +131,6 @@ def sreestimate_alloc_matvek(T, N, M):
         b[t] = ighmm_cmatrix_stat_alloc(N, M + 1)
 
     return alpha, beta, scale, b
-
-
-def sreestimate_free_matvec(alpha, beta, scale, b, T, N):
-    pass
 
 
 def sreestimate_precompute_b(smo, O, T, b):
@@ -475,8 +466,6 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
     else:                        # NO sequence can be build from smodel smonot
         # diskret:  *log_p = +1
         Log.error(" NO sequence can be build from smodel smonot \n")
-
-    sreestimate_free_matvec(alpha, beta, scale, b, T_k_max, smo.N)
 
     return valid_logp, log_p
 

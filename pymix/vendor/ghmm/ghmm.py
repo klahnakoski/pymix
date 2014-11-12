@@ -1041,7 +1041,7 @@ class HMM(object):
         likelihoodList = []
 
         for i in range(seqNumber):
-            Log.note("getting likelihood for sequence %i\n" % i)
+            # Log.note("getting likelihood for sequence %i\n" % i)
             seq = emissionSequences.cseq.getSequence(i)
             tmp = emissionSequences.cseq.getLength(i)
 
@@ -1195,9 +1195,6 @@ class HMM(object):
         states = stateSequence
 
         logp = self.cmodel.logp_joint(seq, t, states, s)
-
-        # deallocation
-        wrapper.free(states)
         return logp
 
     # The functions for model training are defined in the derived classes.
@@ -1286,7 +1283,6 @@ class HMM(object):
 
             allPaths.append(viterbiPath)
             allLogs.append(log_p)
-            wrapper.free(viterbiPath)
 
         Log.note("HMM.viterbi() -- end")
         if seqNumber > 1:
@@ -1481,7 +1477,6 @@ def HMMwriteList(fileName, hmmList, fileType=GHMM_FILETYPE_XML):
         for i, model in enumerate(hmmList):
             wrapper.cmodel_ptr_array_setitem(models, i, model.cmodel)
         wrapper.ghmm_cmodel_xml_write(models, fileName, len(hmmList))
-        wrapper.free(models)
     elif fileType == GHMM_FILETYPE_SMO:
         Log.error("the smo file format is deprecated, use xml instead")
     else:
@@ -1644,7 +1639,6 @@ class DiscreteEmissionHMM(HMM):
                 #change model_type and free array if no silent state is left
                 if 0 == sum(wrapper.int_array2list(self.cmodel.silent, self.N)):
                     self.clearFlags(kSilentStates)
-                    wrapper.free(self.cmodel.silent)
                     self.cmodel.silent = None
         #if the state becomes the first silent state allocate memory and set the silen flag
         elif sum(distributionParameters) == 0.0:
@@ -1781,7 +1775,6 @@ class DiscreteEmissionHMM(HMM):
         cweights = backgroundWeight
         result = self.cmodel.background_apply(cweights)
 
-        wrapper.free(cweights)
         if result:
             Log.error("applyBackground failed.")
 
@@ -1806,9 +1799,6 @@ class DiscreteEmissionHMM(HMM):
         if not len(stateBackground) == self.N:
             Log.error("Argument 'stateBackground' does not match number of states.")
 
-        if self.background != None:
-            del (self.background)
-            wrapper.free(self.cmodel.background_id)
         self.background = backgroundObject.getCopy()
         self.cmodel.bp = self.background.cbackground
         self.cmodel.background_id = wrapper.list2int_array(stateBackground)
@@ -1878,7 +1868,6 @@ class DiscreteEmissionHMM(HMM):
     def removeTieGroups(self):
         """ Removes all tied emission information. """
         if self.hasFlags(kTiedEmissions) and self.cmodel.tied_to != None:
-            wrapper.free(self.cmodel.tied_to)
             self.cmodel.tied_to = None
             self.clearFlags(kTiedEmissions)
 
@@ -2070,7 +2059,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
             if not self.labelDomain.isAdmissable(labelList[i]):
                 Log.error("Label " + str(labelList[i]) + " not included in labelDomain.")
 
-        wrapper.free(self.cmodel.label)
         self.cmodel.label = wrapper.list2int_array([self.labelDomain.internal(l) for l in labelList])
 
     def getLabels(self):
@@ -2170,7 +2158,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
             allLabels.append(oneLabel)
             allLogs.append(log_p)
-            wrapper.free(labeling)
 
         if emissionSequences.cseq.seq_number > 1:
             return (map(self.externalLabel, allLabels), allLogs)
@@ -2258,9 +2245,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
         pyscale = wrapper.double_array2list(cscale, t)
         pyalpha = ghmmhelper.double_matrix2list(calpha, t, n_states)
 
-        wrapper.free(label)
-        wrapper.free(cscale)
-        wrapper.double_matrix_free(calpha, t)
         return (logp, pyalpha, pyscale)
 
     def labeledBackward(self, emissionSequence, labelSequence, scalingVector):
@@ -2287,10 +2271,6 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         pybeta = ghmmhelper.double_matrix2list(cbeta, t, self.cmodel.N)
 
-        # deallocation
-        wrapper.free(cscale)
-        wrapper.free(label)
-        wrapper.double_matrix_free(cbeta, t)
         return logp, pybeta
 
     def labeledBaumWelch(self, trainingSequences, nrSteps=wrapper.MAX_ITER_BW,
@@ -2498,9 +2478,6 @@ class GaussianEmissionHMM(HMM):
         pyscale = wrapper.double_array2list(cscale, t) # XXX return Python2.5 arrays???
         pyalpha = ghmmhelper.double_matrix2list(calpha, t, i) # XXX return Python2.5 arrays? Also
         # XXX Check Matrix-valued input.
-
-        wrapper.free(cscale)
-        wrapper.double_matrix_free(calpha, t)
         return (pyalpha, pyscale)
 
     def backward(self, emissionSequence, scalingVector):
@@ -2525,10 +2502,6 @@ class GaussianEmissionHMM(HMM):
             Log.error("backward finished with -1: EmissionSequence cannot be build.")
 
         pybeta = ghmmhelper.double_matrix2list(cbeta, t, self.cmodel.N)
-
-        # deallocation
-        wrapper.free(cscale)
-        wrapper.double_matrix_free(cbeta, t)
         return pybeta
 
     def loglikelihoods(self, emissionSequences):
@@ -2616,8 +2589,6 @@ class GaussianEmissionHMM(HMM):
 
             allPaths.append(onePath)
             allLogs.append(log_p)
-
-        wrapper.free(viterbiPath)
 
         # resetting class_change->k to default
         if self.cmodel.cos > 1:
@@ -3240,9 +3211,6 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps=50, gradient=0):
         HMMList[i].cmodel = wrapper.dmodel_ptr_array_getitem(HMMArray, i)
         SeqList[i].cseq = wrapper.dseq_ptr_array_getitem(SeqArray, i)
 
-    wrapper.free(HMMArray)
-    wrapper.free(SeqArray)
-
     return HMMDiscriminativePerformance(HMMList, SeqList)
 
 
@@ -3272,10 +3240,6 @@ def HMMDiscriminativePerformance(HMMList, SeqList):
         wrapper.dseq_ptr_array_setitem(SeqArray, i, SeqList[i].cseq)
 
     retval = wrapper.ghmm_dmodel_label_discrim_perf(HMMArray, SeqArray, inplen)
-
-    wrapper.free(HMMArray)
-    wrapper.free(SeqArray)
-
     return retval
 
 ########## Here comes all the Pair HMM stuff ##########
@@ -3517,10 +3481,6 @@ class PairHMM(HMM):
         log_p = wrapper.double_array_getitem(log_p_ptr, 0)
         length = length_ptr[0]
         path = [cpath[x] for x in range(length)]
-        # free the memory
-        wrapper.free(log_p_ptr)
-        wrapper.free(length_ptr)
-        wrapper.free(cpath)
         return (path, log_p)
 
     def logP(self, complexEmissionSequenceX, complexEmissionSequenceY, path):
@@ -3537,7 +3497,6 @@ class PairHMM(HMM):
         logP = self.cmodel.viterbi_logP(complexEmissionSequenceX.cseq,
             complexEmissionSequenceY.cseq,
             cpath, len(path))
-        wrapper.free(cpath)
         return logP
 
     def addEmissionDomains(self, emissionDomains):

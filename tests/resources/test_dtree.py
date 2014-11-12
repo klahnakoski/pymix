@@ -1,87 +1,82 @@
 from pymix import mixture
 import numpy as np
 import random
+from pymix.distributions.conditional_gauss import ConditionalGaussDistribution
+from pymix.distributions.dependence_tree import DependenceTreeDistribution
+from pymix.distributions.product import ProductDistribution
+from pymix.models.mixture import MixtureModel
+from pymix.util.dataset import DataSet
 
 
 def testdtree():
+    tree = {}
+    tree[0] = -1
+    tree[1] = 0
+    tree[2] = 1
 
-        tree = {}
-        tree[0] = -1
-        tree[1] = 0
-        tree[2] = 1
+    n1 = ProductDistribution([ConditionalGaussDistribution(3, [0, 1, 0],
+        [0, -0.1, 0.1],
+        [0.5, 0.5, 0.5], tree)])
+    tree2 = {}
+    tree2[0] = -1
+    tree2[1] = 0
+    tree2[2] = 0
+    n2 = ProductDistribution([ConditionalGaussDistribution(3, [-1, 0, 1],
+        [0, 0.1, -0.1],
+        [0.5, 0.5, 0.5], tree2)])
 
+    pi = [0.4, 0.6]
+    gen = MixtureModel(2, pi, [n1, n2])
 
-        n1 = mixture.ProductDistribution([mixture.ConditionalGaussDistribution(3,[0, 1, 0],
-                                                                                 [0, -0.1, 0.1],
-                                                                                 [0.5,0.5,0.5],tree)])
-        tree2 = {}
-        tree2[0] = -1
-        tree2[1] = 0
-        tree2[2] = 0
-        n2 = mixture.ProductDistribution([mixture.ConditionalGaussDistribution(3,[-1, 0, 1],
-                                                                                 [0, 0.1, -0.1],
-                                                                                 [0.5,0.5,0.5],tree2)])
+    random.seed(1)
+    data = gen.sampleDataSet(1000)
 
-        pi = [0.4, 0.6]
-        gen = mixture.MixtureModel(2,pi,[n1,n2])
+    print data
 
-        random.seed(1)
-        data = gen.sampleDataSet(1000)
+    n1 = ProductDistribution([DependenceTreeDistribution(3, [0.1, 1.1, 0.1],
+        [0, 0, 0],
+        [1.0, 1.0, 1.0])])
+    n2 = ProductDistribution([DependenceTreeDistribution(3, [-1, 0, -0.1],
+        [0, 0, 0],
+        [1.0, 1.0, 1.0])])
 
-        print data
+    n1 = ProductDistribution([ConditionalGaussDistribution(3, [0, 1, 0],
+        [0.0, 0.1, 0.1],
+        [0.1, 0.1, 0.1], tree)])
+    n2 = ProductDistribution([ConditionalGaussDistribution(3, [-1, 0, 1],
+        [0.0, 0.1, 0.1],
+        [0.1, 0.1, 0.1], tree2)])
 
-
-
-        n1 = mixture.ProductDistribution([mixture.DependenceTreeDistribution(3,[0.1, 1.1, 0.1],
-                                                                                 [0, 0, 0],
-                                                                                 [1.0,1.0,1.0])])
-        n2 = mixture.ProductDistribution([mixture.DependenceTreeDistribution(3,[-1, 0, -0.1],
-                                                                                 [0, 0, 0],
-                                                                                 [1.0,1.0,1.0])])
-
-
-        n1 = mixture.ProductDistribution([mixture.ConditionalGaussDistribution(3,[0, 1, 0],
-                                                                                 [0.0, 0.1, 0.1],
-                                                                                 [0.1,0.1,0.1],tree)])
-        n2 = mixture.ProductDistribution([mixture.ConditionalGaussDistribution(3,[-1, 0, 1],
-                                                                                 [0.0, 0.1, 0.1],
-                                                                                 [0.1,0.1,0.1],tree2)])
-
-        train = mixture.MixtureModel(2,pi,[n1,n2])
-	train.modelInitialization(data)
-        train.EM(data,100,0.01,silent=1)
-
+    train = MixtureModel(2, pi, [n1, n2])
+    train.modelInitialization(data)
+    train.EM(data, 100, 0.01, silent=1)
 
 
 def testLymphData():
+    k = 5
+    d = 11
 
-	k = 5
-	d = 11
+    aux = [0] * d
 
-	aux = [0]*d
+    models = []
 
-	models = []
+    for i in range(k):
+        aux1 = [0] * d
+        aux2 = [0] * d
+        aux3 = [0] * d
+        models.append(ProductDistribution([DependenceTreeDistribution(d, aux1, aux2, aux3)]))
 
-	for i in range(k):
-	    aux1 = [0]*d
-	    aux2 = [0]*d
-	    aux3 = [0]*d
-  	    models.append(mixture.ProductDistribution([mixture.DependenceTreeDistribution(d,aux1,aux2,aux3)]))
+    pi = [1.0] * k
+    pi = np.array(pi) / k
 
-        pi = [1.0]*k
-	pi = np.array(pi)/k
+    train = MixtureModel(k, pi, models)
 
+    data = DataSet()
+    data.fromFiles(['data/ltree2_2fold.txt'], )
 
-        train = mixture.MixtureModel(k,pi,models)
+    train.modelInitialization(data)
 
-        data = mixture.DataSet()
-	data.fromFiles(['data/ltree2_2fold.txt'],)
-
-	train.modelInitialization(data)
-
-        train.EM(data,100,0.01,silent=1)
-
-
+    train.EM(data, 100, 0.01, silent=1)
 
 
 testdtree()

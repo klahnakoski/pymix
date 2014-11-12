@@ -309,18 +309,6 @@ class SequenceSetSubset(SequenceSet):
         self.ParentSequenceSet = ParentSequenceSet
         SequenceSet.__init__(self, emissionDomain, sequenceSetInput, labelDomain, labelInput)
 
-    def __del__(self):
-        """ Since we do not want to deallocate the sequence memory,
-        the destructor has to be overloaded.
-        """
-        Log.note("__del__ SequenceSubSet " + str(self.cseq))
-
-        if self.cseq is not None:
-            self.cseq.subseq_free()
-
-        # remove reference on parent SequenceSet object
-        self.ParentSequenceSet = None
-        self.cseq.thisown = 0
 
 
 #-------------------------------------------------------------------------------
@@ -404,24 +392,13 @@ class EmissionSequence(object):
         else:
             Log.error("inputType " + str(type(sequenceInput)) + " not recognized.")
 
-    def __del__(self):
-        "Deallocation of C sequence struct."
-        Log.note("__del__ EmissionSequence " + str(self.cseq))
-        # if a parent SequenceSet exits, we use cseq.subseq_free() to free memory
-        if self.ParentSequenceSet is not None:
-            self.cseq.subseq_free()
-        self.ParentSequenceSet = None
-
-
     def __len__(self):
         "Returns the length of the sequence."
         return self.cseq.getLength(0)
 
-
     def __setitem__(self, index, value):
         internalValue = self.emissionDomain.internal(value)
         self.cseq.setSymbol(0, index, internalValue)
-
 
     def __getitem__(self, index):
         """

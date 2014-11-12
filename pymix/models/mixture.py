@@ -1378,10 +1378,10 @@ class MixtureModel(ProbDistribution):
         g = np.sum(l, 2)
         for k in range(self.G):
             g[k, :] += np.log(self.pi[k])
-        sum_logs = np.zeros(data.N, dtype='Float64')
+        _sum_logs = np.zeros(data.N, dtype='Float64')
         for n in range(data.N):
-            sum_logs[n] = sum_logs(g[:, n])
-        lk = sum(sum_logs)
+            _sum_logs[n] = sum_logs(g[:, n])
+        lk = sum(_sum_logs)
         for j in range(self.dist_nr):
             # initialize free parameters
             full_fp_0 = self.freeParams
@@ -1464,10 +1464,10 @@ class MixtureModel(ProbDistribution):
                 for k in range(self.G):
                     g[k, :] += np.log(self.pi[k])
 
-                sum_logs = np.zeros(data.N, dtype='Float64')
+                _sum_logs = np.zeros(data.N, dtype='Float64')
                 for n in range(data.N):
-                    sum_logs[n] = sum_logs(g[:, n])
-                lk_1 = sum(sum_logs)
+                    _sum_logs[n] = sum_logs(g[:, n])
+                lk_1 = sum(_sum_logs)
                 full_BIC_1 = -2 * lk_1 + (full_fp_1 * np.log(data.N))
                 AIC_0 = -2 * lk + ( 2 * full_fp_0 )
                 AIC_1 = -2 * lk_1 + ( 2 * full_fp_1 )

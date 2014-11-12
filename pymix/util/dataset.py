@@ -257,7 +257,7 @@ class DataSet(object):
         if row_headers:
             self.row_headers = row_headers
 
-        self.dataMatrix = array.tolist()
+        self.dataMatrix = array
 
 
     def fromList(self, List, IDs=None, headers=None, col_headers=None, row_headers=None):
