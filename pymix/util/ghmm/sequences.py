@@ -1,3 +1,5 @@
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC
+
 
 class sequence():
     """
