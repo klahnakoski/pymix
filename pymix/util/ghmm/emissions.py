@@ -1,10 +1,10 @@
 #*
-#      ghmm_c_emission bundles all emission parameters
+#      Emission bundles all emission parameters
 #
 from pyLibrary.struct import Struct
 
 
-class ghmm_c_emission:
+class Emission:
     def __init__(self):
         #* specify the type of the density
         self.type = 0

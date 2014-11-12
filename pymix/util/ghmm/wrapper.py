@@ -10,7 +10,7 @@
 ################################################################################
 from copy import deepcopy
 from math import exp, log, sqrt
-from pymix.util.ghmm.emission import ghmm_c_emission
+from pymix.util.ghmm.emissions import Emission
 from pymix.util.logs import Log
 
 
@@ -101,7 +101,7 @@ def int_matrix_alloc_row(rows):
 
 
 def c_emission_array_alloc(n):
-    return [ghmm_c_emission() for i in range(n)]
+    return [Emission() for i in range(n)]
 
 
 def double_array_alloc(length):

@@ -9,6 +9,11 @@ class ghmm_cstate:
     def __init__(self, M, in_states, out_states, cos):
         #* Number of output densities per state
         self.M = M  # int
+        #* vector of Emission
+        #      (type and parameters of output function components)
+        self.e = ARRAY_CALLOC(M)  # Emission *
+
+
         #* initial prob.
         self.pi = None  # double
 
@@ -40,9 +45,6 @@ class ghmm_cstate:
         #* flag for fixation of parameter. If fix = 1 do not change parameters of
         #      output functions, if fix = 0 do normal training. Default is 0.
         self.fix = 0  # int
-        #* vector of ghmm_c_emission
-        #      (type and parameters of output function components)
-        self.e = ARRAY_CALLOC(M)  # ghmm_c_emission *
 
         #* contains a description of the state (null terminated utf-8)
         self.desc = None  # char *
@@ -51,11 +53,8 @@ class ghmm_cstate:
         #* y coordinate position for graph representation plotting *
         self.yPosition = 0.0  # int
 
-        self.c=None
-
     def setDensity(self, i, type):
         self.e[i].type = type
-
 
     def getEmission(self, i):
         return self.e[i]
@@ -71,21 +70,6 @@ class ghmm_cstate:
 
     def getInProb(self, i, c=0):
         return self.in_a[c][i]
-
-    def calc_cmbm(self, m, omega):
-        emission = self.e[m]
-        # return self.c[m] * density_func[emission.type](emission, omega)
-        return density_func[emission.type](emission, omega)
-
-
-    #============================================================================
-    # PDF(omega) in a given state
-    def calc_b(self, omega):
-        b = 0.0
-
-        for m in range(self.M):
-            b += self.c[m] * density_func[self.e[m].type](self.e[m], omega)
-        return b
 
     def getMean(self, i):
         return self.e[i].mean
@@ -106,3 +90,19 @@ class ghmm_cstate:
 
     def getWeight(self, i):
         return self.c[i]
+
+
+    #============================================================================
+    # PDF(omega) in a given state
+    def calc_b(self, omega):
+        b = 0.0
+
+        for m in range(self.M):
+            b += self.c[m] * density_func[self.e[m].type](self.e[m], omega)
+        return b
+
+    def calc_cmbm(self, m, omega):
+        emission = self.e[m]
+        # return self.c[m] * density_func[emission.type](emission, omega)
+        return density_func[emission.type](emission, omega)
+
