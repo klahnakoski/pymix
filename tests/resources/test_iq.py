@@ -1,11 +1,14 @@
-from pymix import mixture
 import random
-from numpy import numarray
 
-VNTR = mixture.Alphabet( ['.', '2/4', '2/7', '3/4', '3/7', '4/4', '4/6', '4/7', '4/8', '4/9', '7/7'] )
-DIAG = mixture.Alphabet(['.','0','8','1'])
+from pymix.mixture import DataSet
+from pymix import mixture
+from pymix.vendor.ghmm.emission_domain import Alphabet
 
-data = mixture.DataSet()
+
+VNTR = Alphabet( ['.', '2/4', '2/7', '3/4', '3/7', '4/4', '4/6', '4/7', '4/8', '4/9', '7/7'] )
+DIAG = Alphabet(['.','0','8','1'])
+
+data = DataSet()
 
 # iq.txt = iq and achievement test fields from pheno.txt
 # drd4_len.txt = drd4 vntr types, only number of repeats

@@ -114,18 +114,6 @@ class Alphabet(EmissionDomain):
         for i, c in enumerate(self.listOfCharacters):
             self.index[c] = i
 
-        lens = {}
-        try:
-            for c in self.listOfCharacters:
-                lens[len(c)] = 1
-        except TypeError:
-            self._lengthOfCharacters = None
-        else:
-            if len(lens) == 1:
-                self._lengthOfCharacters = lens.keys()[0]
-            else:
-                self._lengthOfCharacters = None
-
         self.CDataType = "int" # flag indicating which C data type should be used
         self.dimension = 1
 
@@ -215,14 +203,6 @@ class Alphabet(EmissionDomain):
         """ Check whether emission is admissable (contained in) the domain
         """
         return emission in self.listOfCharacters
-
-    def getExternalCharacterLength(self):
-        """
-        If all external characters are of the same length the length is
-        returned. Otherwise None.
-        @return length of the external characters or None
-        """
-        return self._lengthOfCharacters
 
     def toCstruct(self):
         calphabet = wrapper.ghmm_alphabet(len(self), "<unused>")

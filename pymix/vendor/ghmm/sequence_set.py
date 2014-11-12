@@ -610,12 +610,7 @@ class ComplexEmissionSequence(object):
         )
 
         for i in range(len(self.discreteInputs)):
-            # internalInput = []
-            offset = self.discreteDomains[i].getExternalCharacterLength()
-            if offset == None:
-                internalInput = self.discreteDomains[i].internalSequence(self.discreteInputs[i])
-            else:
-                internalInput = ([-1]*offset) + self.discreteDomains[i].internalSequence(self.discreteInputs[i])
+            internalInput = self.discreteDomains[i].internalSequence(self.discreteInputs[i])
             pointerDiscrete = self.cseq.get_discrete(i)
             for j in range(len(self)):
                 wrapper.int_array_setitem(pointerDiscrete, j, internalInput[j])
