@@ -85,17 +85,8 @@ def extract_out(lisprobs):
 
     Allocates: .[out|in]_id and .[out|in]_a vectors
     """
-    lis = []
-    for i in range(len(lisprobs)):
-        if lisprobs[i] != 0:
-            lis.append(i)
-    trans_id = wrapper.int_array_alloc(len(lis))
-    trans_prob = wrapper.double_array_alloc(len(lis))
-    for i in range(len(lis)):
-        trans_id[i] = lis[i]
-        trans_prob[i] = lisprobs[lis[i]]
-
-    return len(lis), trans_id, trans_prob
+    trans_id = range(len(lisprobs))
+    return len(lisprobs), trans_id, lisprobs[:]
 
 
 #def extract_out_probs(lisprobs,cos):
@@ -137,29 +128,20 @@ def extract_out_cos(transmat, cos, state):
 
     Allocates: .out_id vector and .out_a array (of size cos x N)
     """
-
-    lis = []
+    trans_id = []
     # parsing indixes belonging to postive probabilites
     for j in range(cos):
         for i in range(len(transmat[j][state])):
-            if transmat[j][state][i] != 0.0 and i not in lis:
-                lis.append(i)
+            trans_id.append(i)
 
-    #lis.sort()
-    #print "lis: ", lis
-
-    trans_id = wrapper.int_array_alloc(len(lis))
-    probsarray = wrapper.double_matrix_alloc(cos, len(lis)) # C-function
+    probsarray = wrapper.double_matrix_alloc(cos, len(trans_id))
 
     # creating list with positive probabilities
     for k in range(cos):
-        for j in range(len(lis)):
-            wrapper.double_matrix_setitem(probsarray, k, j, transmat[k][state][lis[j]])
+        for j in range(len(trans_id)):
+            probsarray[k][j]=transmat[k][state][j]
 
-    # initializing C state index array
-    for i in range(len(lis)):
-        wrapper.int_array_setitem(trans_id, i, lis[i])
-    return [len(lis), trans_id, probsarray]
+    return len(trans_id), trans_id, probsarray
 
 
 def extract_in_cos(transmat, cos, state):
@@ -171,33 +153,21 @@ def extract_in_cos(transmat, cos, state):
 
     Allocates: .in_id vector and .in_a array (of size cos x N)
     """
-    lis = []
+    trans_id = []
 
     # parsing indixes belonging to postive probabilites
     for j in range(cos):
         transmat_col_state = map(lambda x: x[state], transmat[j])
         for i in range(len(transmat_col_state)):
+            trans_id.append(i)
 
-            if transmat_col_state[i] != 0.0 and i not in lis:
-                lis.append(i)
+    probsarray = wrapper.double_matrix_alloc(cos, len(trans_id)) # C-function
 
-    #lis.sort()
-    #print "lis: ", lis
-
-
-
-    trans_id = wrapper.int_array_alloc(len(lis))
-    probsarray = wrapper.double_matrix_alloc(cos, len(lis)) # C-function
-
-    # creating list with positive probabilities
     for k in range(cos):
-        for j in range(len(lis)):
-            wrapper.double_matrix_setitem(probsarray, k, j, transmat[k][lis[j]][state])
+        for j in range(len(trans_id)):
+            probsarray[k][j]=transmat[k][j][state]
 
-    # initializing C state index array
-    for i in range(len(lis)):
-        wrapper.int_array_setitem(trans_id, i, lis[i])
-    return [len(lis), trans_id, probsarray]
+    return [len(trans_id), trans_id, probsarray]
 
 
 class twodim_double_array:
