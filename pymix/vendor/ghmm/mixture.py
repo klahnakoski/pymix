@@ -55,13 +55,13 @@ def Entropy(prob_dist):
         # we have to deal with zero probs
         p = prob_dist[i]
         if p > 0.0:
-            result -= p * math.log(p)
-            # p == 0.0 Note: lim_(x->0) x log(x) = 0
+            result -= p * Math.log(p)
+            # p == 0.0 Note: lim_(x->0) x Math.log(x) = 0
     return result
 
 
 def sumlogs(a):
-    """ Given a np.array a of log p_i, return log(sum p_i)
+    """ Given a np.array a of log p_i, return Math.log(sum p_i)
 
     XXX should be coded in C, check whether part of np
     """
@@ -75,7 +75,7 @@ def sumlogs(a):
             if x < -1.0e-16:
                 result += math.exp(x) # XXX use approximation
 
-    result = math.log(result)
+    result = Math.log(result)
     result += m
     return result
 
@@ -106,11 +106,11 @@ def estimate_mixture(models, seqs, max_iter, eps, alpha=None):
     l = np.zeros((len(seqs), len(models)), dtype='Float64')
     if alpha == None: # Uniform alpha
         logalpha = np.ones(len(models), dtype='Float64') * \
-                   math.log(1.0 / len(models))
+                   Math.log(1.0 / len(models))
     else:
         logalpha = np.log(alpha)
     print logalpha, np.exp(logalpha)
-    log_nrseqs = math.log(len(seqs))
+    log_nrseqs = Math.log(len(seqs))
 
     while 1:
         # Score all sequences with all models
@@ -121,7 +121,7 @@ def estimate_mixture(models, seqs, max_iter, eps, alpha=None):
 
         #print l
         for i in xrange(len(seqs)):
-            l[i] += logalpha # l[i] = ( log( a_k * P[seq i| model k]) )
+            l[i] += logalpha # l[i] = ( Math.log( a_k * P[seq i| model k]) )
             #print l
         mixture_likelihood = np.sum(np.sum(l))
         print "# iter %s joint likelihood = %f" % (iter, mixture_likelihood)
@@ -258,7 +258,7 @@ if __name__ == '__main__':
                 print string.join(map(lambda x: "%1.3f" % x, P[i]), '\t')
         else:
             if output == 'cluster':
-                assignment = decode_mixture(P, len(models)) # max ent: log(len(models))
+                assignment = decode_mixture(P, len(models)) # max ent: Math.log(len(models))
             else:
                 assignment = decode_mixture(P, entropy_cutoff)
             for i, c in enumerate(assignment):

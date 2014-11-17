@@ -61,9 +61,9 @@ class MultinomialDistribution(ProbDistribution):
         @param parFix: list of flags to determine if any elements of phi should be fixed
         """
         assert len(phi) == M, "Invalid number of parameters for MultinomialDistribution."
-        assert abs((1.0 - sum(phi))) < 1e-12, str(phi) + ": " + str(1.0 - sum(phi)) # check parameter validity
+        assert abs((1.0 - sum(phi))) < 1e-12, str(phi) + ": " + str(1.0 - sum(phi))  #  check parameter validity
 
-        self.p = p # lenght of input vectors, corresponds to p in MixtureModel
+        self.p = p  # length of input vectors, corresponds to p in MixtureModel
         self.M = M
         self.suff_p = M  # length of the sufficient statistics, equal to size of alphabet
 

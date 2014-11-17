@@ -1,4 +1,4 @@
-from math import log
+from pyLibrary.maths import Math
 from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.sequences import sequence
 from pymix.util.ghmm.cstate import ghmm_cstate
@@ -361,9 +361,9 @@ class ghmm_cmodel:
         dim = self.dim
 
         prevstate = state = S[0]
-        log_p = log(self.s[state].pi)
+        log_p = Math.log(self.s[state].pi)
         if not (self.model_type & kSilentStates) or 1: # XXX not mo.silent[state]  :
-            log_p += log(self.s[state].calc_b(O[pos]))
+            log_p += Math.log(self.s[state].calc_b(O[pos]))
             pos += 1
 
         for state_pos in range(1, len):
@@ -382,10 +382,10 @@ class ghmm_cmodel:
             if (j == self.s[state].in_states or abs(self.s[state].in_a[osc][j]) < GHMM_EPS_PREC):
                 Log.error("Sequence can't be built. There is no transition from state %d to %d.", prevstate, state)
 
-            log_p += log(self.s[state].in_a[osc][j])
+            log_p += Math.log(self.s[state].in_a[osc][j])
 
             if not (self.model_type & kSilentStates) or 1: # XXX !mo.silent[state]
-                log_p += log(self.s[state].calc_b(O[pos]))
+                log_p += Math.log(self.s[state].calc_b(O[pos]))
                 pos += 1
 
             prevstate = state
@@ -413,7 +413,7 @@ class ghmm_cmodel:
         if scale[0] <= DBL_MIN:
             Log.error(" means f(O[0], mue, u) << 0, first symbol very unlikely")
 
-        log_p = log(scale[0])
+        log_p = Math.log(scale[0])
 
         if self.cos == 1:
             osc = 0
@@ -447,8 +447,8 @@ class ghmm_cmodel:
             # scale alpha
             for i in range(self.N):
                 alpha[t][i] *= c_t
-                # summation of log(c[t]) for calculation of log( P(O|lambda) )
-            log_p -= log(c_t)
+                # summation of Math.log(c[t]) for calculation of Math.log( P(O|lambda) )
+            log_p -= Math.log(c_t)
 
             if self.cos == 1:
                 osc = 0

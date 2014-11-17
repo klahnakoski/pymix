@@ -115,6 +115,7 @@ import StringIO
 import math
 import os
 from string import join
+from pyLibrary.maths import Math
 
 from pymix.util.ghmm import types
 from pymix.util.ghmm import wrapper
@@ -505,7 +506,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     states[i] = state
                     # compute state order
                     if cmodel.M > 1:
-                        order = math.log(len(B[i]), cmodel.M) - 1
+                        order = Math.log(len(B[i]), cmodel.M) - 1
                     else:
                         order = len(B[i]) - 1
 
@@ -811,7 +812,7 @@ class BackgroundDistribution(object):
             b = wrapper.double_matrix_alloc_row(distNum)
             for i in range(distNum):
                 if len(emissionDomain) > 1:
-                    o = math.log(len(bgInput[i]), len(emissionDomain)) - 1
+                    o = Math.log(len(bgInput[i]), len(emissionDomain)) - 1
                 else:
                     o = len(bgInput[i]) - 1
 
@@ -950,13 +951,13 @@ class HMM(object):
         Log.note("__del__ HMM" + str(self.cmodel))
 
     def loglikelihood(self, emissionSequences):
-        """ Compute log( P[emissionSequences| model]) using the forward algorithm
+        """ Compute Math.log( P[emissionSequences| model]) using the forward algorithm
         assuming independence of the sequences in emissionSequences
 
         @param emissionSequences can either be a SequenceSet or a EmissionSequence
 
-        @returns log( P[emissionSequences| model]) of type float which is
-        computed as \f$\sum_{s} log( P[s| model])\f$ when emissionSequences
+        @returns Math.log( P[emissionSequences| model]) of type float which is
+        computed as \f$\sum_{s} Math.log( P[s| model])\f$ when emissionSequences
         is a SequenceSet
 
         @note The implementation does not compute the full forward matrix since
@@ -966,12 +967,12 @@ class HMM(object):
 
 
     def loglikelihoods(self, emissionSequences):
-        """ Compute a vector ( log( P[s| model]) )_{s} of log-likelihoods of the
+        """ Compute a vector ( Math.log( P[s| model]) )_{s} of log-likelihoods of the
         individual emission_sequences using the forward algorithm
 
         @param emissionSequences is of type SequenceSet
 
-        @returns log( P[emissionSequences| model]) of type float
+        @returns Math.log( P[emissionSequences| model]) of type float
         (numarray) vector of floats
 
         """
@@ -1053,7 +1054,7 @@ class HMM(object):
         #                if pp == 0:
         #                    return float('-inf')
         #                else:
-        #                    path_log_lik += math.log(post[p][path[p]])
+        #                    path_log_lik += Math.log(post[p][path[p]])
         #                    j+=1
         #
         #
@@ -1066,7 +1067,7 @@ class HMM(object):
         #                    if pp == 0:
         #                        return float('-inf')
         #                    else:
-        #                        path_log_lik += math.log(post[p][path[p]])
+        #                        path_log_lik += Math.log(post[p][path[p]])
         #                        j+=1
         #
         #            return path_log_lik
@@ -1579,7 +1580,7 @@ class DiscreteEmissionHMM(HMM):
         if self.cmodel.order is None:
             self.cmodel.order = [0] * self.M
 
-        self.cmodel.order[i] = int(math.log(len(distributionParameters), self.M))-1
+        self.cmodel.order[i] = int(Math.log(len(distributionParameters), self.M))-1
         if self.M ** (self.cmodel.order[i]+1) != len(distributionParameters):
             Log.error("distributionParameters has wrong length")
         self.cmodel.maxorder = max(self.cmodel.order)
@@ -1660,7 +1661,7 @@ class DiscreteEmissionHMM(HMM):
         @param pA prior count for transitions
         @param pB prior count for emissions
         @param pPI prior count for initial state
-        @param R length of uniform compression >0, works best for .5log(sqrt(T)) where T is length of seq
+        @param R length of uniform compression >0, works best for .5Math.log(sqrt(T)) where T is length of seq
         @param burnin number of iterations
         @return set of sampled paths for each training sequence
         @warning work in progress
@@ -1671,7 +1672,7 @@ class DiscreteEmissionHMM(HMM):
         if self.hasFlags(kSilentStates):
             Log.error("Sorry, training of models containing silent states not yet supported.")
         if R is -1:
-            R = int(math.ceil(.5 * math.log(math.sqrt(len(trainingSequences)))))
+            R = int(math.ceil(.5 * Math.log(math.sqrt(len(trainingSequences)))))
             #print R
         if R <= 1:
             R = 2
@@ -2115,12 +2116,12 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
 
     def labeledlogikelihoods(self, emissionSequences):
-        """ Compute a vector ( log( P[s,l| model]) )_{s} of log-likelihoods of the
+        """ Compute a vector ( Math.log( P[s,l| model]) )_{s} of log-likelihoods of the
         individual \p emissionSequences using the forward algorithm
 
         @param emissionSequences SequenceSet
 
-        Result: log( P[emissionSequences,labels| model]) of type float
+        Result: Math.log( P[emissionSequences,labels| model]) of type float
         (numarray) vector of floats
         """
         emissionSequences = emissionSequences.asSequenceSet()
@@ -2432,12 +2433,12 @@ class GaussianEmissionHMM(HMM):
         return pybeta
 
     def loglikelihoods(self, emissionSequences):
-        """ Compute a vector ( log( P[s| model]) )_{s} of log-likelihoods of the
+        """ Compute a vector ( Math.log( P[s| model]) )_{s} of log-likelihoods of the
         individual emissionSequences using the forward algorithm.
 
         @param emissionSequences SequenceSet
 
-        Result: log( P[emissionSequences| model]) of type float
+        Result: Math.log( P[emissionSequences| model]) of type float
         (numarray) vector of floats
 
         """

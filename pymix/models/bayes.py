@@ -47,7 +47,7 @@ from ..util import setPartitions, mixextend, stats
 from ..util.candidate_group import CandidateGroup
 from ..util.dataset import DataSet
 from ..util.errors import InvalidPosteriorDistribution, ConvergenceFailureEM
-from ..util.maths import matrix_sum_logs, sum_logs
+from ..util.maths import matrix_sum_logs
 from ..util.setPartitions import init_last, prev_partition
 from ..util.stats import sym_kl_dist
 

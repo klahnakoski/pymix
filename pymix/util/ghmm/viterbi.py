@@ -33,7 +33,7 @@
 #*             last change by $Author: grunau $.
 #*
 #******************************************************************************
-from math import log
+from pyLibrary.maths import Math
 from pymix.util.ghmm.types import kSilentStates
 from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_dmatrix_stat_alloc, ighmm_cmatrix_alloc, DBL_MAX
 from pymix.util.logs import Log
@@ -56,23 +56,23 @@ class viterbi_alloc:
 
 
 def Viterbi_precompute(mo, o, len, v):
-    # Precomputing the log(a_ij)
+    # Precomputing the Math.log(a_ij)
     for j in range(mo.N):
         for i in range(mo.s[j].in_states):
             if mo.s[j].in_a[i] == 0.0:        # DBL_EPSILON ?
                 v.log_in_a[j][i] = +1 # Not used any further in the calculations
             else:
-                v.log_in_a[j][i] = log(mo.s[j].in_a[i])
+                v.log_in_a[j][i] = Math.log(mo.s[j].in_a[i])
 
 
 
-    # Precomputing the log(bj(ot))
+    # Precomputing the Math.log(bj(ot))
     for j in range(mo.N):
         for t in range(mo.M):
             if mo.s[j].b[t] == 0.0:    # DBL_EPSILON ?
                 v.log_b[j][t] = +1
             else:
-                v.log_b[j][t] = log(mo.s[j].b[t])
+                v.log_b[j][t] = Math.log(mo.s[j].b[t])
 
 
 def viterbi_silent(mo, t, v):
@@ -117,7 +117,7 @@ def ghmm_dmodel_viterbi(mo, o, len):
 
     plen = ARRAY_CALLOC(mo.N)
 
-    # Precomputing the log(a_ij) and log(bj(ot))
+    # Precomputing the Math.log(a_ij) and Math.log(bj(ot))
     Viterbi_precompute(mo, o, len, v)
 
     # Initialization, that is t = 0
@@ -125,7 +125,7 @@ def ghmm_dmodel_viterbi(mo, o, len):
         if mo.s[j].pi == 0.0 or v.log_b[j][o[0]] == +1: # instead of 0, DBL_EPS.?
             v.phi[j] = +1
         else:
-            v.phi[j] = log(mo.s[j].pi) + v.log_b[j][o[0]]
+            v.phi[j] = Math.log(mo.s[j].pi) + v.log_b[j][o[0]]
             v.path_len[j] = 1
 
     if mo.model_type & kSilentStates:  # could go into silent state at t=0

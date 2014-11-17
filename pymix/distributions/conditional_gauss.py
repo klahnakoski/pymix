@@ -35,10 +35,10 @@
 #
 ################################################################################
 
-from random import random
 import math
 import numpy as np
 from .prob import ProbDistribution
+from pyLibrary.maths import Math
 from pymix.util.errors import InvalidDistributionInput
 from pymix.util.ghmm import randvar
 
@@ -107,10 +107,10 @@ class ConditionalGaussDistribution(ProbDistribution):
         res = np.zeros(len(data))
 
         for i in range(len(data)):
-            res[i] = math.log((1.0 / (math.sqrt(2.0 * math.pi) * self.sigma[0])) * math.exp(( data[i, 0] - self.mu[0]  ) ** 2 / (-2.0 * self.sigma[0] ** 2)))
+            res[i] = Math.log((1.0 / (math.sqrt(2.0 * math.pi) * self.sigma[0])) * math.exp(( data[i, 0] - self.mu[0]  ) ** 2 / (-2.0 * self.sigma[0] ** 2)))
             for j in range(1, self.p):
                 pind = self.parents[j]
-                res[i] += math.log(
+                res[i] += Math.log(
                     (1.0 / (math.sqrt(2.0 * math.pi) * self.sigma[j])) * math.exp(( data[i, j] - self.mu[j] - self.w[j] * ( data[i, pind] - self.mu[pind] )  ) ** 2 / (-2.0 * self.sigma[j] ** 2)))
 
         return res

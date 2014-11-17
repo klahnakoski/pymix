@@ -495,7 +495,7 @@ def ghmm_cmodel_baum_welch(cs):
     while n <= max_iter_bw:
         valid, log_p = sreestimate_one_step(cs.smo, r, cs.sqd.seq_number, cs.sqd.seq_len, cs.sqd.seq, cs.sqd.seq_w)
         # to follow convergence of bw: uncomment next line
-        # Log.note("\tBW Iter %d\t log(p) %.4f", n, log_p)
+        # Log.note("\tBW Iter %d\t Math.log(p) %.4f", n, log_p)
         diff = log_p - log_p_old
 
         if diff < -GHMM_EPS_PREC:

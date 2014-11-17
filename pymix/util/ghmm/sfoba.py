@@ -33,10 +33,7 @@
 #*             last change by $Author: christoph_mpg $.
 #*
 #******************************************************************************
-from math import log
-from pymix.util.ghmm.types import kSilentStates
-from pymix.util.ghmm.wrapper import DBL_MIN, ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, GHMM_EPS_PREC
-from pymix.util.logs import Log
+from pymix.util.ghmm.wrapper import DBL_MIN
 
 
 LOWER_SCALE_BOUND = 3.4811068399043105e-57

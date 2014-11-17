@@ -38,6 +38,7 @@
 ## function sumlogs is borrowed from GQLMixture.py
 import math
 import numpy as np
+from pyLibrary.maths import Math
 from ..util import mixextend
 from .maths import sum_logs
 
@@ -248,7 +249,7 @@ def entropy(p):
     res = 0.0
     for i in range(len(p)):
         if p[i] != 0.0:
-            res += p[i] * math.log(p[i], 2)
+            res += p[i] * Math.log(p[i], 2)
     return -res
 
 
@@ -270,7 +271,7 @@ def get_posterior(mix_model, data, logreturn=True):
 
     # computing log posterior distribution
     for i in range(mix_model.G):
-        log_l[i] = math.log(mix_model.pi[i]) + mix_model.components[i].pdf(data)
+        log_l[i] = Math.log(mix_model.pi[i]) + mix_model.components[i].pdf(data)
 
 
     # computing data log likelihood as criteria of convergence

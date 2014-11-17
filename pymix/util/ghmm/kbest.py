@@ -33,12 +33,13 @@
 #*             last change by $Author: grunau $.
 #*
 #******************************************************************************
-from math import log, exp
+from math import exp
+from pyLibrary.maths import Math
 from pymix.util.ghmm.wrapper import ARRAY_MALLOC, ARRAY_CALLOC, ARRAY_REALLOC, ighmm_cvector_log_sum
 from pymix.util.logs import Log
 
 KBEST_THRESHOLD = -3.50655789732
-#* log(0.03) => threshold: 3% of most probable partial hypothesis
+#* Math.log(0.03) => threshold: 3% of most probable partial hypothesis
 KBEST_EPS = 1E-15
 
 
@@ -72,7 +73,7 @@ def kbest_buildLogMatrix(s, N):
     for i in range(0, N):
         log_a[i] = ARRAY_MALLOC(s[i].in_states)
         for j in range(0, s[i].in_states):
-            log_a[i][j] = log(s[i].in_a[j])
+            log_a[i][j] = Math.log(s[i].in_a[j])
 
     return log_a
 
@@ -81,7 +82,7 @@ def kbest_buildLogMatrix(s, N):
 def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
     num_labels = 0
 
-    # logarithmized transition matrix A, log(a(i,j)) => log_a[i*N+j],
+    # logarithmized transition matrix A, Math.log(a(i,j)) => log_a[i*N+j],
     #     1.0 for zero probability
     # double **log_a
 
@@ -139,7 +140,7 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
                     # add entry to the gamma list
                     g_nr = hP.gamma_states
                     hP.gamma_id[g_nr] = i
-                    hP.gamma_a[g_nr] = log(mo.s[i].pi) + log(mo.s[i].b[mo.get_emission_index(i, o_seq[0], 0)])
+                    hP.gamma_a[g_nr] = Math.log(mo.s[i].pi) + Math.log(mo.s[i].b[mo.get_emission_index(i, o_seq[0], 0)])
                     hP.gamma_states = g_nr + 1
                     exists = 1
                     break
@@ -153,7 +154,7 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
                 h[0].gamma_a = ARRAY_MALLOC(states_wlabel[mo.label[i]])
                 h[0].gamma_id = ARRAY_MALLOC(states_wlabel[mo.label[i]])
                 h[0].gamma_id[0] = i
-                h[0].gamma_a[0] = log(mo.s[i].pi) + log(mo.s[i].b[mo.get_emission_index(i, o_seq[0], 0)])
+                h[0].gamma_a[0] = Math.log(mo.s[i].pi) + Math.log(mo.s[i].b[mo.get_emission_index(i, o_seq[0], 0)])
                 h[0].gamma_states = 1
                 h[0].chosen = 1
 
@@ -193,8 +194,8 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
 
             for i in range(0, hP.gamma_states):
                 # if hypothesis hP ends with label of state i:
-                #           gamma(i,c):= log(sum(exp(a(j,i)*exp(oldgamma(j,old_c)))))
-                #           + log(b[i](o_seq[t]))
+                #           gamma(i,c):= Math.log(sum(exp(a(j,i)*exp(oldgamma(j,old_c)))))
+                #           + Math.log(b[i](o_seq[t]))
                 #           else: gamma(i,c):= -INF (represented by 1.0)
                 i_id = hP.gamma_id[i]
                 hP.gamma_a[i] = ighmm_log_gamma_sum(log_a[i_id], mo.s[i_id], hP.parent)
@@ -211,10 +212,10 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
                         if p == 0.0:
                             hP.gamma_a[i] = -float("inf")
                         else:
-                            hP.gamma_a[i] += log(p)
+                            hP.gamma_a[i] += Math.log(p)
                     except Exception, e:
                         Log.error("", e)
-                    #printf("%g = %g\n", log(mo.s[i_id].b[b_index]), hP.gamma_a[i])
+                    #printf("%g = %g\n", Math.log(mo.s[i_id].b[b_index]), hP.gamma_a[i])
                 if hP.gamma_a[i] > 0.0:
                     Log.error("gamma too large. ghmm_dl_kbest failed\n")
 
@@ -405,7 +406,7 @@ def ighmm_hlist_prop_forward(mo, h, hplus, labels, nr_s, max_out):
 #   Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j,g_pos]))
 #   which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
 #   @return ighmm_log_sum for products of a row from gamma and a row from matrix A
-#   @param log_a:      row of the transition matrix with logarithmic values (1.0 for log(0))
+#   @param log_a:      row of the transition matrix with logarithmic values (1.0 for Math.log(0))
 #   @param s:          ghmm_dstate whose gamma-value is calculated
 #   @param parent:     a pointer to the parent hypothesis
 #
@@ -436,12 +437,12 @@ def ighmm_log_gamma_sum(log_a, s, parent):
                 max = logP[j]
                 argmax = j
 
-    # calculate max+log(1+sum[j!=argmax exp(logP[j]-max)])
+    # calculate max+Math.log(1+sum[j!=argmax exp(logP[j]-max)])
     result = 1.0
     for j in range(0, s.in_states):
         if j != argmax and logP[j] != 1.0:
             result += exp(logP[j] - max)
 
-    result = log(result)
+    result = Math.log(result)
     result += max
     return result

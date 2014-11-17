@@ -10,6 +10,7 @@
 ################################################################################
 from copy import deepcopy
 from math import exp, log, sqrt
+from pyLibrary.maths import Math
 from pymix.util.ghmm.emissions import Emission
 from pymix.util.logs import Log
 
@@ -563,13 +564,13 @@ def ighmm_cvector_log_sum(a, length):
             argmax = i
 
 
-    # calculate max+log(1+sum[i!=argmax exp(a[i]-max)])
+    # calculate max+Math.log(1+sum[i!=argmax exp(a[i]-max)])
     result = 1.0
     for i in range(0, length):
         if a[i] != 1.0 and i != argmax:
             result += exp(a[i] - max)
 
-    result = log(result)
+    result = Math.log(result)
     result += max
     return result
 

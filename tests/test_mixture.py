@@ -1175,12 +1175,12 @@ class NormalGammaPriorTests(FuzzyTestCase):
         self.assertEqual(p3, -90.6073056147)
 
         n4 = NormalDistribution(9.9, 0.01)  # -inf result raises exception
-        self.assertRaises(ValueError, self.ng.pdf, n4)
+        self.assertEqual(self.ng.pdf(n4), -float("inf"))
 
         # array valued input
         p5 = self.ng.pdf([n1, n2, n3])
         self.assertEqual(p5, [-2.55726452, -7.38114015, -90.60730561])
-        self.assertRaises(ValueError, self.ng.pdf, [n1, n2, n3, n4])
+        self.assertEqual(self.ng.pdf([n1, n2, n3, n4]), [-2.55726452327334, -7.38114015051443, -90.60730561473144, -float("inf")])
 
     def testmapmstepmerge(self):
         self.set_default_places(8)

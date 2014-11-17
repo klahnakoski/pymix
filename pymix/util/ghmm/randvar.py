@@ -38,6 +38,7 @@
 #   N(0,1)-distribution, with x in [0.00, 19.99]
 from math import erf, exp, pi, log, cos, erfc, sqrt
 from numpy.random.mtrand import dirichlet
+from pyLibrary.maths import Math
 from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.wrapper import DBL_MIN, multinormal, binormal, uniform, normal_left, normal_approx, normal_right, normal
 from pymix.util.logs import Log
@@ -258,10 +259,10 @@ def ighmm_rand_std_normal(seed):
     #       r2 = (x) + (y)
     #        while (r2 >= 1.0)
     #
-    #       return x * sqrt((-2.0 * log(r2)) / r2)
+    #       return x * sqrt((-2.0 * Math.log(r2)) / r2)
     #
 
-    r2 = -2.0 * log(random_mt.float23())   # r2 ~ chi-square(2)
+    r2 = -2.0 * Math.log(random_mt.float23())   # r2 ~ chi-square(2)
     theta = 2.0 * pi * random_mt.float23()  # theta ~ uniform(0, 2 \pi)
     return sqrt(r2) * cos(theta)
 
@@ -328,7 +329,7 @@ def ighmm_rand_normal_right(a, mue, u, seed):
     Us1 = 1 - Us
     t = min(Us, Us1)
 
-    t = sqrt(-log(t))
+    t = sqrt(-Math.log(t))
 
     T = sigma * (t - (C0 + t * (C1 + t * C2)) / (1 + t * (D1 + t * (D2 + t * D3))))
 

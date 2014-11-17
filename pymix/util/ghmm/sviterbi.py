@@ -34,8 +34,8 @@
 #*
 #******************************************************************************
 
-from math import log
-from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_dmatrix_alloc, DBL_MAX, ighmm_dmatrix_stat_alloc
+from pyLibrary.maths import Math
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, DBL_MAX, ighmm_dmatrix_stat_alloc
 from pymix.util.logs import Log
 
 
@@ -49,7 +49,7 @@ class local_store_t:
 
 
 def sviterbi_precompute(smo, O, T, v):
-    # Precomputing of log(b_j(O_t))
+    # Precomputing of Math.log(b_j(O_t))
     for t in range(T):
         for j in range(smo.N):
             cb = smo.s[j].calc_b(O[t])
@@ -57,7 +57,7 @@ def sviterbi_precompute(smo, O, T, v):
             # DBL_EPSILON ?
                 v.log_b[j][t] = -DBL_MAX
             else:
-                v.log_b[j][t] = log(cb)
+                v.log_b[j][t] = Math.log(cb)
 
 
 def ghmm_cmodel_viterbi(smo, O, T):
@@ -65,7 +65,7 @@ def ghmm_cmodel_viterbi(smo, O, T):
     v = local_store_t(smo, T)
 
     state_seq = ARRAY_CALLOC(T)
-    # Precomputing of log(bj(ot))
+    # Precomputing of Math.log(bj(ot))
     sviterbi_precompute(smo, O, T, v)
 
     # Initialization for  t = 0
@@ -73,7 +73,7 @@ def ghmm_cmodel_viterbi(smo, O, T):
         if smo.s[j].pi == 0.0 or v.log_b[j][0] == -DBL_MAX:
             v.phi[j] = -DBL_MAX
         else:
-            v.phi[j] = log(smo.s[j].pi) + v.log_b[j][0]
+            v.phi[j] = Math.log(smo.s[j].pi) + v.log_b[j][0]
 
 
     # Recursion
@@ -95,8 +95,8 @@ def ghmm_cmodel_viterbi(smo, O, T):
             max_value = -DBL_MAX
             v.psi[t][j] = -1
             for i in range(smo.s[j].in_states):
-                if v.phi[smo.s[j].in_id[i]] > -DBL_MAX and log(smo.s[j].in_a[osc][i]) > -DBL_MAX:
-                    value = v.phi[smo.s[j].in_id[i]] + log(smo.s[j].in_a[osc][i])
+                if v.phi[smo.s[j].in_id[i]] > -DBL_MAX and Math.log(smo.s[j].in_a[osc][i]) > -DBL_MAX:
+                    value = v.phi[smo.s[j].in_id[i]] + Math.log(smo.s[j].in_a[osc][i])
                     if value > max_value:
                         max_value = value
                         v.psi[t][j] = smo.s[j].in_id[i]

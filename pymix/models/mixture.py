@@ -41,6 +41,7 @@ import random
 import sys
 
 import numpy as np
+from pyLibrary.maths import Math
 
 from ..util import mixextend
 from ..distributions.prob import ProbDistribution
@@ -1066,7 +1067,7 @@ class MixtureModel(ProbDistribution):
         z = np.ones(data.N, dtype='Int32') * -1
 
         entropy_list = np.zeros(data.N, dtype='Float64')
-        max_entropy = math.log(self.G, 2)
+        max_entropy = Math.log(self.G, 2)
 
         # compute posterior entropies
         for i in range(data.N):

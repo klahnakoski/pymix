@@ -41,10 +41,10 @@ import numpy as np
 
 
 def sumlogs_purepy(a):
-    """ Given a Numeric.array a of log p_i, return log(sum p_i)
+    """ Given a Numeric.array a of log p_i, return Math.log(sum p_i)
 
         Uses (assuming p_1 is maximal):
-        log(\Sum p_i) = log(p_1) + log( 1 + \Sum_{i=2} exp(log(p_i) - log(p_1)))
+        Math.log(\Sum p_i) = Math.log(p_1) + Math.log( 1 + \Sum_{i=2} exp(Math.log(p_i) - Math.log(p_1)))
 
         NOTE: The sumlogs functions returns the sum for values != -Inf
 

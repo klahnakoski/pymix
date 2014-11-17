@@ -15,7 +15,7 @@ from math import exp, log, sqrt
 import numpy as np
 import scipy
 from scipy import stats, special
-
+from pyLibrary.maths import Math
 
 
 def get_normalized_posterior_matrix(data):
@@ -40,10 +40,10 @@ def wrap_gsl_dirichlet_sample(alpha, n):
 
 
 def get_log_normal_inverse_gamma_prior_density(mu_p, kappa, dof, scale, cmu, csigma):
-    output = [0]*len(cmu)
+    output = [0] * len(cmu)
     for i in range(len(cmu)):
-        output[i] = log(pow((pow(csigma[i], 2.0) ), (- (dof + 2.0) / 2.0)) * exp(-scale / (2.0 * pow(csigma[i], 2.0))))
-        output[i] += log(gsl_ran_gaussian_pdf(cmu[i] - mu_p, sqrt(pow(csigma[i], 2.0) / kappa)))
+        output[i] = Math.log(pow((pow(csigma[i], 2.0)), (- (dof + 2.0) / 2.0)) * exp(-scale / (2.0 * pow(csigma[i], 2.0))))
+        output[i] += Math.log(gsl_ran_gaussian_pdf(cmu[i] - mu_p, sqrt(pow(csigma[i], 2.0) / kappa)))
     return output
 
 
@@ -65,11 +65,11 @@ def wrap_gsl_dirichlet_lnpdf(alpha, x):
     if hasattr(x[0], "__iter__"):
         output = [wrap_gsl_dirichlet_lnpdf(alpha, xi) for xi in x]
     else:
-        output = log(special.gamma(sum(alpha))) - np.sum(np.log(special.gamma(alpha))) + np.sum(np.log([xi ** (ai - 1.0) for xi, ai in zip(x, alpha)]))
+        output = Math.log(special.gamma(sum(alpha))) - np.sum(np.log(special.gamma(alpha))) + np.sum(np.log([xi ** (ai - 1.0) for xi, ai in zip(x, alpha)]))
 
     return output
 
 
 def wrap_gsl_sf_lngamma(alpha):
-    output = log(special.gamma(alpha))
+    output = Math.log(special.gamma(alpha))
     return output

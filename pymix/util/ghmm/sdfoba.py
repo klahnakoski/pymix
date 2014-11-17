@@ -34,6 +34,7 @@
 #*
 #******************************************************************************
 from math import log
+from pyLibrary.maths import Math
 from pymix.util.ghmm.types import kSilentStates
 from pymix.util.ghmm.wrapper import GHMM_EPS_PREC, ARRAY_CALLOC, ighmm_cmatrix_alloc
 from pymix.util.logs import Log
@@ -107,7 +108,7 @@ def ghmm_dsmodel_forward(mo, O, len, alpha, scale):
         log_p = +1
 
     else:
-        log_p = -log(1 / scale[0])
+        log_p = -Math.log(1 / scale[0])
         for t in range(1, len):
             scale[t] = 0.0
             #      printf("\nStep t=%i mit len=%i, O[i]=%i\n",t,len,O[t])
@@ -163,8 +164,8 @@ def ghmm_dsmodel_forward(mo, O, len, alpha, scale):
             c_t = 1 / scale[t]
             for i in range(mo.N):
                 alpha[t][i] *= c_t
-                # sum log(c[t]) to get  log( P(O|lambda) )
-            log_p -= log(c_t)
+                # sum Math.log(c[t]) to get  Math.log( P(O|lambda) )
+            log_p -= Math.log(c_t)
 
     return log_p
 
@@ -211,7 +212,7 @@ def sdfobau_forward(mo, O, len, alpha, scale):
         log_p = +1
 
     else:
-        log_p = -log(1 / scale[0])
+        log_p = -Math.log(1 / scale[0])
         for t in range(1, len):
             scale[t] = 0.0
             if mo.cos > 1:
@@ -238,8 +239,8 @@ def sdfobau_forward(mo, O, len, alpha, scale):
             c_t = 1 / scale[t]
             for i in range(mo.N):
                 alpha[t][i] *= c_t
-                # sum log(c[t]) to get  log( P(O|lambda) )
-            log_p -= log(c_t)
+                # sum Math.log(c[t]) to get  Math.log( P(O|lambda) )
+            log_p -= Math.log(c_t)
     return log_p
 
 

@@ -39,6 +39,7 @@ import math
 import random
 import numpy as np
 from .prob import ProbDistribution
+from pyLibrary.maths import Math
 from ..util.errors import InvalidDistributionInput
 from ..util.dataset import DataSet
 
@@ -94,7 +95,7 @@ class ExponentialDistribution(ProbDistribution):
         else:
             raise TypeError, "Unknown/Invalid input type:" + str(type(data))
 
-        return math.log(self.lambd) + (-self.lambd * x)  # XXX pure Python implementation for now
+        return Math.log(self.lambd) + (-self.lambd * x)  # XXX pure Python implementation for now
 
 
     def sample(self):

@@ -362,7 +362,7 @@ class ConstrainedMixtureModel(MixtureModel):
                             #          print - np.multiply(penn,prior_neg)
 
             log_l[:, i] += (-np.multiply(pen, prior_pos) - np.multiply(penn, prior_neg))
-            # l[k,i] = log( (a_k * * P[seq i| model k]) + P[W+|y] * P[W-|y] )
+            # l[k,i] = Math.log( (a_k * * P[seq i| model k]) + P[W+|y] * P[W-|y] )
 
             #          print '-> log_l=',log_l[:,i]
             #          print '-> norm l=',np.exp( log_l[:,i] - sumlogs(log_l[:,i]) )
