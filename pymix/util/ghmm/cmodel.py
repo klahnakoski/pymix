@@ -36,7 +36,7 @@ class ghmm_cmodel:
         self.model_type = modeltype
 
         # All states of the model. Transition probs are part of the states.
-        self.s = [ghmm_cstate(self.cos, None, None, None) for i in range(N)]
+        self.s = [ghmm_cstate(1, N, self.cos) for i in range(N)]
 
         # pointer to a ghmm_cmodel_class_change_context struct necessary for multiple transition
         # classes * /
@@ -111,10 +111,10 @@ class ghmm_cmodel:
 
             # Get a random initial state i
             p = random_mt.float23()
-            sum = 0.0
+            sum_ = 0.0
             for i in range(self.N):
-                sum += self.s[i].pi
-                if sum >= p:
+                sum_ += self.s[i].pi
+                if sum_ >= p:
                     break
             else:
                 i = self.N
@@ -127,10 +127,10 @@ class ghmm_cmodel:
             # Get a random initial output
             # . get a random m and then respectively a pdf omega.
             p = random_mt.float23()
-            sum = 0.0
+            sum_ = 0.0
             for m in range(self.s[i].M):
-                sum += self.s[i].c[m]
-                if sum >= p:
+                sum_ += self.s[i].c[m]
+                if sum_ >= p:
                     break
             else:
                 m = self.s[i].M
@@ -159,26 +159,26 @@ class ghmm_cmodel:
             while pos < len:
                 # Get a new state
                 p = random_mt.float23()
-                sum = 0.0
-                for j in range(self.s[i].out_states):
-                    sum += self.s[i].out_a[clazz][j]
-                    if sum >= p:
+                sum_ = 0.0
+                for j in range(self.N):
+                    sum_ += self.s[i].out_a[clazz][j]
+                    if sum_ >= p:
                         break
                 else:
-                    j = self.s[i].out_states
+                    j = self.N
 
-                if j == self.s[i].out_states:  # Can happen by a rounding error
+                if j == self.N:  # Can happen by a rounding error
                     j -= 1
                     while j > 0 and self.s[i].out_a[clazz][j] == 0.0:
                         j -= 1
 
-                if sum == 0.0:
-                    if self.s[i].out_states > 0:
+                if sum_ == 0.0:
+                    if self.N > 0:
                         # Repudiate the sequence, if all self.s[i].out_a[clazz][.] == 0,
                         # that is, clazz "clazz" isn't used in the original data:
                         # go out of the while-loop, n should not be counted.
                         # Log.error("Zustand %d, clazz %d, len %d out_states %d \n", i, clazz,
-                        # state, self.s[i].out_states)
+                        # state, self.N)
                         badseq = 1
                         # break
 
@@ -206,10 +206,10 @@ class ghmm_cmodel:
 
                 # Get output from state i
                 p = random_mt.float23()
-                sum = 0.0
+                sum_ = 0.0
                 for m in range(self.s[i].M):
-                    sum += self.s[i].c[m]
-                    if sum >= p:
+                    sum_ += self.s[i].c[m]
+                    if sum_ >= p:
                         break
                 else:
                     m = self.s[i].M
@@ -280,20 +280,16 @@ class ghmm_cmodel:
         except Exception:
             return None
 
-
-    def getState(self, index):
-        return self.s[index]
-
     def getEmission(self, index):
         return self.s[index].e
 
     def check(self):
-        sum = 0.0
+        sum_ = 0.0
 
         for i in range(self.N):
-            sum += self.s[i].pi
+            sum_ += self.s[i].pi
 
-        if abs(sum - 1.0) >= GHMM_EPS_PREC:
+        if abs(sum_ - 1.0) >= GHMM_EPS_PREC:
             Log.error("sum Pi[i] != 1.0\n")
 
         # only 0/1 in fix?
@@ -302,25 +298,18 @@ class ghmm_cmodel:
                 Log.error("in vector fix_state only 0/1 values!\n")
 
         for i in range(self.N):
-            if self.s[i].out_states == 0:
-                Log.note("out_states = 0 (state %d . final state!)\n", i)
-
             # sum  a[i][k][j]
             for k in range(self.cos):
-                sum = 0.0
-                for j in range(self.s[i].out_states):
-                    sum += self.s[i].out_a[k][j]
+                sum_ = sum(self.s[i].out_a[k])
 
-                if abs(sum - 1.0) >= GHMM_EPS_PREC:
-                    Log.error("sum out_a[j] = %.4f != 1.0 (state %d, class %d)\n", sum, i, k)
+                if abs(sum_ - 1.0) >= GHMM_EPS_PREC:
+                    Log.error("sum out_a[j] = %.4f != 1.0 (state %d, class %d)\n", sum_, i, k)
 
 
-            # sum c[j]
-            sum = 0.0
-            for j in range(self.s[i].M):
-                sum += self.s[i].c[j]
-            if abs(sum - 1.0) >= GHMM_EPS_PREC:
-                Log.error("sum c[j] = %.2f != 1.0 (state %d)\n", sum, i)
+            # sum_ c[j]
+            sum_ = sum(self.s[i].c)
+            if abs(sum_ - 1.0) >= GHMM_EPS_PREC:
+                Log.error("sum c[j] = %.2f != 1.0 (state %d)\n", sum_, i)
 
         # do all emissions have the same dimension as specified in smo.dim
         for i in range(self.N):
@@ -330,7 +319,7 @@ class ghmm_cmodel:
 
     def get_transition(self, i, j, c=None):
         if self.s and self.s[i].out_a and self.s[j].in_a:
-            for out in range(self.s[i].out_states):
+            for out in range(self.N):
                 if c is None:
                     return self.s[i].out_a[j]
                 else:
@@ -340,7 +329,7 @@ class ghmm_cmodel:
 
     def set_transition(self, i, j, c, value):
         if self.s and self.s[i].out_a and self.s[j].in_a:
-            for out in range(self.s[i].out_states):
+            for out in range(self.N):
                 self.s[i].out_a[c][j] = value
 
         return 0.0
@@ -365,9 +354,6 @@ class ghmm_cmodel:
 
         for state_pos in range(1, len):
             state = S[state_pos]
-            for j in range(self.s[state].in_states):
-                if prevstate == j:
-                    break
             if self.cos > 1:
                 if not self.class_change.get_class:
                     Log.error("get_class not initialized")
@@ -376,10 +362,10 @@ class ghmm_cmodel:
                 if osc >= self.cos:
                     Log.error("get_class returned index %d but model has only %d classes!", osc, self.cos)
 
-            if j == self.s[state].in_states or abs(self.s[state].in_a[osc][j]) < GHMM_EPS_PREC:
+            if abs(self.s[state].in_a[osc][prevstate]) < GHMM_EPS_PREC:
                 Log.error("Sequence can't be built. There is no transition from state %d to %d.", prevstate, state)
 
-            log_p += Math.log(self.s[state].in_a[osc][j])
+            log_p += Math.log(self.s[state].in_a[osc][prevstate])
 
             if not (self.model_type & kSilentStates) or 1: # XXX !mo.silent[state]
                 log_p += Math.log(self.s[state].calc_b(O[pos]))
@@ -497,22 +483,22 @@ class ghmm_cmodel:
         for t in reversed(range(T - 1)):
             if b == None:
                 for i in range(self.N):
-                    sum = 0.0
-                    for j in range(self.s[i].out_states):
-                        sum += self.s[i].out_a[osc][j] * self.s[j].calc_b(O[t+1]) * beta_tmp[j]
+                    sum_ = 0.0
+                    for j in range(self.N):
+                        sum_ += self.s[i].out_a[osc][j] * self.s[j].calc_b(O[t+1]) * beta_tmp[j]
 
-                    beta[t][i] = sum
+                    beta[t][i] = sum_
 
             else:
                 for i in range(self.N):
-                    sum = 0.0
-                    for j in range(self.s[i].out_states):
-                        sum += self.s[i].out_a[osc][j] * b[t + 1][j][self.M] * beta_tmp[j]
+                    sum_ = 0.0
+                    for j in range(self.N):
+                        sum_ += self.s[i].out_a[osc][j] * b[t + 1][j][self.M] * beta_tmp[j]
 
                         #printf("  smo.s[%d].out_a[%d][%d] * b[%d] * beta_tmp[%d] = %f * %f *
                         #            %f\n",i,osc,j,t+1,j_id,smo.s[i].out_a[osc][j], b[t + 1][j_id][smo.M], beta_tmp[j_id])
 
-                    beta[t][i] = sum
+                    beta[t][i] = sum_
                     # printf(" .   beta[%d][%d] = %f\n",t,i,beta[t][i])
 
             c_t = 1 / scale[t]
@@ -546,10 +532,10 @@ class ghmm_cmodel:
 
             # normalize transition probabilities
             for c in range(self.cos):
-                ighmm_cvector_normalize(self.s[i].out_a[c], 0, self.s[i].out_states)
+                ighmm_cvector_normalize(self.s[i].out_a[c], 0, self.N)
 
                 # for every outgoing probability update the corrosponding incoming probability
-                for j in range(self.s[i].out_states):
+                for j in range(self.N):
                     self.s[j].in_a[c][i] = self.s[i].out_a[c][j]
 
         for i in range(self.N):

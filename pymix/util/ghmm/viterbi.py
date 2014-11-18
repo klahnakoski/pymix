@@ -44,7 +44,7 @@ class viterbi_alloc:
         # Allocate the log_in_a's . individal lenghts
         self.log_in_a = ARRAY_CALLOC(mo.N)
         for j in range(mo.N):
-            self.log_in_a[j] = ARRAY_CALLOC(mo.s[j].in_states)
+            self.log_in_a[j] = ARRAY_CALLOC(mo.N)
 
         self.log_b = ighmm_cmatrix_alloc(mo.N, mo.M)
         self.phi = ARRAY_CALLOC(mo.N)
@@ -58,7 +58,7 @@ class viterbi_alloc:
 def Viterbi_precompute(mo, o, len, v):
     # Precomputing the Math.log(a_ij)
     for j in range(mo.N):
-        for i in range(mo.s[j].in_states):
+        for i in range(mo.N):
             if mo.s[j].in_a[i] == 0.0:        # DBL_EPSILON ?
                 v.log_in_a[j][i] = +1 # Not used any further in the calculations
             else:
@@ -83,7 +83,7 @@ def viterbi_silent(mo, t, v):
             # max_phi = phi[i] + log_in_a[j][i] ...
             max_value = -DBL_MAX
             max_id = -1
-            for i in range(mo.s[St].in_states):
+            for i in range(mo.N):
                 if v.phi[i] != +1 and v.log_in_a[St][i] != +1:
                     value = v.phi[i] + v.log_in_a[St][i]
                     if value > max_value:
@@ -144,7 +144,7 @@ def ghmm_dmodel_viterbi(mo, o, len):
             if not (mo.model_type & kSilentStates) or not mo.silent[St]:
                 max_value = -DBL_MAX
                 max_id = -1
-                for i in range(mo.s[St].in_states):
+                for i in range(mo.N):
                     if v.phi[i] != +1 and v.log_in_a[St][i] != +1:
                         value = v.phi[i] + v.log_in_a[St][i]
                         if value > max_value:

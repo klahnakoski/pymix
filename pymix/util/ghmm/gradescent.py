@@ -93,7 +93,7 @@ def ghmm_dmodel_label_gradient_expectations(mo, alpha, beta, scale, seq, seq_len
         for i in range(mo.N):
             # n_a(i,j) = sum[t=0..T-2 | xi(t,i,j)] / sum[t=0..T-2 | gamma(t,i)]
             # compute xi only till the state before the last
-            for j in range(mo.s[i].out_states):
+            for j in range(mo.N):
                 if t >= seq_len - 1:
                     break
 
@@ -192,7 +192,7 @@ def gradient_descent_onestep(mo, sq, eta):
         for i in range(mo.N):
             a_row_sum = 0
             # update
-            for j in range(mo.s[i].out_states):
+            for j in range(mo.N):
                 gradient = eta * (m_a[i * mo.N + j] - n_a[i * mo.N + j]) / (seq_len - 1)
                 if mo.s[i].out_a[j] + gradient > GHMM_EPS_PREC:
                     mo.s[i].out_a[j] += gradient
@@ -207,7 +207,7 @@ def gradient_descent_onestep(mo, sq, eta):
                 Log.error("Training ruined the model. You lose.\n")
 
             # normalise
-            for j in range(mo.s[i].out_states):
+            for j in range(mo.N):
                 mo.s[i].out_a[j] /= a_row_sum
                 mo.s[j].in_a[i] = mo.s[i].out_a[j]
 

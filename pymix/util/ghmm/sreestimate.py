@@ -74,7 +74,7 @@ def sreestimate_alloc(smo):
     r.pi_num = ARRAY_CALLOC(smo.N)
     r.a_num = ARRAY_CALLOC(smo.N)
     for i in range(smo.N):
-        r.a_num[i] = ighmm_cmatrix_stat_alloc(smo.cos, smo.s[i].out_states)
+        r.a_num[i] = ighmm_cmatrix_stat_alloc(smo.cos, smo.N)
 
     r.a_denom = ighmm_cmatrix_stat_alloc(smo.N, smo.cos)
 
@@ -103,7 +103,7 @@ def sreestimate_init(r, smo):
         r.pi_num[i] = 0.0
         for osc in range(smo.cos):
             r.a_denom[i][osc] = 0.0
-            for j in range(smo.s[i].out_states):
+            for j in range(smo.N):
                 r.a_num[i][osc][j] = 0.0
 
         r.c_denom[i] = 0.0
@@ -170,7 +170,7 @@ def sreestimate_setlambda(r, smo):
 
             a_num_pos = 0
 
-            for j in range(smo.s[i].out_states):
+            for j in range(smo.N):
                 # TEST: denom. < numerator
                 if (r.a_denom[i][osc] - r.a_num[i][osc][j]) < -GHMM_EPS_PREC:
                     smo.s[i].out_a[osc][j] = 1.0
@@ -379,7 +379,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
                                       "but model has only %d classesnot ", osc, smo.cos)
 
                     # A: starts at t=1 not !not
-                    for j in range(state.out_states):
+                    for j in range(smo.N):
                         contrib_t = (seq_w[k] * alpha[t - 1][i] * state.out_a[osc][j] * b[t][j][state.M] * beta[t][j] * c_t)
 
                         r.a_num[i][osc][j] += contrib_t
@@ -387,7 +387,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
 
                     # calculate sum (j=1..N):alp[t-1][j]*a_jc(t-1)i
                     sum_alpha_a_ji = 0.0
-                    for j in range(state.in_states):
+                    for j in range(smo.N):
                         sum_alpha_a_ji += alpha[t - 1][j] * state.in_a[osc][j]
 
                 else:
@@ -417,7 +417,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
 
                     # numerator Mue:
                     if smo.model_type & kMultivariate:
-                        for d in range(0, state.e[m].dimension):
+                        for d in range(state.e[m].dimension):
                             r.mue_num[i][m][d] += (gamma_ct * O[k][t][d])
                     else:
                         r.mue_num[i][m][0] += gamma_ct * O[k][t]

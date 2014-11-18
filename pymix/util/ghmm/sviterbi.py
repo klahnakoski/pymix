@@ -94,7 +94,7 @@ def ghmm_cmodel_viterbi(smo, O, T):
             # max_phi = phi[i] + log_in_a[j][i] ...
             max_value = -DBL_MAX
             v.psi[t][j] = -1
-            for i in range(smo.s[j].in_states):
+            for i in range(smo.N):
                 if v.phi[i] > -DBL_MAX and Math.log(smo.s[j].in_a[osc][i]) > -DBL_MAX:
                     value = v.phi[i] + Math.log(smo.s[j].in_a[osc][i])
                     if value > max_value:

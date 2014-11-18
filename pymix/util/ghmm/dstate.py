@@ -10,14 +10,12 @@ class ghmm_dstate():
         self.pi = 0.0 #double
 
         # transition probabilities to successor states.
-        self.out_a = [0.0] #double*
+        self.out_a = [] #double*
         # Number of successor states
-        self.out_states = 0 #int
 
         # transition probabilities from predecessor states.
-        self.in_a = [0.0] #double*
+        self.in_a = [] #double*
         # Number of precursor states
-        self.in_states = 0 #int
 
         # if fix == 1 -. b stays fix during the training
         self.fix = 0 #int
@@ -35,7 +33,7 @@ class ghmm_dstate():
         if b_symb < GHMM_EPS_PREC:
             return 0
 
-        for i in range(self.in_states):
+        for i in range(len(self.in_a)):
             value += self.in_a[i] * alpha_t[i]
 
         value *= b_symb
@@ -46,14 +44,12 @@ class ghmm_dstate():
 
 def model_state_alloc(
     M,
-    in_states,
-    out_states
+    N
 ):
     s = ghmm_dstate()
     s.b = [0.0] * M
-    s.out_a = [0.0] * out_states
-
-    s.in_a = [0.0] * in_states
+    s.out_a = [0.0] * N
+    s.in_a = [0.0] * N
 
     return s
 

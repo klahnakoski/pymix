@@ -140,8 +140,6 @@ from pymix.vendor.ghmm.sequence_set import SequenceSet, EmissionSequence
 from pymix.util.logs import Log
 
 
-
-
 class HMMFactory(object):
     """
     A HMMFactory is the base class of HMM factories.
@@ -191,7 +189,7 @@ class HMMOpenFactory(HMMFactory):
                 filetype = self.guessFileType(fileName)
             if not filetype:
                 Log.error("Could not guess the type of file " + str(fileName)
-                                    + " and no filetype specified")
+                          + " and no filetype specified")
 
         # XML file: both new and old format
         if filetype == GHMM_FILETYPE_XML:
@@ -229,7 +227,7 @@ class HMMOpenFactory(HMMFactory):
             getModel = file.get_cmodel
 
         # we have a discrete HMM, prepare for hmm creation
-        elif ((modelType & kDiscreteHMM)        and not (modelType & kTransitionClasses)        and not (modelType & kPairHMM)):
+        elif ((modelType & kDiscreteHMM) and not (modelType & kTransitionClasses) and not (modelType & kPairHMM)):
             emission_domain = 'd'
             distribution = DiscreteDistribution
             getModel = file.get_dmodel
@@ -269,6 +267,7 @@ class HMMOpenFactory(HMMFactory):
         return result
 
         #obsolete
+
     def openOldXML(self, fileName):
         # from ghmm_gato import xmlutil
 
@@ -496,7 +495,7 @@ class HMMFromMatricesFactory(HMMFactory):
                 else:
                     cmodel.name = ''
 
-                states = [None]*cmodel.N
+                states = [None] * cmodel.N
                 silent_states = []
                 tmpOrder = []
 
@@ -527,12 +526,12 @@ class HMMFromMatricesFactory(HMMFactory):
                         silent_states.append(0)
 
                     #set out probabilities
-                    state.out_states, state.out_id, state.out_a = ghmmhelper.extract_out(A[i])
+                    _, _, state.out_a = ghmmhelper.extract_out(A[i])
 
                     #set "in" probabilities
                     A_col_i = map(lambda x: x[i], A)
                     # Numarray use A[,:i]
-                    state.in_states, _, state.in_a = ghmmhelper.extract_out(A_col_i)
+                    _, _, state.in_a = ghmmhelper.extract_out(A_col_i)
                     #fix probabilities in reestimation, else 0
                     state.fix = 0
 
@@ -671,7 +670,7 @@ class HMMFromMatricesFactory(HMMFactory):
                         emission = emissions[j]
                         emission.type = densities[i][j]
                         emission.dimension = 1
-                        if (emission.type == wrapper.normal    or emission.type == wrapper.normal_approx):
+                        if (emission.type == wrapper.normal or emission.type == wrapper.normal_approx):
                             emission.mean = parameters[1]
                             emission.variance = parameters[2]
                         elif emission.type == wrapper.normal_right:
@@ -776,13 +775,10 @@ class HMMFromMatricesFactory(HMMFactory):
 
             #set out probabilities
             trans = ghmmhelper.extract_out_cos(A, cmodel.cos, i)
-            state.out_states = trans[0]
-            state.out_id = trans[1]
             state.out_a = trans[2]
 
             #set "in" probabilities
             trans = ghmmhelper.extract_in_cos(A, cmodel.cos, i)
-            state.in_states = trans[0]
             state.in_a = trans[2]
 
 
@@ -1037,39 +1033,39 @@ class HMM(object):
                 except IndexError:
                     Log.error("Invalid state index " + str(state) + ". Model and path are incompatible")
             return path_posterior
-        #        # XXX TODO silent states are yet to be done
-        #        else:
-        #            # for silent state models we have to propagate the silent states in each column of the
-        #            # posterior matrix
-        #
-        #            assert not self.isSilent(path[0]), "First state in path must not be silent."
-        #
-        #            j = 0   # path index
-        #            for i in range(len(sequence)):
-        #                pp = post[i][path[j]]
-        #
-        #                print pp
-        #
-        #                if pp == 0:
-        #                    return float('-inf')
-        #                else:
-        #                    path_log_lik += Math.log(post[p][path[p]])
-        #                    j+=1
-        #
-        #
-        #                # propagate path up until the next emitting state
-        #                while self.isSilent(path[j]):
-        #
-        #                    print "** silent state ",path[j]
-        #
-        #                    pp =  post[i][path[j]]
-        #                    if pp == 0:
-        #                        return float('-inf')
-        #                    else:
-        #                        path_log_lik += Math.log(post[p][path[p]])
-        #                        j+=1
-        #
-        #            return path_log_lik
+            #        # XXX TODO silent states are yet to be done
+            #        else:
+            #            # for silent state models we have to propagate the silent states in each column of the
+            #            # posterior matrix
+            #
+            #            assert not self.isSilent(path[0]), "First state in path must not be silent."
+            #
+            #            j = 0   # path index
+            #            for i in range(len(sequence)):
+            #                pp = post[i][path[j]]
+            #
+            #                print pp
+            #
+            #                if pp == 0:
+            #                    return float('-inf')
+            #                else:
+            #                    path_log_lik += Math.log(post[p][path[p]])
+            #                    j+=1
+            #
+            #
+            #                # propagate path up until the next emitting state
+            #                while self.isSilent(path[j]):
+            #
+            #                    print "** silent state ",path[j]
+            #
+            #                    pp =  post[i][path[j]]
+            #                    if pp == 0:
+            #                        return float('-inf')
+            #                    else:
+            #                        path_log_lik += Math.log(post[p][path[p]])
+            #                        j+=1
+            #
+            #            return path_log_lik
 
     def statePosterior(self, sequence, state, time):
         """
@@ -1130,7 +1126,7 @@ class HMM(object):
 
         if t / seqdim != s and not self.hasFlags(kSilentStates):
             Log.error("sequence and state sequence have different lengths " +
-                             "but the model has no silent states.")
+                      "but the model has no silent states.")
 
         seq = emissionSequence.cseq.getSequence(0)
         states = stateSequence
@@ -1260,12 +1256,12 @@ class HMM(object):
 
     def getStateFix(self, state):
         state = self.state(state)
-        s = self.cmodel.getState(state)
+        s = self.cmodel.s[state]
         return s.fix
 
     def setStateFix(self, state, flag):
         state = self.state(state)
-        s = self.cmodel.getState(state)
+        s = self.cmodel.s[state]
         s.fix = flag
 
     def clearFlags(self, flags):
@@ -1295,7 +1291,7 @@ class HMM(object):
 
     def getInitial(self, i):
         """ Accessor function for the initial probability \f$\pi_i\f$ """
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         return state.pi
 
     def setInitial(self, i, prob, fixProb=False):
@@ -1305,7 +1301,7 @@ class HMM(object):
         fixed to the arguement value of 'prob'.
 
         """
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         old_pi = state.pi
         state.pi = prob
 
@@ -1314,7 +1310,7 @@ class HMM(object):
             coeff = (1.0 - old_pi) / prob
             for j in range(self.N):
                 if i != j:
-                    state = self.cmodel.getState(j)
+                    state = self.cmodel.s[j]
                     p = state.pi
                     state.pi = p / coeff
 
@@ -1385,7 +1381,7 @@ class HMM(object):
         if model_type == kNotSpecified:
             return 'kNotSpecified'
         for k, v in types.__dict__.items():
-            if v==-1:
+            if v == -1:
                 continue
             if not isinstance(v, int):
                 continue
@@ -1452,7 +1448,7 @@ class DiscreteEmissionHMM(HMM):
                 strout.append('\n  ...\n\n')
                 continue
 
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("  state " + str(k) + ' (')
             if order[k] > 0:
                 strout.append('order=' + str(order[k]) + ',')
@@ -1468,12 +1464,7 @@ class DiscreteEmissionHMM(HMM):
 
             strout.append("    Transitions:")
             #trans = [0.0] * hmm.N
-            for i in range(state.out_states):
-                strout.append(" ->" + str(state.getOutState(i)) + ' (' + f(wrapper.double_array_getitem(state.out_a, i)) + ')')
-                if i < state.out_states - 1:
-                    strout.append(',')
-                    #strout.append(" with probability " + str(wrapper.double_array_getitem(state.out_a,i)))
-
+            strout.append(','.join([" ->" + str(state.getOutState(i)) + ' (' + f(a) + ')' for i, a in enumerate(state.out_a)]))
             strout.append('\n')
 
         return join(strout, '')
@@ -1492,7 +1483,7 @@ class DiscreteEmissionHMM(HMM):
             order = [0] * hmm.N
 
         for k in range(hmm.N):
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("\n\nState number " + str(k) + ":")
             if state.desc is not None:
                 strout.append("\nState Name: " + state.desc)
@@ -1508,12 +1499,12 @@ class DiscreteEmissionHMM(HMM):
                     strout.append(", ")
 
             strout.append("\nOutgoing transitions:")
-            for i in range(state.out_states):
-                strout.append("\ntransition to state " + str(state.getOutState(i)))
-                strout.append(" with probability " + str(wrapper.double_array_getitem(state.out_a, i)))
+            for i, a in enumerate(state.out_a):
+                strout.append("\ntransition to state " + str(i))
+                strout.append(" with probability " + str(a))
             strout.append("\nIngoing transitions:")
-            for i in range(state.in_states):
-                strout.append("\ntransition from state " + str(state.getInState(i)))
+            for i, _ in enumerate(state.in_a):
+                strout.append("\ntransition from state " + str(i))
                 strout.append(" with probability " + str(wrapper.double_array_getitem(state.in_a, i)))
             strout.append("\nint fix:" + str(state.fix) + "\n")
 
@@ -1541,7 +1532,7 @@ class DiscreteEmissionHMM(HMM):
 
     def getEmission(self, i):
         i = self.state(i)
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         if self.hasFlags(kHigherOrderEmissions):
             order = wrapper.int_array_getitem(self.cmodel.order, i)
             emissions = wrapper.double_array2list(state.b, self.M ** (order + 1))
@@ -1555,7 +1546,7 @@ class DiscreteEmissionHMM(HMM):
         if not len(distributionParameters) == self.M:
             Log.error("Can not handle more than zero-order emmisions at this time")
 
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
 
         # updating silent flag and/or model type if necessary
         if self.hasFlags(kSilentStates):
@@ -1579,8 +1570,8 @@ class DiscreteEmissionHMM(HMM):
         if self.cmodel.order is None:
             self.cmodel.order = [0] * self.M
 
-        self.cmodel.order[i] = int(Math.log(len(distributionParameters), self.M))-1
-        if self.M ** (self.cmodel.order[i]+1) != len(distributionParameters):
+        self.cmodel.order[i] = int(Math.log(len(distributionParameters), self.M)) - 1
+        if self.M ** (self.cmodel.order[i] + 1) != len(distributionParameters):
             Log.error("distributionParameters has wrong length")
         self.cmodel.maxorder = max(self.cmodel.order)
         if self.cmodel.maxorder > 0:
@@ -1825,12 +1816,11 @@ class DiscreteEmissionHMM(HMM):
 
         for i in range(self.cmodel.N):
             A.append([0.0] * self.N)
-            state = self.cmodel.getState(i)
+            state = self.cmodel.s[i]
             pi.append(state.pi)
             B.append(wrapper.double_array2list(state.b, self.M ** (order[i] + 1)))
-            for j in range(state.out_states):
-                state_index = wrapper.int_array_getitem(state.out_id, j)
-                A[i][state_index] = wrapper.double_array_getitem(state.out_a, j)
+            for j, a in enumerate(state.out_a):
+                A[i][j] = state.out_a[j]
 
         return [A, B, pi]
 
@@ -1900,7 +1890,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
                 strout.append('\n  ...\n\n')
                 continue
 
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("  state " + str(k) + ' (')
             if order[k] > 0:
                 strout.append('order= ' + str(order[k]) + ',')
@@ -1916,12 +1906,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
             strout.append("    Transitions:")
             #trans = [0.0] * hmm.N
-            for i in range(state.out_states):
-                strout.append(" ->" + str(state.getOutState(i)) + ' (' + f(wrapper.double_array_getitem(state.out_a, i)) + ')')
-                if i < state.out_states - 1:
-                    strout.append(',')
-                    #strout.append(" with probability " + str(wrapper.double_array_getitem(state.out_a,i)))
-
+            strout.append(','.join([" ->" + str(i) + ' (' + f(a) + ')' for i, a in enumerate(state.out_a)]))
             strout.append('\n')
 
         return join(strout, '')
@@ -1941,7 +1926,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             order = [0] * hmm.N
         label = wrapper.int_array2list(hmm.label, self.N)
         for k in range(hmm.N):
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("\n\nState number " + str(k) + ":")
             if state.desc is not None:
                 strout.append("\nState Name: " + state.desc)
@@ -1958,11 +1943,11 @@ class StateLabelHMM(DiscreteEmissionHMM):
                     strout.append(", ")
 
             strout.append("Outgoing transitions:")
-            for i in range(state.out_states):
-                strout.append("\ntransition to state " + str(state.getOutState(i)) + " with probability " + str(state.getOutProb(i)))
+            for i, a in enumerate(state.out_a):
+                strout.append("\ntransition to state " + str(i) + " with probability " + str(state.getOutProb(i)))
             strout.append("\nIngoing transitions:")
-            for i in range(state.in_states):
-                strout.append("\ntransition from state " + str(state.getInState(i)) + " with probability " + str(state.getInProb(i)))
+            for i, _ in enumerate(state.in_a):
+                strout.append("\ntransition from state " + str(i) + " with probability " + str(state.getInProb(i)))
             strout.append("\nint fix:" + str(state.fix) + "\n")
 
         if hmm.model_type & kSilentStates:
@@ -2168,7 +2153,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         logp = self.cmodel.label_forward(seq, label, t, calpha, cscale)
 
-       # translate alpha / scale to python lists
+        # translate alpha / scale to python lists
         pyscale = wrapper.double_array2list(cscale, t)
         pyalpha = ghmmhelper.double_matrix2list(calpha, t, n_states)
 
@@ -2275,7 +2260,7 @@ class GaussianEmissionHMM(HMM):
         if not 0 <= i < self.N:
             Log.error("Index " + str(i) + " out of bounds.")
 
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         mu = state.getMean(0)
         sigma = state.getStdDev(0)
         return (mu, sigma)
@@ -2289,14 +2274,14 @@ class GaussianEmissionHMM(HMM):
         mu, sigma = values
         i = self.state(i)
 
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         state.setMean(0, float(mu))
         state.setStdDev(0, float(sigma))
 
     def getEmissionProbability(self, value, i):
         """ @returns probability of emitting value in state i  """
         i = self.state(i)
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         p = state.calc_b(value)
         return p
 
@@ -2320,7 +2305,7 @@ class GaussianEmissionHMM(HMM):
                 strout.append('\n  ...\n\n')
                 continue
 
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("  state " + str(k) + " (")
             strout.append("initial=" + f(state.pi))
             if self.cmodel.cos > 1:
@@ -2336,11 +2321,8 @@ class GaussianEmissionHMM(HMM):
             for c in range(self.cmodel.cos):
                 if self.cmodel.cos > 1:
                     strout.append('      class: ' + str(c) + ':')
-                for i in range(state.out_states):
-                    strout.append('->' + str(state.getOutState(i)) + ' (' + f(state.getOutProb(i, c)) + ')')
-                    if i < state.out_states - 1:
-                        strout.append(', ')
 
+                strout.append(','.join(['->' + str(i) + ' (' + f(state.getOutProb(i, c)) + ')' for i, a in enumerate(state.out_a)]))
                 strout.append('\n')
 
         return join(strout, '')
@@ -2353,7 +2335,7 @@ class GaussianEmissionHMM(HMM):
         strout.append("\nNumber of mixture components: " + str(hmm.M))
 
         for k in range(hmm.N):
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("\n\nState number " + str(k) + ":")
             if state.desc is not None:
                 strout.append("\nState Name: " + state.desc)
@@ -2374,11 +2356,11 @@ class GaussianEmissionHMM(HMM):
             for c in range(self.cmodel.cos):
                 strout.append("\n  Class : " + str(c))
                 strout.append("\n    Outgoing transitions:")
-                for i in range(state.out_states):
-                    strout.append("\n      transition to state " + str(state.getOutState(i)) + " with probability = " + str(state.getOutProb(i, c)))
+                for i, a in enumerate(state.out_a):
+                    strout.append("\n      transition to state " + str(i) + " with probability = " + str(state.getOutProb(i, c)))
                 strout.append("\n    Ingoing transitions:")
-                for i in range(state.in_states):
-                    strout.append("\n      transition from state " + str(state.getInState(i)) + " with probability = " + str(state.getInProb(i, c)))
+                for i, _ in enumerate(state.in_a):
+                    strout.append("\n      transition from state " + str(i) + " with probability = " + str(state.getInProb(i, c)))
 
         return join(strout, '')
 
@@ -2595,15 +2577,14 @@ class GaussianEmissionHMM(HMM):
         for i in range(self.cmodel.N):
             A.append([0.0] * self.N)
             B.append([0.0] * 2)
-            state = self.cmodel.getState(i)
+            state = self.cmodel.s[i]
             pi.append(state.pi)
 
             B[i][0] = state.getMean(0)
             B[i][1] = state.getStdDev(0)
 
-            for j in range(state.out_states):
-                state_index = wrapper.int_array_getitem(state.out_id, j)
-                A[i][state_index] = wrapper.double_matrix_getitem(state.out_a, 0, j)
+            for j, _ in enumerate(state.out_a[0]):
+                A[i][j] = state.out_a[0][j]
 
         return [A, B, pi]
 
@@ -2622,7 +2603,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         @returns (mu, sigma^2, weight) of component 'comp' in state 'i'
         """
         i = self.state(i)
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         mu = state.getMean(comp)
         sigma = state.getStdDev(comp)
         weigth = state.getWeight(comp)
@@ -2638,14 +2619,14 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         mu, sigma, weight = values
         i = self.state(i)
 
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         state.setMean(comp, float(mu))  # GHMM C is german: mue instead of mu
         state.setStdDev(comp, float(sigma))
         state.setWeight(comp, float(weight))
 
     def getMixtureFix(self, state):
         state = self.state(state)
-        s = self.cmodel.getState(state)
+        s = self.cmodel.s[state]
         mixfix = []
         for i in range(s.M):
             emission = s.getEmission(i)
@@ -2654,7 +2635,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
     def setMixtureFix(self, state, flags):
         state = self.state(state)
-        s = self.cmodel.getState(state)
+        s = self.cmodel.s[state]
         for i in range(s.M):
             emission = s.getEmission(i)
             emission.fixed = flags[i]
@@ -2678,7 +2659,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
                 strout.append('\n  ...\n\n')
                 continue
 
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("  state " + str(k) + " (")
             strout.append("initial=" + f(state.pi))
             if self.cmodel.cos > 1:
@@ -2707,11 +2688,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             for c in range(self.cmodel.cos):
                 if self.cmodel.cos > 1:
                     strout.append('      class: ' + str(c) + ':')
-                for i in range(state.out_states):
-                    strout.append('->' + str(state.getOutState(i)) + ' (' + str(state.getOutProb(i, c)) + ')')
-                    if i < state.out_states - 1:
-                        strout.append(', ')
-
+                strout.append(', '.join(['->' + str(i) + ' (' + str(state.getOutProb(i, c)) + ')' for i, _ in enumerate(state.out_a)]))
                 strout.append('\n')
 
         return join(strout, '')
@@ -2726,7 +2703,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         strout.append("\nNumber of mixture components: " + str(hmm.M))
 
         for k in range(hmm.N):
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("\n\nState number " + str(k) + ":")
             if state.desc is not None:
                 strout.append("\nState Name: " + state.desc)
@@ -2750,11 +2727,11 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             for c in range(self.cmodel.cos):
                 strout.append("\n  Class : " + str(c))
                 strout.append("\n    Outgoing transitions:")
-                for i in range(state.out_states):
-                    strout.append("\n      transition to state " + str(state.getOutState(i)) + " with probability = " + str(state.getOutProb(i, c)))
+                for i, _ in enumerate(state.out_a):
+                    strout.append("\n      transition to state " + str(i) + " with probability = " + str(state.getOutProb(i, c)))
                 strout.append("\n    Ingoing transitions:")
-                for i in range(state.in_states):
-                    strout.append("\n      transition from state " + str(state.getInState(i)) + " with probability = " + str(state.getInProb(i, c)))
+                for i, _ in enumerate(state.in_a):
+                    strout.append("\n      transition from state " + str(i) + " with probability = " + str(state.getInProb(i, c)))
 
             strout.append("\nint fix:" + str(state.fix) + "\n")
         return join(strout, '')
@@ -2768,7 +2745,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
         for i in range(self.cmodel.N):
             A.append([0.0] * self.N)
             B.append([])
-            state = self.cmodel.getState(i)
+            state = self.cmodel.s[i]
             pi.append(state.pi)
 
             mulist = []
@@ -2782,9 +2759,8 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
             B[i].append(siglist)
             B[i].append(wrapper.double_array2list(state.c, state.M))
 
-            for j in range(state.out_states):
-                state_index = wrapper.int_array_getitem(state.out_id, j)
-                A[i][state_index] = wrapper.double_matrix_getitem(state.out_a, 0, j)
+            for j, _ in enumerate(state.out_a[0]):
+                A[i][j] = state.out_a[0][j]
 
         return [A, B, pi]
 
@@ -2806,9 +2782,9 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         - (type, max, mix,     weight)        - for a uniform
         """
         i = self.state(i)
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         emission = state.getEmission(comp)
-        if (emission.type == wrapper.normal or              emission.type == wrapper.normal_approx):
+        if (emission.type == wrapper.normal or emission.type == wrapper.normal_approx):
             return (emission.type, emission.mean, emission.variance, state.getWeight(comp))
         elif emission.type == wrapper.normal_right:
             return (emission.type, emission.mean, emission.variance,
@@ -2840,7 +2816,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         mu, sigma, a, weight = values
         i = self.state(i)
 
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         state.setWeight(comp, weight)
         emission = state.getEmission(comp)
         emission.type = distType
@@ -2873,7 +2849,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         strout.append("\nMaximum number of output distributions per state: " + str(hmm.M))
 
         for k in range(hmm.N):
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("\n\nState number " + str(k) + ":")
             if state.desc is not None:
                 strout.append("\nState Name: " + state.desc)
@@ -2904,14 +2880,12 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
             for c in range(self.cmodel.cos):
                 strout.append("\n  Class : " + str(c))
                 strout.append("\n    Outgoing transitions:")
-                for i in range(state.out_states):
-                    strout.append("\n      transition to state " + str(state.getOutState(i)) +
-                                  " with probability = " + str(state.getOutProb(i, c)))
+                for i, _ in enumerate(state.out_a):
+                    strout.append("\n      transition to state " + str(i) + " with probability = " + str(state.getOutProb(i, c)))
 
                 strout.append("\n    Ingoing transitions:")
-                for i in range(state.in_states):
-                    strout.append("\n      transition from state " + str(state.getInState(i)) +
-                                  " with probability = " + str(state.getInProb(i, c)))
+                for i, _ in enumerate(state.in_a):
+                    strout.append("\n      transition from state " + str(i) + " with probability = " + str(state.getInProb(i, c)))
 
             strout.append("\n  int fix:" + str(state.fix))
 
@@ -2930,7 +2904,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         for i in range(self.cmodel.N):
             A.append([0.0] * self.N)
             B.append([])
-            state = self.cmodel.getState(i)
+            state = self.cmodel.s[i]
             pi.append(state.pi)
             denList = []
 
@@ -2939,14 +2913,11 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
                 emission = state.getEmission(j)
                 denList.append(emission.type)
                 if emission.type == wrapper.normal:
-                    parlist.append([emission.mean, emission.variance,
-                        0, state.getWeight(j)])
+                    parlist.append([emission.mean, emission.variance, 0, state.getWeight(j)])
                 elif emission.type == wrapper.normal_right:
-                    parlist.append([emission.mean, emission.variance,
-                        emission.min, state.getWeight(j)])
+                    parlist.append([emission.mean, emission.variance, emission.min, state.getWeight(j)])
                 elif emission.type == wrapper.normal_left:
-                    parlist.append([emission.mean, emission.variance,
-                        emission.max, state.getWeight(j)])
+                    parlist.append([emission.mean, emission.variance, emission.max, state.getWeight(j)])
                 elif emission.type == wrapper.uniform:
                     parlist.append([emission.max, emission.min, 0, state.getWeight(j)])
                 else:
@@ -2957,9 +2928,8 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 
             d.append(denList)
 
-            for j in range(state.out_states):
-                state_index = state.getOutState(j)
-                A[i][state_index] = wrapper.double_matrix_getitem(state.out_a, 0, j)
+            for j, _ in enumerate(state.out_a[0]):
+                A[i][j] = state.out_a[0][j]
 
         return [A, B, pi, d]
 
@@ -2981,7 +2951,7 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         @returns mean and covariance matrix of component m in state i
         """
         i = self.state(i)
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         assert 0 <= m < state.M, "Index " + str(m) + " out of bounds."
 
         emission = state.getEmission(m)
@@ -3001,7 +2971,7 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         mu, sigma = values
         i = self.state(i)
 
-        state = self.cmodel.getState(i)
+        state = self.cmodel.s[i]
         assert 0 <= m < state.M, "Index " + str(m) + " out of bounds."
 
         emission = state.getEmission(m)
@@ -3022,7 +2992,7 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         strout.append("\nNumber of dimensions: " + str(hmm.dim))
 
         for k in range(hmm.N):
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("\n\nState number " + str(k) + ":")
             strout.append("\nInitial probability: " + str(state.pi))
             strout.append("\nNumber of mixture components: " + str(state.M))
@@ -3056,11 +3026,11 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
             for c in range(self.cmodel.cos):
                 strout.append("\n\n  Class : " + str(c))
                 strout.append("\n    Outgoing transitions:")
-                for i in range(state.out_states):
-                    strout.append("\n      transition to state " + str(state.getOutState(i)) + " with probability = " + str(state.getOutProb(i, c)))
+                for i, _ in enumerate(state.out_a):
+                    strout.append("\n      transition to state " + str(i) + " with probability = " + str(state.getOutProb(i, c)))
                 strout.append("\n    Ingoing transitions:")
-                for i in range(state.in_states):
-                    strout.append("\n      transition from state " + str(state.getInState(i)) + " with probability = " + str(state.getInProb(i, c)))
+                for i, a in enumerate(state.in_a):
+                    strout.append("\n      transition from state " + str(i) + " with probability = " + str(state.getInProb(i, c)))
 
         return join(strout, '')
 
@@ -3072,7 +3042,7 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         for i in range(self.cmodel.N):
             A.append([0.0] * self.N)
             emissionparams = []
-            state = self.cmodel.getState(i)
+            state = self.cmodel.s[i]
             pi.append(state.pi)
             for m in range(state.M):
                 emission = state.getEmission(m)
@@ -3087,9 +3057,8 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
 
             B.append(emissionparams)
 
-            for j in range(state.out_states):
-                state_index = wrapper.int_array_getitem(state.out_id, j)
-                A[i][state_index] = wrapper.double_matrix_getitem(state.out_a, 0, j)
+            for j, _ in enumerate(state.out_a[0]):
+                A[i][j] = state.out_a[0][j]
 
         return [A, B, pi]
 
@@ -3129,8 +3098,8 @@ def HMMDiscriminativeTraining(HMMList, SeqList, nrSteps=50, gradient=0):
     SeqArray = wrapper.sequences_ptr_array_alloc(inplen)
 
     for i in range(inplen):
-        HMMArray[i]= HMMList[i].cmodel
-        SeqArray[i]=SeqList[i].cseq
+        HMMArray[i] = HMMList[i].cmodel
+        SeqArray[i] = SeqList[i].cseq
 
     wrapper.ghmm_dmodel_label_discriminative(HMMArray, SeqArray, inplen, nrSteps, gradient)
 
@@ -3272,7 +3241,6 @@ class DiscretePairDistribution(DiscreteDistribution):
             return counts
 
 
-
 class PairHMM(HMM):
     """
     Pair HMMs with discrete emissions over multiple alphabets.
@@ -3321,7 +3289,7 @@ class PairHMM(HMM):
         strout.append("\nNumber of states: " + str(hmm.N))
         strout.append("\nSize of Alphabet: " + str(hmm.M))
         for k in range(hmm.N):
-            state = hmm.getState(k)
+            state = hmm.s[k]
             strout.append("\n\nState number " + str(k) + ":")
             if state.desc is not None:
                 strout.append("\nState Name: " + state.desc)
@@ -3331,11 +3299,11 @@ class PairHMM(HMM):
             strout.append("\n")
 
             strout.append("\nOutgoing transitions:")
-            for i in range(state.out_states):
-                strout.append("\ntransition to state " + str(state.out_id[i]) + " with probability " + str(wrapper.double_array_getitem(state.out_a, i)))
+            for i, a in enumerate(state.out_a):
+                strout.append("\ntransition to state " + str(i) + " with probability " + str(a))
             strout.append("\nIngoing transitions:")
-            for i in range(state.in_states):
-                strout.append("\ntransition from state " + str(i) + " with probability " + str(wrapper.double_array_getitem(state.in_a, i)))
+            for i, a in enumerate(state.a):
+                strout.append("\ntransition from state " + str(i) + " with probability " + str(a))
                 strout.append("\nint fix:" + str(state.fix) + "\n")
 
         if hmm.model_type & kSilentStates:
@@ -3479,7 +3447,7 @@ class PairHMM(HMM):
             for tclass in range(state.kclasses):
                 outSum = 0.0
                 c_state = self.cmodel.getState(orders[state.index])
-                for out in range(c_state.out_states):
+                for out, a in enumerate(c_state.out_a):
                     outSum += wrapper.double_matrix_getitem(c_state.out_a, out, tclass)
 
                 if abs(1 - outSum) > eps:

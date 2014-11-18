@@ -1,7 +1,6 @@
 #*
 #      Emission bundles all emission parameters
 #
-from pyLibrary.struct import Struct
 
 
 class Emission:

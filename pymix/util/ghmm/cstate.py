@@ -6,7 +6,7 @@ from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_alloc
 
 
 class ghmm_cstate:
-    def __init__(self, M, in_states, out_states, cos):
+    def __init__(self, M, N, cos):
         #* Number of output densities per state
         self.M = M  # int
         #* weight vector for output function components
@@ -19,20 +19,15 @@ class ghmm_cstate:
         self.pi = None  # double
 
         #   matrix in case of mult. transition matrices (COS > 1)
-        self.out_a = None  # double **
         #* number of  successor states
-        self.out_states = out_states  # int
-        if out_states > 0:
-            self.out_a = ighmm_cmatrix_alloc(cos, out_states)
+        self.out_a = ighmm_cmatrix_alloc(cos, N)
 
         #* transition probs to successor states. It is a
         #* transition probs from predecessor states. It is a
         #   matrix in case of mult. transition matrices (COS > 1)
         self.in_a = None  # double **
         #* number of  predecessor states
-        self.in_states = in_states  # int
-        if in_states > 0:
-            self.in_a = ighmm_cmatrix_alloc(cos, in_states)
+        self.in_a = ighmm_cmatrix_alloc(cos, N)
 
         #* flag for fixation of parameter. If fix = 1 do not change parameters of
         #      output functions, if fix = 0 do normal training. Default is 0.

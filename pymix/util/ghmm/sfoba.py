@@ -58,7 +58,7 @@ def sfoba_initforward(smo, alpha_1, omega, scale, b):
 
 def sfoba_stepforward(s, alpha_t, osc, b_omega):
     value = 0.0
-    for i in range(s.in_states):
+    for i in range(len(s.in_a[osc])):
         value += s.in_a[osc][i] * alpha_t[i]
 
     value *= b_omega             # b_omega outside the sum

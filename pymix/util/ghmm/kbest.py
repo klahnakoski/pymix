@@ -71,8 +71,8 @@ def kbest_buildLogMatrix(s, N):
     # create & initialize matrix:
     log_a = ARRAY_MALLOC(N)
     for i in range(0, N):
-        log_a[i] = ARRAY_MALLOC(s[i].in_states)
-        for j in range(0, s[i].in_states):
+        log_a[i] = ARRAY_MALLOC(N)
+        for j in range(N):
             log_a[i][j] = Math.log(s[i].in_a[j])
 
     return log_a
@@ -121,8 +121,8 @@ def ghmm_dmodel_label_kbest(mo, o_seq, seq_len, k):
         states_wlabel[c] += 1
         if c > num_labels:
             num_labels = c
-        if mo.s[i].out_states > label_max_out[c]:
-            label_max_out[c] = mo.s[i].out_states
+        if mo.N > label_max_out[c]:
+            label_max_out[c] = mo.N
 
     # add one to the maximum label to get the number of labels
     num_labels += 1
@@ -362,7 +362,7 @@ def ighmm_hlist_prop_forward(mo, h, hplus, labels, nr_s, max_out):
             if hP.gamma_a[i] == 1.0:
                 continue
             i_id = hP.gamma_id[i]
-            for j in range(0, mo.s[i_id].out_states):
+            for j in range(0, mo.N):
                 c = mo.label[j]
 
                 # create a new hypothesis with label c
@@ -417,10 +417,10 @@ def ighmm_log_gamma_sum(log_a, s, parent):
     if parent.gamma_states == 1:
         return parent.gamma_a[0] + log_a[parent.gamma_id[0]]
 
-    logP = ARRAY_MALLOC(s.in_states)
+    logP = ARRAY_MALLOC(len(s.in_a))
 
     # calculate logs of a[k,l]*gamma[k,hi] as sums of logs and find maximum:
-    for j in range(0, s.in_states):
+    for j in range(len(s.in_a)):
         # search for state j_id in the gamma list
         for k in range(0, parent.gamma_states):
             if parent.gamma_id[k] == j:
@@ -435,7 +435,7 @@ def ighmm_log_gamma_sum(log_a, s, parent):
 
     # calculate max+Math.log(1+sum[j!=argmax exp(logP[j]-max)])
     result = 1.0
-    for j in range(0, s.in_states):
+    for j in range(len(s.in_a)):
         if j != argmax and logP[j] != 1.0:
             result += exp(logP[j] - max)
 

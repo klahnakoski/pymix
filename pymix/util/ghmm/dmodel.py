@@ -22,7 +22,7 @@ class ghmm_dmodel():
 
         # Vector of the states
         if inDegVec:
-            self.s = [model_state_alloc(M, i, o) for i, o in zip(inDegVec, outDegVec)]
+            self.s = [model_state_alloc(M, N) for _ in range(N)]
         else:
             self.s = None  # ghmm_dstate*
 
@@ -175,10 +175,10 @@ class ghmm_dmodel():
 
             # Get a random initial state i
             p = random_mt.float23()
-            sum = 0.0
+            sum_ = 0.0
             for state in range(self.N):
-                sum += self.s[state].pi
-                if sum >= p:
+                sum_ += self.s[state].pi
+                if sum_ >= p:
                     break
             else:
                 state = self.N
@@ -200,11 +200,11 @@ class ghmm_dmodel():
                 p = random_mt.float23()
                 if pos < self.maxorder:
                     max_sum = 0.0
-                    for j in range(self.s[state].out_states):
+                    for j in range(self.N):
                         if not (self.model_type & kHigherOrderEmissions) or self.order[j] <= pos:
                             max_sum += self.s[state].out_a[j]
                     else:
-                        j = self.s[state].out_states
+                        j = self.N
 
                     if j and abs(max_sum) < GHMM_EPS_PREC:
                         Log.error("No possible transition from state %d "
@@ -215,15 +215,15 @@ class ghmm_dmodel():
                     if j:
                         p *= max_sum
 
-                sum = 0.0
-                for j in range(self.s[state].out_states):
+                sum_ = 0.0
+                for j in range(self.N):
                     if not (self.model_type & kHigherOrderEmissions) or self.order[j] <= pos:
-                        sum += self.s[state].out_a[j]
-                        if sum >= p:
+                        sum_ += self.s[state].out_a[j]
+                        if sum_ >= p:
                             break
                 else:
-                    j = self.s[state].out_states
-                if sum == 0.0:
+                    j = self.N
+                if sum_ == 0.0:
                     Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
                     break
 
@@ -243,7 +243,7 @@ class ghmm_dmodel():
 
     def get_random_output(self, i, position):
         #define CUR_PROC "get_random_output"
-        sum = 0.0
+        sum_ = 0.0
 
         p = random_mt.float23()
 
@@ -253,13 +253,13 @@ class ghmm_dmodel():
 
             # get the probability, exit, if the index is -1
             if -1 != e_index:
-                sum += self.s[i].b[e_index]
-                if sum >= p:
+                sum_ += self.s[i].b[e_index]
+                if sum_ >= p:
                     break
             else:
                 Log.error("ERROR: State has order %d, but in the history are only %d emissions.\n", self.order[i], position)
         else:
-            Log.error("ERROR: no valid output choosen. Are the Probabilities correct? sum: %g, p: %g\n", sum, p)
+            Log.error("ERROR: no valid output choosen. Are the Probabilities correct? sum: %g, p: %g\n", sum_, p)
 
         return m
 
@@ -314,7 +314,7 @@ class ghmm_dmodel():
 
                 #printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id])
 
-                for j in range(self.s[id].in_states):
+                for j in range(self.N):
                     alpha_1[id] += self.s[id].in_a[j] * alpha_1[j]
 
                     #printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id])
@@ -448,34 +448,34 @@ class ghmm_dmodel():
                     # printf("  silent[%d] = %d\n",id,self.silent[id])
                     assert (self.silent[id] == 1)
 
-                    sum = 0.0
-                    for j in range(self.s[id].out_states):
+                    sum_ = 0.0
+                    for j in range(self.N):
                         # out_state is not silent
                         if not self.silent[j]:
                             e_index = self.get_emission_index(j, O[t + 1], t + 1)
                             if e_index != -1:
-                                sum += self.s[id].out_a[j] * self.s[j].b[e_index] * beta[t + 1][j]
+                                sum_ += self.s[id].out_a[j] * self.s[j].b[e_index] * beta[t + 1][j]
 
 
                         # out_state is silent, beta_tmp[j_id] is useful since we go through
                         # the silent states in reversed topological order
                         else:
-                            sum += self.s[id].out_a[j] * beta_tmp[j]
+                            sum_ += self.s[id].out_a[j] * beta_tmp[j]
 
                     # setting beta_tmp for the silent state
                     # don't scale the betas for silent states now
                     # wait until the betas for non-silent states are complete to avoid
                     # multiple scaling with the same scalingfactor in one term
-                    beta_tmp[id] = sum
+                    beta_tmp[id] = sum_
 
 
 
             # iterating over the the non-silent states
             for i in range(self.N):
                 if not (self.model_type & kSilentStates) or not (self.silent[i]):
-                    sum = 0.0
+                    sum_ = 0.0
 
-                    for j in range(self.s[i].out_states):
+                    for j in range(self.N):
                         # out_state is not silent: get the emission probability
                         # and use beta[t+1]
                         if not (self.model_type & kSilentStates) or not (self.silent[j]):
@@ -484,14 +484,14 @@ class ghmm_dmodel():
                                 emission = self.s[j].b[e_index]
                             else:
                                 emission = 0
-                            sum += self.s[i].out_a[j] * emission * beta[t + 1][j]
+                            sum_ += self.s[i].out_a[j] * emission * beta[t + 1][j]
 
                             # out_state is silent: use beta_tmp
                         else:
-                            sum += self.s[i].out_a[j] * beta_tmp[j]
+                            sum_ += self.s[i].out_a[j] * beta_tmp[j]
 
                     # updating beta[t] for non-silent state
-                    beta[t][i] = sum / scale[t + 1]
+                    beta[t][i] = sum_ / scale[t + 1]
 
             # updating beta[t] for silent states, finally scale them
             # and resetting beta_tmp
@@ -513,40 +513,40 @@ class ghmm_dmodel():
             for k in reversed(range(self.topo_order_length)):#for (k = self.topo_order_length - 1 k >= 0 k--) :
                 id = self.topo_order[k]
                 assert (self.silent[id] == 1)
-                sum = 0.0
+                sum_ = 0.0
 
-                for j in range(self.s[id].out_states):
+                for j in range(self.N):
                     # out_state is not silent
                     if not self.silent[j]:
                         # no emission history for the first symbol
                         if not (self.model_type & kHigherOrderEmissions) or self.order[id] == 0:
-                            sum += self.s[id].out_a[j] * self.s[j].b[O[0]] * beta[0][j]
+                            sum_ += self.s[id].out_a[j] * self.s[j].b[O[0]] * beta[0][j]
 
 
                     # out_state is silent, beta_tmp[j_id] is useful since we go through
                     # the silent states in reversed topological order
                     else:
-                        sum += self.s[id].out_a[j] * beta_tmp[j]
+                        sum_ += self.s[id].out_a[j] * beta_tmp[j]
 
                 # setting beta_tmp for the silent state
                 # don't scale the betas for silent states now
-                beta_tmp[id] = sum
+                beta_tmp[id] = sum_
 
-        sum = 0.0
+        sum_ = 0.0
         # iterating over all states with pi > 0.0
         for i in range(self.N):
             if self.s[i].pi > 0.0:
                 # silent states
                 if (self.model_type & kSilentStates) and self.silent[i]:
-                    sum += self.s[i].pi * beta_tmp[i]
+                    sum_ += self.s[i].pi * beta_tmp[i]
 
                 # non-silent states
                 else:
                     # no emission history for the first symbol
                     if not (self.model_type & kHigherOrderEmissions) or self.order[i] == 0:
-                        sum += self.s[i].pi * self.s[i].b[O[0]] * beta[0][i]
+                        sum_ += self.s[i].pi * self.s[i].b[O[0]] * beta[0][i]
 
-        log_p = Math.log(sum) - Math.log(scale[0])
+        log_p = Math.log(sum_) - Math.log(scale[0])
 
         log_scale_sum = 0.0
         for i in range(length):
@@ -787,8 +787,8 @@ class ghmm_dmodel():
                 self.update_emission_history_front(O[t - self.maxorder + 1])
 
             for i in range(self.N):
-                sum = 0.0
-                for j in range(self.s[i].out_states):
+                sum_ = 0.0
+                for j in range(self.N):
                     # The state has only a emission with probability > 0, if the label matches
                     if label[t] == self.label[i]:
                         e_index = self.get_emission_index(j, O[t + 1], t + 1)
@@ -800,9 +800,9 @@ class ghmm_dmodel():
                     else:
                         emission = 0.0
 
-                    sum += emission * self.s[i].out_a[j] * beta_tmp[j]
+                    sum_ += emission * self.s[i].out_a[j] * beta_tmp[j]
 
-                beta[t][i] = sum
+                beta[t][i] = sum_
                 # if ((beta[t][i] > 0) and ((beta[t][i] < .01) or (beta[t][i] > 100))) beta_out++
 
             for i in range(self.N):
@@ -861,7 +861,7 @@ class ghmm_dmodel():
                 alpha_curr_col[i] *= c_t
 
             if not (self.model_type & kSilentStates):
-                #sum Math.log(c[t]) scaling values to get  Math.log( P(O|lambda) )
+                #sum_ Math.log(c[t]) scaling values to get  Math.log( P(O|lambda) )
                 log_p -= Math.log(c_t)
 
 
@@ -960,16 +960,11 @@ class ghmm_dmodel():
             # note: denom. might be 0 never reached state?
             p_i = 0.0
             if r.a_denom[i] < GHMM_EPS_PREC:
-                for h in range(self.s[i].in_states):
+                for h in range(self.N):
                     p_i += self.s[i].in_a[h]
-                else:
-                    h = self.s[i].in_states
 
                 if p_i == 0.0:
-                    if h == 0:
-                        Log.note("State %d can't be reached (no in_states)", i)
-                    else:
-                        Log.note("State %d can't be reached (prob = 0.0)", i)
+                    Log.note("State %d can't be reached (prob = 0.0)", i)
                     reachable = 0
 
                 factor = 0.0
@@ -977,7 +972,7 @@ class ghmm_dmodel():
             else:
                 factor = (1 / r.a_denom[i])
 
-            for j in range(self.s[i].out_states):
+            for j in range(self.N):
                 # TEST: denom. < numerator
                 if (r.a_denom[i] - r.a_num[i][j]) <= -GHMM_EPS_PREC:
                     Log.error("numerator > denominator")
@@ -1086,7 +1081,7 @@ class ghmm_dmodel():
 
                     # A
                     r.a_denom[i] += (seq_w[k] * alpha[t][i] * beta[t][i])
-                    for j in range(self.s[i].out_states):
+                    for j in range(self.N):
                         e_index = self.get_emission_index(j, O[k][t + 1], t + 1)
                         if e_index != -1:
                             r.a_num[i][j] += (seq_w[k] * alpha[t][i] * self.s[i].out_a[j] * self.s[j].b[e_index] * beta[t + 1][j] * (1.0 / scale[t + 1]))       # c[t] = 1/scale[t]
@@ -1169,13 +1164,13 @@ class ghmm_dmodel():
                 for m in range(self.N):
                     for i in range(self.N):
                         # computes estimates for the numerator of transition probabilities :
-                        for j in range(self.s[i].out_states):
-                            for g in range(self.s[j].in_states):
+                        for j in range(self.N):
+                            for g in range(self.N):
                                 e_index = self.get_emission_index(g, O[t], t)
                                 # scales all summands with the current
                                 summands[g] = last_est[m].a_num[i][j] * self.s[j].in_a[g] * self.s[g].b[e_index] * scalingf
                             else:
-                                g = self.s[j].in_states
+                                g = self.N
 
                             if j == m:
                                 e_index = self.get_emission_index(j, O[t], t)
@@ -1186,7 +1181,7 @@ class ghmm_dmodel():
                             curr_est[m].a_num[i][j] = nologSum(summands, g)
 
                         # computes denominator of transition probabilities
-                        for g in range(self.s[m].in_states):
+                        for g in range(self.N):
                             e_index = self.get_emission_index(m, O[t], t)
                             # scales all summands with the current factor
                             summands[g] = last_est[m].a_denom[i] * self.s[m].in_a[g] * self.s[m].b[e_index] * scalingf
@@ -1206,13 +1201,13 @@ class ghmm_dmodel():
                             size = 1
                         for h in range(size):
                             for s in range(h * self.M, h * self.M + self.M):
-                                for g in range(self.s[m].in_states):
+                                for g in range(self.N):
                                     e_index = self.get_emission_index(g, O[t], t)
                                     # scales all summands with the last scaling factor
                                     # of alpha
                                     summands[g] = last_est[m].b_num[i][s] * self.s[m].in_a[g] * self.s[g].b[e_index] * scalingf
                                 else:
-                                    g = self.s[m].in_states
+                                    g = len(self.N)
 
                                 curr_est[m].b_num[i][s] = nologSum(summands, g)
 
@@ -1244,7 +1239,7 @@ class ghmm_dmodel():
 
                     # A
                     curr_est[m].a_denom[i] = 0
-                    for j in range(self.s[i].out_states):
+                    for j in range(self.N):
                         r.a_num[i][j] += seq_w[k] * curr_est[m].a_num[i][j]
                         curr_est[m].a_denom[i] += curr_est[m].a_num[i][j]
 
@@ -1360,7 +1355,7 @@ class ghmm_dmodel():
 
                         # A
                         r.a_denom[i] += seq_w[k] * alpha[t][i] * beta[t][i]
-                        for j in range(self.s[i].out_states):
+                        for j in range(self.N):
                             if label[k][t + 1] != self.label[j]:
                                 continue
                             e_index = self.get_emission_index(j, O[k][t + 1], t + 1)
@@ -1439,62 +1434,51 @@ class ghmm_dmodel():
         imag = 0
 
         # The sum of the Pi[i]'s is 1
-        sum = 0.0
+        sum_ = 0.0
         for i in range(self.N):
-            sum += self.s[i].pi
+            sum_ += self.s[i].pi
 
-        if abs(sum - 1.0) >= GHMM_EPS_PREC:
+        if abs(sum_ - 1.0) >= GHMM_EPS_PREC:
             Log.error("sum Pi[i] != 1.0")
 
 
         # check each state
         for i in range(self.N):
-            sum = 0.0
-            # Sum the a[i][j]'s : normalized out transitions
-            for j in range(self.s[i].out_states):
-                sum += self.s[i].out_a[j]
+            sum_ = sum(self.s[i].out_a)
 
-            if not self.s[i].out_states:
-                Log.note("out_states = 0 (state %d . final state!)", i)
-            elif sum == 0.0:
-                Log.warning("sum of s[%d].out_a[*] = 0.0 (assumed final state but %d transitions)", i, self.s[i].out_states)
-            elif abs(sum - 1.0) >= GHMM_EPS_PREC:
-                Log.error("sum of s[%d].out_a[*] = %f != 1.0", i, sum)
+            if sum_ == 0.0:
+                Log.warning("sum of s[%d].out_a[*] = 0.0 (assumed final state but %d transitions)", i, self.N)
+            elif abs(sum_ - 1.0) >= GHMM_EPS_PREC:
+                Log.error("sum of s[%d].out_a[*] = %f != 1.0", i, sum_)
 
             # Sum the a[i][j]'s : normalized in transitions
-            sum = self.s[i].pi
-            for j in range(self.s[i].in_states):
-                sum += self.s[i].in_a[j]
+            sum_ = self.s[i].pi
+            sum_ += sum(self.s[i].in_a)
 
-            if abs(sum) <= GHMM_EPS_PREC:
+            if abs(sum_) <= GHMM_EPS_PREC:
                 imag = 1
                 Log.note("state %d can't be reached", i)
 
 
             # Sum the b[j]'s: normalized emission probs
-            sum = 0.0
-            for j in range(self.M):
-                sum += self.s[i].b[j]
+            sum_ = sum(self.s[i].b)
 
             if imag:
                 # not reachable states
-                if (abs(sum + self.M) >= GHMM_EPS_PREC):
+                if (abs(sum_ + self.M) >= GHMM_EPS_PREC):
                     Log.error("state %d can't be reached but is not set as non-reachale state", i)
             elif (self.model_type & kSilentStates) and self.silent[i]:
                 # silent states
-                if sum != 0.0:
+                if sum_ != 0.0:
                     Log.error("state %d is silent but has a non-zero emission probability", i)
             else:
                 # normal states
-                if abs(sum - 1.0) >= GHMM_EPS_PREC:
-                    Log.error("sum s[%d].b[*] = %f != 1.0", i, sum)
+                if abs(sum_ - 1.0) >= GHMM_EPS_PREC:
+                    Log.error("sum s[%d].b[*] = %f != 1.0", i, sum_)
 
     def update_emission_history_front(self, O):
         if self.model_type & kHigherOrderEmissions:
             self.emission_history = pow(self.M, self.maxorder - 1) * O + self.emission_history / self.M
-
-    def getState(self, index):
-        return self.s[index]
 
     def get_transition(self, i, j):
         if self.s and self.s[i].out_a and self.s[j].in_a:
@@ -1543,10 +1527,10 @@ class ghmm_dmodel():
                 size = pow(self.M, self.order[i])
 
             # normalize transition probabilities
-            ighmm_cvector_normalize(self.s[i].out_a, 0, self.s[i].out_states)
+            ighmm_cvector_normalize(self.s[i].out_a, 0, self.N)
 
             # for every outgoing probability update the corrosponding incoming probability
-            for j in range(self.s[i].out_states):
+            for j in range(self.N):
                 self.s[j].in_a[i] = self.s[i].out_a[j]
 
             # normalize emission probabilities, but not for silent states
@@ -1631,10 +1615,10 @@ class ghmm_dmodel():
 
             # Get a random initial state i
             p = random_mt.float23()
-            sum = 0.0
+            sum_ = 0.0
             for state in range(self.N):
-                sum += self.s[state].pi
-                if sum >= p:
+                sum_ += self.s[state].pi
+                if sum_ >= p:
                     break
 
             while pos < len:
@@ -1655,7 +1639,7 @@ class ghmm_dmodel():
                 p = random_mt.float23()
                 if pos < self.maxorder:
                     max_sum = 0.0
-                    for j in range(0, self.s[state].out_states):
+                    for j in range(0, self.N):
                         if not (self.model_type & kHigherOrderEmissions) or self.order[j] < pos:
                             max_sum += self.s[state].out_a[j]
 
@@ -1666,14 +1650,14 @@ class ghmm_dmodel():
                     if j:
                         p *= max_sum
 
-                sum = 0.0
-                for j in range(0, self.s[state].out_states):
+                sum_ = 0.0
+                for j in range(0, self.N):
                     if not (self.model_type & kHigherOrderEmissions) or self.order[j] < pos:
-                        sum += self.s[state].out_a[j]
-                        if sum >= p:
+                        sum_ += self.s[state].out_a[j]
+                        if sum_ >= p:
                             break
 
-                if sum == 0.0:
+                if sum_ == 0.0:
                     Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
                     break
 

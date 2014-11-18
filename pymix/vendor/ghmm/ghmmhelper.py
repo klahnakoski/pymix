@@ -126,7 +126,7 @@ def extract_out_cos(transmat, cos, state):
     Extract outgoing transitions for 'state' from the complete list
     of transition matrices
 
-    Allocates: .out_id vector and .out_a array (of size cos x N)
+    Allocates: .out_a array (of size cos x N)
     """
     trans_id = []
     # parsing indixes belonging to postive probabilites

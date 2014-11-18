@@ -99,8 +99,8 @@ def ghmm_dmodel_copy(mo):
         else:
             size = mo.M
 
-        nachf = mo.s[i].out_states
-        vorg = mo.s[i].in_states
+        nachf = mo.N
+        vorg = mo.N
 
         m2.s[i].out_a = ARRAY_CALLOC(nachf)
         m2.s[i].in_a = ARRAY_CALLOC(vorg)
@@ -129,8 +129,6 @@ def ghmm_dmodel_copy(mo):
             m2.order[i] = mo.order[i]
         if mo.model_type & kBackgroundDistributions:
             m2.background_id[i] = mo.background_id[i]
-        m2.s[i].out_states = nachf
-        m2.s[i].in_states = vorg
 
     m2.N = mo.N
     m2.M = mo.M
@@ -146,57 +144,51 @@ def ghmm_dmodel_check(mo):
     imag = 0
 
     # The sum of the Pi[i]'s is 1
-    sum = 0.0
+    sum_ = 0.0
     for i in range(0, mo.N):
-        sum += mo.s[i].pi
+        sum_ += mo.s[i].pi
 
-    if abs(sum - 1.0) >= GHMM_EPS_PREC:
-        Log.error("sum Pi[i] != 1.0")
+    if abs(sum_ - 1.0) >= GHMM_EPS_PREC:
+        Log.error("sum_ Pi[i] != 1.0")
 
     # check each state
     for i in range(mo.N):
-        sum = 0.0
-        # Sum the a[i][j]'s : normalized out transitions
-        for j in range(mo.s[i].out_states):
-            sum += mo.s[i].out_a[j]
+        sum_ = sum(mo.s[i].out_a)
 
-        if j == 0:
-            Log.note("out_states = 0 (state %d . final statenot )", i)
+        if sum_ == 0.0:
+            Log.warning("sum of s[%d].out_a[*] = 0.0 (assumed final state but %d transitions)", i, mo.N)
 
-        elif sum == 0.0:
-            Log.warning("sum of s[%d].out_a[*] = 0.0 (assumed final state but %d transitions)", i, mo.s[i].out_states)
-
-        if abs(sum - 1.0) >= GHMM_EPS_PREC:
-            Log.error("sum of s[%d].out_a[*] = %f != 1.0", i, sum)
+        if abs(sum_ - 1.0) >= GHMM_EPS_PREC:
+            Log.error("sum of s[%d].out_a[*] = %f != 1.0", i, sum_)
 
         # Sum the a[i][j]'s : normalized in transitions
-        sum = mo.s[i].pi
-        for j in range(mo.s[i].in_states):
-            sum += mo.s[i].in_a[j]
+        sum_ = mo.s[i].pi
+        for j in range(mo.N):
+            sum_ += mo.s[i].in_a[j]
 
-        if abs(sum) <= GHMM_EPS_PREC:
+        if abs(sum_) <= GHMM_EPS_PREC:
             imag = 1
             Log.error("state %d can't be reached", i)
 
 
         # Sum the b[j]'s: normalized emission probs
-        sum = 0.0
+        sum_ = 0.0
         for j in range(mo.M):
-            sum += mo.s[i].b[j]
+            sum_ += mo.s[i].b[j]
 
         if imag:
             # not reachable states
-            if (abs(sum + mo.M) >= GHMM_EPS_PREC):
+            if (abs(sum_ + mo.M) >= GHMM_EPS_PREC):
                 Log.error("state %d can't be reached but is not set as non-reachale state", i)
 
         elif (mo.model_type & kSilentStates) and mo.silent[i]:
             # silent states
-            if sum != 0.0:
+            if sum_ != 0.0:
                 Log.error("state %d is silent but has a non-zero emission probability", i)
         else:
             # normal states
-            if abs(sum - 1.0) >= GHMM_EPS_PREC:
-                Log.error("sum s[%d].b[*] = %f != 1.0", i, sum)
+            if abs(sum_ - 1.0) >= GHMM_EPS_PREC:
+                Log.error("sum s[%d].b[*] = %f != 1.0", i, sum_)
 
 
 def ghmm_dmodel_check_compatibility(mo, model_number):
@@ -215,13 +207,15 @@ def ghmm_dmodel_check_compatibel_models(mo, m2):
         Log.error("different number of possible outputs (%d != %d)\n", mo.M, m2.M)
 
     for i in range(mo.N):
-        if mo.s[i].out_states != m2.s[i].out_states:
-            Log.error("different number of outstates (%d != %d) in state %d.\n", mo.s[i].out_states, m2.s[i].out_states, i)
+        if mo.N != m2.N:
+            Log.error("different number of outstates (%d != %d) in state %d.\n", mo.N, m2.N, i)
 
     return 0
 
 
 def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
+    Log.error("in_id has been removed, do not know how that affects this")
+
     mo = ghmm_dmodel(seq_len, anz_symb)
 
     # All models generated from sequences have to be LeftRight-models
@@ -243,8 +237,6 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
     for i in range(1, mo.N - 1):
         s = mo.s[i]
         s.pi = 0.0
-        s.out_states = 1
-        s.in_states = 1
         s.b[seq[i]] = 1.0         # others stay 0
         s.out_id = i + 1
         s.in_id = i - 1
@@ -254,8 +246,6 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
     # Initial state
     s = mo.s[0]
     s.pi = 1.0
-    s.out_states = 1
-    s.in_states = 0
     s.b[seq[0]] = 1.0
     s.out_id = 1
     s.out_a = 1.0
@@ -264,8 +254,6 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
     # End state
     s = mo.s[mo.N - 1]
     s.pi = 0.0
-    s.out_states = 0
-    s.in_states = 1
     s.b[seq[mo.N - 1]] = 1.0   # All other b's stay zero
     s.in_id = mo.N - 2
     s.in_a = 1.0
@@ -277,7 +265,7 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
 
 
 def get_random_output(mo, i, position):
-    sum = 0.0
+    sum_ = 0.0
 
     p = random_mt.float23()
 
@@ -287,15 +275,15 @@ def get_random_output(mo, i, position):
 
         # get the probability, exit, if the index is -1
         if -1 != e_index:
-            sum += mo.s[i].b[e_index]
-            if sum >= p:
+            sum_ += mo.s[i].b[e_index]
+            if sum_ >= p:
                 break
 
         else:
             Log.error("State has order %d, but in the history are only %d emissions.\n", mo.order[i], position)
 
     if mo.M == m:
-        Log.error("no valid output choosen. Are the Probabilities correct? sum: %g, p: %g\n", sum, p)
+        Log.error("no valid output choosen. Are the Probabilities correct? sum: %g, p: %g\n", sum_, p)
 
     return m
 
@@ -335,10 +323,10 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
 
         # Get a random initial state i
         p = random_mt.float23()
-        sum = 0.0
+        sum_ = 0.0
         for state in range(mo.N):
-            sum += mo.s[state].pi
-            if sum >= p:
+            sum_ += mo.s[state].pi
+            if sum_ >= p:
                 break
 
         while pos < len:
@@ -358,7 +346,7 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
             p = random_mt.float23()
             if pos < mo.maxorder:
                 max_sum = 0.0
-                for j in range(0, mo.s[state].out_states):
+                for j in range(0, mo.N):
                     if not (mo.model_type & kHigherOrderEmissions) or mo.order[j] <= pos:
                         max_sum += mo.s[state].out_a[j]
 
@@ -370,14 +358,14 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
 
                 p *= max_sum
 
-            sum = 0.0
-            for j in range(0, mo.s[state].out_states):
+            sum_ = 0.0
+            for j in range(0, mo.N):
                 if not (mo.model_type & kHigherOrderEmissions) or mo.order[j] <= pos:
-                    sum += mo.s[state].out_a[j]
-                    if sum >= p:
+                    sum_ += mo.s[state].out_a[j]
+                    if sum_ >= p:
                         break
 
-            if sum == 0.0:
+            if sum_ == 0.0:
                 Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
                 break
 
@@ -637,10 +625,10 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
 
         # Get a random initial state i
         p = random_mt.float23()
-        sum = 0.0
+        sum_ = 0.0
         for state in range(mo.N):
-            sum += mo.s[state].pi
-            if sum >= p:
+            sum_ += mo.s[state].pi
+            if sum_ >= p:
                 break
 
         while pos < len:
@@ -661,7 +649,7 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
             p = random_mt.float23()
             if pos < mo.maxorder:
                 max_sum = 0.0
-                for j in range(0, mo.s[state].out_states):
+                for j in range(0, mo.N):
                     if not (mo.model_type & kHigherOrderEmissions) or mo.order[j] < pos:
                         max_sum += mo.s[state].out_a[j]
 
@@ -670,14 +658,14 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
 
                 p *= max_sum
 
-            sum = 0.0
-            for j in range(0, mo.s[state].out_states):
+            sum_ = 0.0
+            for j in range(0, mo.N):
                 if not (mo.model_type & kHigherOrderEmissions) or mo.order[j] < pos:
-                    sum += mo.s[state].out_a[j]
-                    if sum >= p:
+                    sum_ += mo.s[state].out_a[j]
+                    if sum_ >= p:
                         break
 
-            if sum == 0.0:
+            if sum_ == 0.0:
                 Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
                 break
 
@@ -713,10 +701,10 @@ def ghmm_dmodel_normalize(mo):
             size = pow(mo, mo.M, mo.order[i])
 
         # normalize transition probabilities
-        ighmm_cvector_normalize(mo.s[i].out_a, 0, mo.s[i].out_states)
+        ighmm_cvector_normalize(mo.s[i].out_a, 0, mo.N)
 
         # for every outgoing probability update the corrosponding incoming probability
-        for j in range(0, mo.s[i].out_states):
+        for j in range(0, mo.N):
             mo.s[j].in_a[i] = mo.s[i].out_a[j]
 
         # normalize emission probabilities, but not for silent states
@@ -733,7 +721,7 @@ def ghmm_dmodel_add_noise(mo, level, seed):
         level = 1.0
 
     for i in range(0, mo.N):
-        for j in range(0, mo.s[i].out_states):
+        for j in range(0, mo.N):
             # add noise only to out_a, in_a is updated on normalisation
             mo.s[i].out_a[j] *= (1 - level) + (random_mt.float23() * 2 * level)
 
@@ -748,8 +736,6 @@ def ghmm_dmodel_add_noise(mo, level, seed):
 
 def ghmm_dstate_transition_add(s, start, dest, prob):
     # resize the arrays
-    s[dest].in_states += 1
-    s[start].out_states += 1
     s[start].out_a.insert(dest, prob)
     s[dest].in_a.insert(start, prob)
 
@@ -757,10 +743,6 @@ def ghmm_dstate_transition_add(s, start, dest, prob):
 def ghmm_dstate_transition_del(s, start, dest):
     del s[start].out_a[dest]
     del s[dest].in_a[start]
-
-    # reset number
-    s[dest].in_states -= 1
-    s[start].out_states -= 1
 
 
 
@@ -800,10 +782,8 @@ def ghmm_dmodel_duration_apply(mo, cur, times):
         mo.order[i] = mo.order[cur]
         mo.s[i].fix = mo.s[cur].fix
         mo.label[i] = mo.label[cur]
-        mo.s[i].in_a = None
-        mo.s[i].in_states = 0
-        mo.s[i].out_a = None
-        mo.s[i].out_states = 0
+        mo.s[i].in_a = []
+        mo.s[i].out_a = []
 
         mo.s[i].b = ARRAY_MALLOC(size)
         for j in range(0, size):
@@ -825,7 +805,7 @@ def ghmm_dmodel_duration_apply(mo, cur, times):
 
 
     # move the outgoing transitions to the last state
-    while mo.s[cur].out_states > 0:
+    while len(mo.s[cur].out_a) > 0:
         if 0 == cur:
             ghmm_dstate_transition_add(mo.s, mo.N - 1, mo.N - 1, 0)
             ghmm_dstate_transition_del(mo.s, cur, 0)
@@ -906,7 +886,7 @@ def ghmm_dmodel_background_apply(mo, background_weight):
 
 def ghmm_dmodel_get_uniform_background(mo, sq):
     n = 0
-    sum = 0.0
+    sum_ = 0.0
 
     if not (mo.model_type & kBackgroundDistributions):
         Log.error("Error: Model has no background distribution")
@@ -966,9 +946,9 @@ def ghmm_dmodel_get_uniform_background(mo, sq):
         size = pow(mo, mo.M, mo.bp.order[n])
         for h in range(0, size, mo.M):
             for m in range(h, h + mo.M):
-                sum += mo.bp.b[i][m]
+                sum_ += mo.bp.b[i][m]
             for m in range(h, h + mo.M):
-                mo.bp.b[i][m] /= sum
+                mo.bp.b[i][m] /= sum_
 
 
 def ghmm_dmodel_distance(mo, m2):
@@ -983,7 +963,7 @@ def ghmm_dmodel_distance(mo, m2):
 
     for i in range(mo.N):
         # A
-        for j in range(mo.s[i].out_states):
+        for j in range(mo.N):
             tmp = mo.s[i].out_a[j] - m2.s[i].out_a[j]
             distance += tmp * tmp
             number += 1

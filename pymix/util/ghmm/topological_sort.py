@@ -6,7 +6,7 @@ def topological_sort(c_model):
     indegrees = [0] * c_model.N
 
     for i in range(c_model.N):
-        indegrees[i] = c_model.s[i].in_states
+        indegrees[i] = c_model.N
     for i in range(c_model.N):    # don't consider back edges in top sort
         for j in range(c_model.N):
             if edge_classes[i][j] == GRAY:
@@ -26,7 +26,7 @@ def topological_sort(c_model):
             v.topo_order[dels_cnt] = nodeu        # append it to the list
             dels_cnt += 1
 
-        for i in range(c_model.s[nodeu].out_states):
+        for i in range(c_model.N):
             if edge_classes[nodeu][i] != GRAY:
                 indegrees[i] -= 1
                 if i != nodeu and indegrees[i] == 0:
@@ -55,7 +55,7 @@ def visit(c_model, nodev, parents, colors, edge_classes):
     Implementation of DFSVisit with recursion (WS)
     """
     colors[nodev] = GRAY
-    for i in range(c_model.s[nodev].out_states):
+    for i in range(c_model.N):
         if edge_classes[nodev][i] == NONE:       # First exploration
             edge_classes[nodev][i] = colors[i]
         if colors[i] == WHITE:

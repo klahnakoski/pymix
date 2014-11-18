@@ -17,7 +17,7 @@ class local_store_t():
         for i in range(mo.N):
             self.pi_num[i] = 0.0
             self.a_denom[i] = 0.0
-            for j in range(mo.s[i].out_states):
+            for j in range(mo.N):
                 self.a_num[i][j] = 0.0
 
             if mo.model_type & kHigherOrderEmissions:
@@ -39,7 +39,7 @@ def reestimate_alloc(mo):
     self.pi_num = ARRAY_CALLOC(mo.N)
     self.a_num = ARRAY_CALLOC(mo.N)
     for i in range(mo.N):
-        self.a_num[i] = ARRAY_CALLOC(mo.s[i].out_states)
+        self.a_num[i] = ARRAY_CALLOC(mo.N)
     self.a_denom = ARRAY_CALLOC(mo.N)
 
     self.b_num = ARRAY_MALLOC(mo.N)
