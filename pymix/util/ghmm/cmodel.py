@@ -200,7 +200,7 @@ class ghmm_cmodel:
                         # Final state reached, out of while-loop
                         break
 
-                i = self.s[i].out_id[j]
+                i = j
                 # fprintf(stderr, "%d\n", i)
                 # fprintf(stderr, "%d\n", i)
 
@@ -331,28 +331,25 @@ class ghmm_cmodel:
     def get_transition(self, i, j, c=None):
         if self.s and self.s[i].out_a and self.s[j].in_a:
             for out in range(self.s[i].out_states):
-                if self.s[i].out_id[out] == j:
-                    if c is None:
-                        return self.s[i].out_a[out]
-                    else:
-                        return self.s[i].out_a[c][out]
+                if c is None:
+                    return self.s[i].out_a[j]
+                else:
+                    return self.s[i].out_a[c][j]
 
         return 0.0
 
     def set_transition(self, i, j, c, value):
         if self.s and self.s[i].out_a and self.s[j].in_a:
             for out in range(self.s[i].out_states):
-                if self.s[i].out_id[out] == j:
-                    self.s[i].out_a[c][out] = value
+                self.s[i].out_a[c][j] = value
 
         return 0.0
 
     def check_transition(smo, i, j, c=None):
-        if smo.s and smo.s[i].out_a and smo.s[j].in_a:
-            for out in range(smo.s[i].out_states):
-                if smo.s[i].out_id[out] == j:
-                    return 1
-        return 0
+        try:
+           return smo.s[i].out_a[c][j] > 0.0
+        except Exception, e:
+            raise e
 
     def logp_joint(self, O, len, S, slen):
         state_pos = 0
@@ -369,7 +366,7 @@ class ghmm_cmodel:
         for state_pos in range(1, len):
             state = S[state_pos]
             for j in range(self.s[state].in_states):
-                if prevstate == self.s[state].in_id[j]:
+                if prevstate == j:
                     break
             if self.cos > 1:
                 if not self.class_change.get_class:
@@ -379,7 +376,7 @@ class ghmm_cmodel:
                 if osc >= self.cos:
                     Log.error("get_class returned index %d but model has only %d classes!", osc, self.cos)
 
-            if (j == self.s[state].in_states or abs(self.s[state].in_a[osc][j]) < GHMM_EPS_PREC):
+            if j == self.s[state].in_states or abs(self.s[state].in_a[osc][j]) < GHMM_EPS_PREC:
                 Log.error("Sequence can't be built. There is no transition from state %d to %d.", prevstate, state)
 
             log_p += Math.log(self.s[state].in_a[osc][j])
@@ -502,8 +499,7 @@ class ghmm_cmodel:
                 for i in range(self.N):
                     sum = 0.0
                     for j in range(self.s[i].out_states):
-                        j_id = self.s[i].out_id[j]
-                        sum += self.s[i].out_a[osc][j] * self.s[j_id].calc_b(O[t+1]) * beta_tmp[j_id]
+                        sum += self.s[i].out_a[osc][j] * self.s[j].calc_b(O[t+1]) * beta_tmp[j]
 
                     beta[t][i] = sum
 
@@ -511,8 +507,7 @@ class ghmm_cmodel:
                 for i in range(self.N):
                     sum = 0.0
                     for j in range(self.s[i].out_states):
-                        j_id = self.s[i].out_id[j]
-                        sum += self.s[i].out_a[osc][j] * b[t + 1][j_id][self.M] * beta_tmp[j_id]
+                        sum += self.s[i].out_a[osc][j] * b[t + 1][j][self.M] * beta_tmp[j]
 
                         #printf("  smo.s[%d].out_a[%d][%d] * b[%d] * beta_tmp[%d] = %f * %f *
                         #            %f\n",i,osc,j,t+1,j_id,smo.s[i].out_a[osc][j], b[t + 1][j_id][smo.M], beta_tmp[j_id])
@@ -542,9 +537,6 @@ class ghmm_cmodel:
     def normalize(self):
     # Scales the output and transitions probs of all states in a given model
         pi_sum = 0.0
-        i_id = 0
-        res = 0
-        size = 1
 
         for i in range(self.N):
             if self.s[i].pi >= 0.0:
@@ -558,16 +550,7 @@ class ghmm_cmodel:
 
                 # for every outgoing probability update the corrosponding incoming probability
                 for j in range(self.s[i].out_states):
-                    j_id = self.s[i].out_id[j]
-                    for m in range(self.s[j_id].in_states):
-                        if i == self.s[j_id].in_id[m]:
-                            i_id = m
-                            break
-
-                    if i_id == self.s[j_id].in_states:
-                        Log.error("Outgoing transition from state %d to state %d has no corresponding incoming transition.", i, j_id)
-
-                    self.s[j_id].in_a[c][i_id] = self.s[i].out_a[c][j]
+                    self.s[j].in_a[c][i] = self.s[i].out_a[c][j]
 
         for i in range(self.N):
             self.s[i].pi /= pi_sum

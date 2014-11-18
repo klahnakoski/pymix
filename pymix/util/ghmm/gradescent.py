@@ -96,15 +96,14 @@ def ghmm_dmodel_label_gradient_expectations(mo, alpha, beta, scale, seq, seq_len
             for j in range(mo.s[i].out_states):
                 if t >= seq_len - 1:
                     break
-                j_id = mo.s[i].out_id[j]
 
                 # compute xi implicit
                 xi = 0
-                e_index = mo.get_emission_index(j_id, seq[t + 1], t + 1)
+                e_index = mo.get_emission_index(j, seq[t + 1], t + 1)
                 if e_index != -1:
-                    xi = alpha[t][i] * beta[t + 1][j_id] * mo.s[i].out_a[j] * mo.s[j_id].b[e_index] / (scale[t + 1] * foba_sum)
+                    xi = alpha[t][i] * beta[t + 1][j] * mo.s[i].out_a[j] * mo.s[j].b[e_index] / (scale[t + 1] * foba_sum)
 
-                matrix_a[i * mo.N + j_id] += xi
+                matrix_a[i * mo.N + j] += xi
 
 
 def compute_performance(mo, sq):
@@ -194,9 +193,7 @@ def gradient_descent_onestep(mo, sq, eta):
             a_row_sum = 0
             # update
             for j in range(mo.s[i].out_states):
-                j_id = mo.s[i].out_id[j]
-
-                gradient = eta * (m_a[i * mo.N + j_id] - n_a[i * mo.N + j_id]) / (seq_len - 1)
+                gradient = eta * (m_a[i * mo.N + j] - n_a[i * mo.N + j]) / (seq_len - 1)
                 if mo.s[i].out_a[j] + gradient > GHMM_EPS_PREC:
                     mo.s[i].out_a[j] += gradient
                 else:
@@ -212,13 +209,7 @@ def gradient_descent_onestep(mo, sq, eta):
             # normalise
             for j in range(mo.s[i].out_states):
                 mo.s[i].out_a[j] /= a_row_sum
-
-                # mirror out_a to corresponding in_a
-                j_id = mo.s[i].out_id[j]
-                for g in range(mo.s[j_id].in_states):
-                    if i == mo.s[j_id].in_id[g]:
-                        mo.s[j_id].in_a[g] = mo.s[i].out_a[j]
-                        break
+                mo.s[j].in_a[i] = mo.s[i].out_a[j]
 
 
 

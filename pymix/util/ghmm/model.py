@@ -47,28 +47,13 @@ VISITED = 2
 
 
 def model_copy_vectors(mo, index, a_matrix, b_matrix, pi, fix):
-    cnt_out = 0
-    cnt_in = 0
     mo.s[index].pi = pi[index]
     mo.s[index].fix = fix[index]
     for i in range(0, mo.M):
         mo.s[index].b[i] = b_matrix[index][i]
     for i in range(0, mo.N):
-        if a_matrix[index][i]:   # Transitions to a following state possible
-            if cnt_out >= mo.s[index].out_states:
-                Log.error("")
-
-            mo.s[index].out_id[cnt_out] = i
-            mo.s[index].out_a[cnt_out] = a_matrix[index][i]
-            cnt_out += 1
-
-        if a_matrix[i][index]:   # Transitions to a previous state possible
-            if cnt_in >= mo.s[index].in_states:
-                Log.error("")
-
-            mo.s[index].in_id[cnt_in] = i
-            mo.s[index].in_a[cnt_in] = a_matrix[i][index]
-            cnt_in += 1
+        mo.s[index].out_a[i] = a_matrix[index][i]
+        mo.s[index].in_a[i] = a_matrix[i][index]
 
 
 def ghmm_dmodel_read(filename):
@@ -117,20 +102,16 @@ def ghmm_dmodel_copy(mo):
         nachf = mo.s[i].out_states
         vorg = mo.s[i].in_states
 
-        m2.s[i].out_id = ARRAY_CALLOC(nachf)
         m2.s[i].out_a = ARRAY_CALLOC(nachf)
-        m2.s[i].in_id = ARRAY_CALLOC(vorg)
         m2.s[i].in_a = ARRAY_CALLOC(vorg)
         m2.s[i].b = ARRAY_CALLOC(size)
 
         # copy the values
         for j in range(0, nachf):
             m2.s[i].out_a[j] = mo.s[i].out_a[j]
-            m2.s[i].out_id[j] = mo.s[i].out_id[j]
 
         for j in range(0, vorg):
             m2.s[i].in_a[j] = mo.s[i].in_a[j]
-            m2.s[i].in_id[j] = mo.s[i].in_id[j]
 
         # copy all b values for higher order states
         for m in range(0, size):
@@ -237,10 +218,6 @@ def ghmm_dmodel_check_compatibel_models(mo, m2):
         if mo.s[i].out_states != m2.s[i].out_states:
             Log.error("different number of outstates (%d != %d) in state %d.\n", mo.s[i].out_states, m2.s[i].out_states, i)
 
-        for j in range(mo.s[i].out_states):
-            if mo.s[i].out_id[j] != m2.s[i].out_id[j]:
-                Log.error("different out_ids (%d != %d) in entry %d of state %d.\n", mo.s[i].out_id[j], m2.s[i].out_id[j], j, i)
-
     return 0
 
 
@@ -269,9 +246,9 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
         s.out_states = 1
         s.in_states = 1
         s.b[seq[i]] = 1.0         # others stay 0
-        (s.out_id) = i + 1
-        (s.in_id) = i - 1
-        (s.out_a) = (s.in_a) = 1.0
+        s.out_id = i + 1
+        s.in_id = i - 1
+        s.out_a = s.in_a = 1.0
 
 
     # Initial state
@@ -280,8 +257,8 @@ def ghmm_dmodel_generate_from_sequence(seq, seq_len, anz_symb):
     s.out_states = 1
     s.in_states = 0
     s.b[seq[0]] = 1.0
-    (s.out_id) = 1
-    (s.out_a) = 1.0
+    s.out_id = 1
+    s.out_a = 1.0
     # No in_id and in_a
 
     # End state
@@ -382,24 +359,20 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
             if pos < mo.maxorder:
                 max_sum = 0.0
                 for j in range(0, mo.s[state].out_states):
-                    j_id = mo.s[state].out_id[j]
-                    if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] <= pos:
+                    if not (mo.model_type & kHigherOrderEmissions) or mo.order[j] <= pos:
                         max_sum += mo.s[state].out_a[j]
 
-                if j and abs(max_sum) < GHMM_EPS_PREC:
+                if abs(max_sum) < GHMM_EPS_PREC:
                     Log.error("No possible transition from state %d "
                               "since all successor states require more history "
                               "than seen up to position: %d.",
                         state, pos)
-                    break
 
-                if j:
-                    p *= max_sum
+                p *= max_sum
 
             sum = 0.0
             for j in range(0, mo.s[state].out_states):
-                j_id = mo.s[state].out_id[j]
-                if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] <= pos:
+                if not (mo.model_type & kHigherOrderEmissions) or mo.order[j] <= pos:
                     sum += mo.s[state].out_a[j]
                     if sum >= p:
                         break
@@ -408,7 +381,7 @@ def ghmm_dmodel_generate_sequences(mo, seed, global_len, seq_number, Tmax):
                 Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
                 break
 
-            state = j_id
+            state = j
             # while pos < len:
         # realocate state path and label sequence to actual size
         if mo.model_type & kSilentStates:
@@ -435,32 +408,21 @@ def ghmm_dmodel_likelihood(mo, sq):
 
 def ghmm_dmodel_get_transition(mo, i, j):
     if mo.s and mo.s[i].out_a and mo.s[j].in_a:
-        for out in range(mo.s[i].out_states):
-            if mo.s[i].out_id[out] == j:
-                return mo.s[i].out_a[out]
+        return mo.s[i].out_a[j]
     return 0.0
 
 
 def ghmm_dmodel_check_transition(mo, i, j):
     if mo.s and mo.s[i].out_a and mo.s[j].in_a:
-        for out in range(mo.s[i].out_states):
-            if mo.s[i].out_id[out] == j:
-                return 1
+        if mo.s[i].out_a[j] > 0.0:
+            return 1
     return 0
 
 
 def ghmm_dmodel_set_transition(mo, i, j, prob):
-# define CUR_PROC "ghmm_dmodel_set_transition"
     if mo.s and mo.s[i].out_a and mo.s[j].in_a:
-        for out in range(0, mo.s[i].out_states):
-            if mo.s[i].out_id[out] == j:
-                mo.s[i].out_a[out] = prob
-                break
-
-        for _in in range(0, mo.s[j].in_states):
-            if mo.s[j].in_id[_in] == i:
-                mo.s[j].in_a[_in] = prob
-                break
+        mo.s[i].out_a[j] = prob
+        mo.s[j].in_a[i] = prob
 
 
 def ghmm_dmodel_direct_clean(mo_d, check):
@@ -700,20 +662,17 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
             if pos < mo.maxorder:
                 max_sum = 0.0
                 for j in range(0, mo.s[state].out_states):
-                    j_id = mo.s[state].out_id[j]
-                    if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] < pos:
+                    if not (mo.model_type & kHigherOrderEmissions) or mo.order[j] < pos:
                         max_sum += mo.s[state].out_a[j]
 
-                if j and abs(max_sum) < GHMM_EPS_PREC:
+                if abs(max_sum) < GHMM_EPS_PREC:
                     Log.error("No possible transition from state %d since all successor states require more history than seen up to position: %d.", state, pos)
 
-                if j:
-                    p *= max_sum
+                p *= max_sum
 
             sum = 0.0
             for j in range(0, mo.s[state].out_states):
-                j_id = mo.s[state].out_id[j]
-                if not (mo.model_type & kHigherOrderEmissions) or mo.order[j_id] < pos:
+                if not (mo.model_type & kHigherOrderEmissions) or mo.order[j] < pos:
                     sum += mo.s[state].out_a[j]
                     if sum >= p:
                         break
@@ -722,7 +681,7 @@ def ghmm_dmodel_label_generate_sequences(mo, seed, global_len, seq_number, Tmax)
                 Log.note("final state (%d) reached at position %d of sequence %d", state, pos, n)
                 break
 
-            state = j_id
+            state = j
             # while pos < len:
         # realocate state path and label sequence to actual size
         if mo.model_type & kSilentStates:
@@ -758,17 +717,7 @@ def ghmm_dmodel_normalize(mo):
 
         # for every outgoing probability update the corrosponding incoming probability
         for j in range(0, mo.s[i].out_states):
-            j_id = mo.s[i].out_id[j]
-            for m in range(0, mo.s[j_id].in_states):
-                if i == mo.s[j_id].in_id[m]:
-                    i_id = m
-                    break
-
-            if i_id == mo.s[j_id].in_states:
-                Log.error("Outgoing transition from state %d to state %d has no corresponding incoming transition.", i, j_id)
-                return -1
-
-            mo.s[j_id].in_a[i_id] = mo.s[i].out_a[j]
+            mo.s[j].in_a[i] = mo.s[i].out_a[j]
 
         # normalize emission probabilities, but not for silent states
         if not ((mo.model_type & kSilentStates) and mo.silent[i]):
@@ -799,75 +748,21 @@ def ghmm_dmodel_add_noise(mo, level, seed):
 
 def ghmm_dstate_transition_add(s, start, dest, prob):
     # resize the arrays
-    s[dest].in_id = ARRAY_REALLOC(s[dest].in_id, s[dest].in_states + 1)
-    s[dest].in_a = ARRAY_REALLOC(s[dest].in_a, s[dest].in_states + 1)
-    s[start].out_id = ARRAY_REALLOC(s[start].out_id, s[start].out_states + 1)
-    s[start].out_a = ARRAY_REALLOC(s[start].out_a, s[start].out_states + 1)
-
     s[dest].in_states += 1
     s[start].out_states += 1
-
-    # search the right place to insert while moving greater entrys one field back
-    for i in reversed(range(s[start].out_states)):
-        if i == 0 or dest > s[start].out_id[i - 1]:
-            s[start].out_id[i] = dest
-            s[start].out_a[i] = prob
-            break
-
-        else:
-            s[start].out_id[i] = s[start].out_id[i - 1]
-            s[start].out_a[i] = s[start].out_a[i - 1]
-
-
-
-    # search the right place to insert while moving greater entrys one field back
-    for i in reversed(range(s[dest].in_states)):
-        if i == 0 or start > s[dest].in_id[i - 1]:
-            s[dest].in_id[i] = start
-            s[dest].in_a[i] = prob
-            break
-
-        else:
-            s[dest].in_id[i] = s[dest].in_id[i - 1]
-            s[dest].in_a[i] = s[dest].in_a[i - 1]
+    s[start].out_a.insert(dest, prob)
+    s[dest].in_a.insert(start, prob)
 
 
 def ghmm_dstate_transition_del(s, start, dest):
-    # search ...
-    j = 0
-    while dest != s[start].out_id[j]:
-        if j == s[start].out_states:
-            Log.error("No such transition")
-        j += 1
-
-    # ... and replace outgoing
-    for i in range(j + 1, s[start].out_states):
-        s[start].out_id[i - 1] = s[start].out_id[i]
-        s[start].out_a[i - 1] = s[start].out_a[i]
-
-    # search ...
-    j = 0
-    while start != s[dest].in_id[j]:
-        if j == s[dest].in_states:
-            Log.error("No such transition")
-            return -1
-        j += 1
-
-    # ... and replace incoming
-    for i in range(j + 1, s[dest].in_states):
-        s[dest].in_id[i - 1] = s[dest].in_id[i]
-        s[dest].in_a[i - 1] = s[dest].in_a[i]
-
+    del s[start].out_a[dest]
+    del s[dest].in_a[start]
 
     # reset number
     s[dest].in_states -= 1
     s[start].out_states -= 1
 
-    # free memory
-    s[dest].in_id = ARRAY_REALLOC(s[dest].in_id, s[dest].in_states)
-    s[dest].in_a = ARRAY_REALLOC(s[dest].in_a, s[dest].in_states)
-    s[start].out_id = ARRAY_REALLOC(s[start].out_id, s[start].out_states)
-    s[start].out_a = ARRAY_REALLOC(s[start].out_a, s[start].out_states)
+
 
 #*
 #   Allocates a new ghmm_dbackground class and assigs the arguments to
@@ -906,10 +801,8 @@ def ghmm_dmodel_duration_apply(mo, cur, times):
         mo.s[i].fix = mo.s[cur].fix
         mo.label[i] = mo.label[cur]
         mo.s[i].in_a = None
-        mo.s[i].in_id = None
         mo.s[i].in_states = 0
         mo.s[i].out_a = None
-        mo.s[i].out_id = None
         mo.s[i].out_states = 0
 
         mo.s[i].b = ARRAY_MALLOC(size)
@@ -933,12 +826,12 @@ def ghmm_dmodel_duration_apply(mo, cur, times):
 
     # move the outgoing transitions to the last state
     while mo.s[cur].out_states > 0:
-        if mo.s[cur].out_id[0] == cur:
-            ghmm_dstate_transition_add(mo.s, mo.N - 1, mo.N - 1, mo.s[cur].out_a[0])
-            ghmm_dstate_transition_del(mo.s, cur, mo.s[cur].out_id[0])
+        if 0 == cur:
+            ghmm_dstate_transition_add(mo.s, mo.N - 1, mo.N - 1, 0)
+            ghmm_dstate_transition_del(mo.s, cur, 0)
         else:
-            ghmm_dstate_transition_add(mo.s, mo.N - 1, mo.s[cur].out_id[0], mo.s[cur].out_a[0])
-            ghmm_dstate_transition_del(mo.s, cur, mo.s[cur].out_id[0])
+            ghmm_dstate_transition_add(mo.s, mo.N - 1, 0, 0)
+            ghmm_dstate_transition_del(mo.s, cur, 0)
 
 
     # set the linear transitions through all added states

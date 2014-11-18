@@ -67,8 +67,7 @@ def sdfoba_initforward(mo, alpha_1, symb, scale):
         alpha_1[id] = mo.s[id].pi
         #      printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id])
         for j in range(mo.s[id].in_states):
-            in_id = mo.s[id].in_id[j]
-            alpha_1[id] += mo.s[id].in_a[clazz][j] * alpha_1[in_id]
+            alpha_1[id] += mo.s[id].in_a[clazz][j] * alpha_1[j]
 
         #      printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id])
         scale[0] += alpha_1[id]
@@ -86,9 +85,7 @@ def sdfoba_stepforward(s, alpha_t, b_symb, clazz):
     value = 0.0
 
     for i in range(s.in_states):
-        id = s.in_id[i]
-        #    printf("state:\t%s, instate:\t%d, prob:\t%f\n", s.label, id, s.in_a[clazz][i])
-        value += s.in_a[clazz][i] * alpha_t[id]
+        value += s.in_a[clazz][i] * alpha_t[i]
 
     value *= b_symb
     return (value)
@@ -185,15 +182,9 @@ def sdfobau_initforward(mo, alpha_1, symb, scale):
     for i in range(mo.topo_order_length):
         id = mo.topo_order[i]
         alpha_1[id] = mo.s[id].pi
-        #printf("\nsilent_start alpha1[%i]=%f\n",id,alpha_1[id])
         for j in range(mo.s[id].in_states):
-            in_id = mo.s[id].in_id[j]
-            alpha_1[id] += mo.s[id].in_a[clazz][j] * alpha_1[in_id]
-            #printf("\n\tsilent_run alpha1[%i]=%f\n",id,alpha_1[id])
+            alpha_1[id] += mo.s[id].in_a[clazz][j] * alpha_1[j]
 
-            #scale[0] += alpha_1[id]
-
-    #printf("\n%f\n",scale[0])
     if scale[0] >= EPS_PREC:
         c_0 = 1 / scale[0]
         for i in range(mo.N):
@@ -274,7 +265,7 @@ def ghmm_dsmodel_backward(mo, O, len, beta, scale):
         for i in range(mo.N):
             sum = 0.0
             for j in range(mo.s[i].out_states):
-                j_id = mo.s[i].out_id[j]
+                j_id = j
                 #sum += mo.s[i].out_a[j] * mo.s[j_id].b[O[t+1]] * beta_tmp[j_id]
 
             beta[t][i] = sum

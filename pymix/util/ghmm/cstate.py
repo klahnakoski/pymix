@@ -18,18 +18,13 @@ class ghmm_cstate:
         #* initial prob.
         self.pi = None  # double
 
-        #* IDs of successor states
-        self.out_id = None  # int *
         #   matrix in case of mult. transition matrices (COS > 1)
         self.out_a = None  # double **
         #* number of  successor states
         self.out_states = out_states  # int
         if out_states > 0:
-            self.out_id = ARRAY_CALLOC(out_states)
             self.out_a = ighmm_cmatrix_alloc(cos, out_states)
 
-        #* IDs of predecessor states
-        self.in_id = None  # int *
         #* transition probs to successor states. It is a
         #* transition probs from predecessor states. It is a
         #   matrix in case of mult. transition matrices (COS > 1)
@@ -37,7 +32,6 @@ class ghmm_cstate:
         #* number of  predecessor states
         self.in_states = in_states  # int
         if in_states > 0:
-            self.in_id = ARRAY_CALLOC(in_states)
             self.in_a = ighmm_cmatrix_alloc(cos, in_states)
 
         #* flag for fixation of parameter. If fix = 1 do not change parameters of
@@ -58,10 +52,10 @@ class ghmm_cstate:
         return self.e[i]
 
     def getOutState(self, index):
-            return self.out_id[index]
+        return index
 
     def getInState(self, index):
-        return self.in_id[index]
+        return index
 
     def getOutProb(self, i, c=0):
         return self.out_a[c][i]

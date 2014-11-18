@@ -84,12 +84,11 @@ def viterbi_silent(mo, t, v):
             max_value = -DBL_MAX
             max_id = -1
             for i in range(mo.s[St].in_states):
-                i_id = mo.s[St].in_id[i]
-                if v.phi[i_id] != +1 and v.log_in_a[St][i] != +1:
-                    value = v.phi[i_id] + v.log_in_a[St][i]
+                if v.phi[i] != +1 and v.log_in_a[St][i] != +1:
+                    value = v.phi[i] + v.log_in_a[St][i]
                     if value > max_value:
                         max_value = value
-                        max_id = i_id
+                        max_id = i
 
 
 
@@ -146,12 +145,11 @@ def ghmm_dmodel_viterbi(mo, o, len):
                 max_value = -DBL_MAX
                 max_id = -1
                 for i in range(mo.s[St].in_states):
-                    i_id = mo.s[St].in_id[i]
-                    if v.phi[i_id] != +1 and v.log_in_a[St][i] != +1:
-                        value = v.phi[i_id] + v.log_in_a[St][i]
+                    if v.phi[i] != +1 and v.log_in_a[St][i] != +1:
+                        value = v.phi[i] + v.log_in_a[St][i]
                         if value > max_value:
                             max_value = value
-                            max_id = i_id
+                            max_id = i
 
 
                 # No maximum found (is, state never reached)

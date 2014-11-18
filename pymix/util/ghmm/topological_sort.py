@@ -27,11 +27,10 @@ def topological_sort(c_model):
             dels_cnt += 1
 
         for i in range(c_model.s[nodeu].out_states):
-            nodew = c_model.s[nodeu].out_id[i]
-            if edge_classes[nodeu][nodew] != GRAY:
-                indegrees[nodew] -= 1
-                if nodew != nodeu and indegrees[nodew] == 0:
-                    v.queue[v.tail] = nodew  # enqueue
+            if edge_classes[nodeu][i] != GRAY:
+                indegrees[i] -= 1
+                if i != nodeu and indegrees[i] == 0:
+                    v.queue[v.tail] = i  # enqueue
                     v.tail += 1
 
     return v.topo_order[0:dels_cnt]
@@ -57,12 +56,11 @@ def visit(c_model, nodev, parents, colors, edge_classes):
     """
     colors[nodev] = GRAY
     for i in range(c_model.s[nodev].out_states):
-        w = c_model.s[nodev].out_id[i]    # Explore edge (v,w)
-        if edge_classes[nodev][w] == NONE:       # First exploration
-            edge_classes[nodev][w] = colors[w]
-        if colors[w] == WHITE:
-            parents[w] = nodev
-            visit(c_model, w, parents, colors, edge_classes)
+        if edge_classes[nodev][i] == NONE:       # First exploration
+            edge_classes[nodev][i] = colors[i]
+        if colors[i] == WHITE:
+            parents[i] = nodev
+            visit(c_model, i, parents, colors, edge_classes)
     colors[nodev] = BLACK        # finished
 
 

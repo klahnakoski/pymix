@@ -151,7 +151,7 @@ def extract_in_cos(transmat, cos, state):
     Extract ingoing transitions for 'state' from the complete list
     of transition matrices
 
-    Allocates: .in_id vector and .in_a array (of size cos x N)
+    Allocates: .in_a array (of size cos x N)
     """
     trans_id = []
 

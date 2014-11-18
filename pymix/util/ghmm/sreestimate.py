@@ -171,36 +171,17 @@ def sreestimate_setlambda(r, smo):
             a_num_pos = 0
 
             for j in range(smo.s[i].out_states):
-                j_id = smo.s[i].out_id[j]
                 # TEST: denom. < numerator
                 if (r.a_denom[i][osc] - r.a_num[i][osc][j]) < -GHMM_EPS_PREC:
                     smo.s[i].out_a[osc][j] = 1.0
                 elif a_denom_pos:
                     smo.s[i].out_a[osc][j] = r.a_num[i][osc][j] * a_factor_i
                 else:
-                    # if smo.s[i].out_states == 1 and  smo.s[i].out_id[0]==i:
-                    #            printf("%d is an absorbing end state . don't change transitions not \n",i)
-                    #
                     continue
-                    # smo.s[i].out_a[osc][j] = 0.0
                 if r.a_num[i][osc][j] > 0.0:
-                # >= EPS_PREC ?
                     a_num_pos = 1
 
-                # important: also update in_a
-                l = 0
-                while l < smo.s[j_id].in_states:
-                    if smo.s[j_id].in_id[l] == i:
-                        break
-                    else:
-                        l += 1
-                if l == smo.s[j_id].in_states:
-                    Log.error("no matching in_a for out_a(=a[%d][%d]) foundnot ", i, j_id)
-                smo.s[j_id].in_a[osc][l] = smo.s[i].out_a[osc][j]
-                # j-loop
-
-                # osc-loop
-
+                smo.s[j].in_a[osc][i] = smo.s[i].out_a[osc][j]
 
         # if fix, continue to next state
         if smo.s[i].fix:
@@ -399,9 +380,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
 
                     # A: starts at t=1 not !not
                     for j in range(state.out_states):
-                        j_id = state.out_id[j]
-
-                        contrib_t = (seq_w[k] * alpha[t - 1][i] * state.out_a[osc][j] * b[t][j_id][state.M] * beta[t][j_id] * c_t)
+                        contrib_t = (seq_w[k] * alpha[t - 1][i] * state.out_a[osc][j] * b[t][j][state.M] * beta[t][j] * c_t)
 
                         r.a_num[i][osc][j] += contrib_t
                         r.a_denom[i][osc] += contrib_t
@@ -409,8 +388,7 @@ def sreestimate_one_step(smo, r, seq_number, T, O, seq_w):
                     # calculate sum (j=1..N):alp[t-1][j]*a_jc(t-1)i
                     sum_alpha_a_ji = 0.0
                     for j in range(state.in_states):
-                        j_id = state.in_id[j]
-                        sum_alpha_a_ji += alpha[t - 1][j_id] * state.in_a[osc][j]
+                        sum_alpha_a_ji += alpha[t - 1][j] * state.in_a[osc][j]
 
                 else:
                     # calculate sum(j=1..N):alpha[t-1][j]*a_jci, which is used below

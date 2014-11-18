@@ -363,8 +363,7 @@ def ighmm_hlist_prop_forward(mo, h, hplus, labels, nr_s, max_out):
                 continue
             i_id = hP.gamma_id[i]
             for j in range(0, mo.s[i_id].out_states):
-                j_id = mo.s[i_id].out_id[j]
-                c = mo.label[j_id]
+                c = mo.label[j]
 
                 # create a new hypothesis with label c
                 if not created[c]:
@@ -372,7 +371,7 @@ def ighmm_hlist_prop_forward(mo, h, hplus, labels, nr_s, max_out):
                     created[c] = hplus
                     # initiallize gamma-array with safe size (number of states
                     hplus.gamma_id = ARRAY_MALLOC(min(nr_s[c], hP.gamma_states * max_out[hP.hyp_c]))
-                    hplus.gamma_id[0] = j_id
+                    hplus.gamma_id[0] = j
                     hplus.gamma_states = 1
                     newHyps += 1
 
@@ -381,11 +380,11 @@ def ighmm_hlist_prop_forward(mo, h, hplus, labels, nr_s, max_out):
                     g_nr = created[c].gamma_states
                     # search for state j_id in the gamma list
                     for k in range(0, g_nr):
-                        if j_id == created[c].gamma_id[k]:
+                        if j == created[c].gamma_id[k]:
                             break
                         # add the state to the gamma list
                     else:
-                        created[c].gamma_id[g_nr] = j_id
+                        created[c].gamma_id[g_nr] = j
                         created[c].gamma_states = g_nr + 1
 
         # reallocating gamma-array to the correct size
@@ -416,18 +415,15 @@ def ighmm_log_gamma_sum(log_a, s, parent):
 
     # shortcut for the trivial case
     if parent.gamma_states == 1:
-        for j in range(0, s.in_states):
-            if parent.gamma_id[0] == s.in_id[j]:
-                return parent.gamma_a[0] + log_a[j]
+        return parent.gamma_a[0] + log_a[parent.gamma_id[0]]
 
     logP = ARRAY_MALLOC(s.in_states)
 
     # calculate logs of a[k,l]*gamma[k,hi] as sums of logs and find maximum:
     for j in range(0, s.in_states):
-        j_id = s.in_id[j]
         # search for state j_id in the gamma list
         for k in range(0, parent.gamma_states):
-            if parent.gamma_id[k] == j_id:
+            if parent.gamma_id[k] == j:
                 break
         if k == parent.gamma_states:
             logP[j] = 1.0

@@ -9,15 +9,11 @@ class ghmm_dstate():
         # Initial probability
         self.pi = 0.0 #double
 
-        # IDs of the following states
-        self.out_id = [0] #int*
         # transition probabilities to successor states.
         self.out_a = [0.0] #double*
         # Number of successor states
         self.out_states = 0 #int
 
-        # IDs of the previous states
-        self.in_id = [0] #int*
         # transition probabilities from predecessor states.
         self.in_a = [0.0] #double*
         # Number of precursor states
@@ -40,15 +36,13 @@ class ghmm_dstate():
             return 0
 
         for i in range(self.in_states):
-            id = self.in_id[i]
-            value += self.in_a[i] * alpha_t[id]
+            value += self.in_a[i] * alpha_t[i]
 
         value *= b_symb
         return value
 
     def getOutState(self, index):
-        return self.out_id[index]
-
+        return index
 
 def model_state_alloc(
     M,
@@ -57,10 +51,8 @@ def model_state_alloc(
 ):
     s = ghmm_dstate()
     s.b = [0.0] * M
-    s.out_id = [0] * out_states
     s.out_a = [0.0] * out_states
 
-    s.in_id = [0] * in_states
     s.in_a = [0.0] * in_states
 
     return s

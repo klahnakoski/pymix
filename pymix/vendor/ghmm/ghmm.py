@@ -532,7 +532,7 @@ class HMMFromMatricesFactory(HMMFactory):
                     #set "in" probabilities
                     A_col_i = map(lambda x: x[i], A)
                     # Numarray use A[,:i]
-                    state.in_states, state.in_id, state.in_a = ghmmhelper.extract_out(A_col_i)
+                    state.in_states, _, state.in_a = ghmmhelper.extract_out(A_col_i)
                     #fix probabilities in reestimation, else 0
                     state.fix = 0
 
@@ -783,7 +783,6 @@ class HMMFromMatricesFactory(HMMFactory):
             #set "in" probabilities
             trans = ghmmhelper.extract_in_cos(A, cmodel.cos, i)
             state.in_states = trans[0]
-            state.in_id = trans[1]
             state.in_a = trans[2]
 
 
@@ -3336,7 +3335,7 @@ class PairHMM(HMM):
                 strout.append("\ntransition to state " + str(state.out_id[i]) + " with probability " + str(wrapper.double_array_getitem(state.out_a, i)))
             strout.append("\nIngoing transitions:")
             for i in range(state.in_states):
-                strout.append("\ntransition from state " + str(state.in_id[i]) + " with probability " + str(wrapper.double_array_getitem(state.in_a, i)))
+                strout.append("\ntransition from state " + str(i) + " with probability " + str(wrapper.double_array_getitem(state.in_a, i)))
                 strout.append("\nint fix:" + str(state.fix) + "\n")
 
         if hmm.model_type & kSilentStates:
