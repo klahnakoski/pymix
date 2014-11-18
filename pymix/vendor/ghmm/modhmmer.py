@@ -51,6 +51,7 @@ def gotoLine(f,res):
     else:
         return rematch
 
+
 def build_matrix(n,m):
     "builds n x m matrix with lists"
     matrix = range(n)
@@ -59,6 +60,7 @@ def build_matrix(n,m):
         for j in range(m):
             matrix[i][j] = 0
     return matrix
+
 
 def sum_mrows(mat):
     "sums the rows of a matrix"
@@ -69,6 +71,7 @@ def sum_mrows(mat):
             s=s+mat[i][j]
         mout[i] = s
     return mout
+
 
 def norm_mat(mat):
     #print mat
@@ -81,11 +84,13 @@ def norm_mat(mat):
             #print "j: " + str(j) + ",  "+ str(mat[i][j])
             mat[i][j] = mat[i][j]/s
 
+
 def red_mat_end(mat,r):
     "delete <r> rows and columns from the end of the matrix"
     for i in range(len(mat)-r):
         del mat[i][-1*r:]
     del mat[-1*r:]
+
 
 def del_mat(mat,r):
     "deletes the <r>th columns and row from the matrix"
@@ -93,13 +98,6 @@ def del_mat(mat,r):
         del mat[i][r]
     del mat[r]
 
-def toint(i):
-    "return integer if i is value or 0"
-    try:
-        iout = int(i)
-    except ValueError:
-        iout = 0
-    return iout
 
 def map_entries(dic,lis):
     "translates the letters to the number of the columns"

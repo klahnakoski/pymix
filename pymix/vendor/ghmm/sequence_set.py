@@ -34,13 +34,11 @@ class SequenceSet(object):
         if self.emissionDomain.CDataType == "int":
             # necessary C functions for accessing the sequence struct
             self.sequenceAllocationFunction = sequence
-            self.allocSingleSeq = wrapper.int_array_alloc
             #obsolete
             self.sequence_cmatrix = ghmmhelper.list2int_matrix
         elif self.emissionDomain.CDataType == "double":
             # necessary C functions for accessing the sequence struct
             self.sequenceAllocationFunction = sequence
-            self.allocSingleSeq = wrapper.double_array_alloc
             #obsolete
             self.sequence_cmatrix = ghmmhelper.list2double_matrix
         else:
@@ -327,12 +325,10 @@ class EmissionSequence(object):
         if self.emissionDomain.CDataType == "int":
             # necessary C functions for accessing the sequence struct
             self.sequenceAllocationFunction = sequence
-            self.allocSingleSeq = wrapper.int_array_alloc
             self.sequence_carray = wrapper.list2int_array
         elif self.emissionDomain.CDataType == "double":
             # necessary C functions for accessing the sequence struct
             self.sequenceAllocationFunction = sequence
-            self.allocSingleSeq = wrapper.double_array_alloc
             self.sequence_carray = wrapper.list2double_array
         else:
             Log.error("C data type " + str(self.emissionDomain.CDataType) + " invalid.")

@@ -39,38 +39,6 @@
 
 import numpy as np
 
-
-def sumlogs_purepy(a):
-    """ Given a Numeric.array a of log p_i, return Math.log(sum p_i)
-
-        Uses (assuming p_1 is maximal):
-        Math.log(\Sum p_i) = Math.log(p_1) + Math.log( 1 + \Sum_{i=2} exp(Math.log(p_i) - Math.log(p_1)))
-
-        NOTE: The sumlogs functions returns the sum for values != -Inf
-
-    """
-    m = max(a) # Maximal value must not be unique
-    result = 0.0
-    #minus_infinity = -float(1E300)
-    for x in a:
-        if x >= m: # For every maximal value
-            result += 1.0
-        else:
-            if x == float('-inf'): # zero probability, hence
-                # -Inf log prob. Doesnt contribute
-                continue
-            x = x - m
-            # Special case to avoid numerical problems
-            if x < -1.0e-16: # <=> |x| >  1.0e-16
-                result += np.exp(x)
-            else: # |x| <  1.0e-16 => exp(x) = 1
-                result += 1.0
-
-    result = np.log(result)
-    result += m
-    return result
-
-
 def sum_logs(a):
     m = np.max(a)  # Maximal value must not be unique
     result = np.log(sum(np.exp(a - m))) + m
