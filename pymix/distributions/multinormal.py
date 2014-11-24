@@ -165,16 +165,24 @@ class MultiNormalDistribution(ProbDistribution):
         @param A: optional Cholesky decomposition of the covariance matrix self.variance, can speed up
         the sampling
         """
+
+        if not native:
+            # multivariate random numbers without gsl
+            x=[0]*self.dimension
+            for i in range(self.dimension):
+                randuni = NormalDistribution(0, 1).sample(native)
+                for j in range(self.dimension):
+                    if i == 0:
+                        x[j] = self.mean[j]
+                    x[j] += randuni * self.variance[j][i]
+            return x
+
         if A == None:
             A = la.cholesky(self.variance)
 
         z = np.zeros(self.dimension, dtype='Float64')
         for i in range(self.dimension):
-            if native:
-                z[i] = random.normalvariate(0.0, 1.0)  # sample p iid N(0,1) RVs
-            else:
-                z[i] = NormalDistribution(0, 1).sample(native)
-
+            z[i] = random.normalvariate(0.0, 1.0)  # sample p iid N(0,1) RVs
         X = np.dot(A, z) + self.mean
         return X.tolist()  # return value of sample must be Python list
 
