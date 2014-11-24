@@ -1,10 +1,12 @@
+import random
 from pyLibrary.maths import Math
 from pymix.util.ghmm import random_mt
+from pymix.util.ghmm.matrixop import cholesky
 from pymix.util.ghmm.sequences import sequence
 from pymix.util.ghmm.cstate import ghmm_cstate
 from pymix.util.ghmm.sfoba import sfoba_initforward, LOWER_SCALE_BOUND, sfoba_stepforward
 from pymix.util.ghmm.types import kContinuousHMM, kSilentStates
-from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_MAX_SEQ_LEN, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC, DBL_MIN, ighmm_cmatrix_stat_alloc, ighmm_cvector_normalize
+from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_MAX_SEQ_LEN, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC, DBL_MIN, ighmm_cmatrix_stat_alloc, ighmm_cvector_normalize
 from pymix.util.logs import Log
 
 
@@ -41,13 +43,13 @@ class ghmm_cmodel:
         # classes * /
         self.class_change = None  # ghmm_cmodel_class_change_context *
 
-    def ghmm_cmodel_get_random_var(self, state, m):
+    def ghmm_cmodel_get_random_var(self, state, m, native=False):
         # PARAMETER x IS THE RETURN VALUES
         # define CUR_PROC "ghmm_cmodel_get_random_var"
         emission = self.s[state].e[m]
-        return emission.sample()
+        return emission.sample(native=native)
 
-    def generate_sequences(self, seed, global_len, seq_number, Tmax):
+    def generate_sequences(self, seed, global_len, seq_number, Tmax, native=False):
         # An end state is characterized by not having an output probabiliy.
 
         len = global_len
@@ -74,7 +76,10 @@ class ghmm_cmodel:
         # seed == -1: Initialization, has already been done outside the function
         if seed >= 0:
             if seed > 0:
-                random_mt.set_seed(seed)
+                if native:
+                    random.seed(seed)
+                else:
+                    random_mt.set_seed(seed)
             else:                        # Random initialization!
                 pass
 
@@ -86,7 +91,7 @@ class ghmm_cmodel:
         if self.dim > 1:
             for i in range(self.N):
                 for m in range(self.s[i].M):
-                    self.s[i].e[m].sigmacd = ighmm_cholesky_decomposition(self.dim, self.s[i].e[m].variance)
+                    self.s[i].e[m].sigmacd = cholesky(self.dim, self.s[i].e[m].variance)
 
         while n < seq_number:
             # Test: A new seed for each sequence
@@ -94,7 +99,10 @@ class ghmm_cmodel:
             sq.seq[n] = matrix_alloc(len, self.dim)
 
             # Get a random initial state i
-            p = random_mt.float23()
+            if native:
+                p = random.random()
+            else:
+                p = random_mt.float23()
             sum_ = 0.0
             for i in range(self.N):
                 sum_ += self.s[i].pi
@@ -110,7 +118,10 @@ class ghmm_cmodel:
 
             # Get a random initial output
             # . get a random m and then respectively a pdf omega.
-            p = random_mt.float23()
+            if native:
+                p = random.random()
+            else:
+                p = random_mt.float23()
             sum_ = 0.0
             for m in range(self.s[i].M):
                 sum_ += self.s[i].c[m]
@@ -122,7 +133,7 @@ class ghmm_cmodel:
                 m -= 1
 
             # Get random numbers according to the density function
-            sq.seq[n][0] = self.ghmm_cmodel_get_random_var(i, m)
+            sq.seq[n][0] = self.ghmm_cmodel_get_random_var(i, m, native=native)
             pos = 1
 
             # The first symbol chooses the start class
@@ -142,7 +153,10 @@ class ghmm_cmodel:
 
             while pos < len:
                 # Get a new state
-                p = random_mt.float23()
+                if native:
+                    p=random.random()
+                else:
+                    p = random_mt.float23()
                 sum_ = 0.0
                 for j in range(self.N):
                     sum_ += self.s[i].out_a[clazz][j]
@@ -189,7 +203,10 @@ class ghmm_cmodel:
                 # fprintf(stderr, "%d\n", i)
 
                 # Get output from state i
-                p = random_mt.float23()
+                if native:
+                    p=random.random()
+                else:
+                    p = random_mt.float23()
                 sum_ = 0.0
                 for m in range(self.s[i].M):
                     sum_ += self.s[i].c[m]
@@ -204,7 +221,7 @@ class ghmm_cmodel:
                         m -= 1
 
                 # Get a random number from the corresponding density function
-                sq.seq[n][pos] = self.ghmm_cmodel_get_random_var(i, m)
+                sq.seq[n][pos] = self.ghmm_cmodel_get_random_var(i, m, native=native)
                 # Decide the clazz for the next step
                 if self.cos == 1:
                     clazz = 0

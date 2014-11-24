@@ -1330,11 +1330,13 @@ class ContinuousMixtureHMMTests(FuzzyTestCase):
         F = Float()
         #self.A = [[0.3,0.3,0.4],[0.4,0.3,0.3],[0.3,0.4,0.3]]
         self.A = [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]]
-        self.B = [[[2.0], [1.0], [2.0], [1.0]],
+        self.B = [
+            [[1.0], [2.0], [2.0], [1.0]],
             [[6.0], [4.0], [5.3], [1.0]],
-            [[5.0], [9.0], [5.5], [1.0]]]
+            [[5.0], [9.0], [5.5], [1.0]]
+        ]
         self.pi = [1.0, 0.0, 0.0]
-        self.densities = [[NormalDistribution], [NormalRight], [NormalLeft]]
+        self.densities = [[UniformDistribution], [NormalRight], [NormalLeft]]
         self.CMmodel = HMMFromMatrices(F, ContinuousMixtureDistribution(F), self.A, self.B, self.pi, densities=self.densities)
 
     def test__str__(self):
@@ -1395,9 +1397,11 @@ class ContinuousMixtureHMM2Tests(FuzzyTestCase):
         # create a continuous mixture model from matrices
         F = Float()
         self.A = [[0.25, 0.5, 0.25], [0.3, 0.2, 0.5], [0.3, 0.3, 0.4]]
-        self.B = [[[1.0, 2.5, 0.2], [2.0, 5.5, 0.3], [0, 0, 0], [0.2, 0.4, 0.4]],
+        self.B = [
+            [[1.0, 2.5, 0.2], [2.0, 5.5, 0.3], [0, 0, 0], [0.2, 0.4, 0.4]],
             [[6.0, 0.5, 0.5], [1.0, 0.7, 0.4], [0, 0, 0], [0.1, 0.8, 0.1]],
-            [[5.0, 2.5, 0.3], [1.0, 2.0, 0.4], [0, 0, 0], [0.3, 0.3, 0.4]]]
+            [[5.0, 2.5, 0.3], [1.0, 2.0, 0.4], [0, 0, 0], [0.3, 0.3, 0.4]]
+        ]
         self.densities = [[NormalDistribution] * 3] * 3
         self.pi = [1.0, 0.0, 0.0]
         self.CMmodel = HMMFromMatrices(F, ContinuousMixtureDistribution(F),
@@ -1407,11 +1411,13 @@ class ContinuousMixtureHMM2Tests(FuzzyTestCase):
         # create a continuous mixture model from matrices with only one mixture component
         F = Float()
         self.A1 = [[0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 0.0]]
-        self.B1 = [[[2.0], [1.0], [0.0], [1]],
+        self.B1 = [
+            [[1.0], [2.0], [0.0], [1]],
             [[6.0], [4.0], [5.3], [1]],
-            [[5.0], [9.0], [5.5], [1]]]
+            [[5.0], [9.0], [5.5], [1]]
+        ]
         self.densities1 = [
-            [NormalDistribution],
+            [UniformDistribution],
             [NormalRight],
             [NormalLeft]
         ]
@@ -1461,11 +1467,11 @@ class ContinuousMixtureHMM2Tests(FuzzyTestCase):
         self.assertEqual(pi, 0.5)
 
         emission = self.CMmodel.getEmission(1, 2)
-        self.assertEqual(emission, (0, 0.5, 0.4, 0.1))
+        self.assertEqual(emission, (NormalDistribution, 0.5, 0.4, 0.1))
         # set emission parameters of state 1 component 2
         self.CMmodel.setEmission(1, 2, NormalDistribution, (3.3, 4.4, 0.0, 0.2))
         emission = self.CMmodel.getEmission(1, 2)
-        self.assertEqual(emission, (0, 3.3, 4.4, 0.2))
+        self.assertEqual(emission, (NormalDistribution, 3.3, 4.4, 0.2))
         self.CMmodel.normalize()
 
         statefix = self.CMmodel.getStateFix(2)
@@ -1485,7 +1491,7 @@ class ContinuousMixtureHMM2Tests(FuzzyTestCase):
         #print "testprobfunctions"
         # get probability of value 1.0 in state 0
         p = self.CMmodel.getEmissionProbability(1.0, 0)
-        self.assertEqual(round(p, 12), round(0.212143793508, 12))
+        self.assertAlmostEqual(p, 0.212143793508, places=12)
         seq = self.CMmodel.sampleSingle(5, seed=3586662)
         lp = self.CMmodel.joined(seq, [0, 2, 1, 2, 0, ])
         self.assertAlmostEqual(lp, -14.990634258963, places=14)
@@ -1797,7 +1803,7 @@ class MultivariateMixtureHMMTests(FuzzyTestCase):
         # get probability of value [1.0, 1.0] in state 0
         p = self.CMMmodel.getEmissionProbability([1.0, 1.0], 0)
         self.assertEqual(round(p, 12), round(7.5129999999999992e-09, 12))
-        seq = self.CMMmodel.sampleSingle(5, seed=3586662)
+        seq = self.CMMmodel.sampleSingle(5, seed=3586662, native=False)
         lp = self.CMMmodel.joined(seq, [0, 2, 1, 2, 0])
         self.assertAlmostEqual(lp, -115.70197178468406)
 

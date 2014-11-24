@@ -326,16 +326,16 @@ class MixtureModel(ProbDistribution):
             p[j] = sum_logs(logp_list[:, j])
         return p
 
-    def sample(self):
+    def sample(self, native=False):
         sum = 0.0
         p = random.random()
         for k in range(self.G):
             sum += self.pi[k]
             if sum >= p:
                 break
-        return self.components[k].sample()
+        return self.components[k].sample(native=native)
 
-    def sampleSet(self, nr):
+    def sampleSet(self, nr, native=False):
         ls = []
         for i in range(nr):
             sum = 0.0
@@ -344,11 +344,11 @@ class MixtureModel(ProbDistribution):
                 sum += self.pi[k]
                 if sum >= p:
                     break
-            ls.append(self.components[k].sample())
+            ls.append(self.components[k].sample(native=native))
         return ls
 
 
-    def sampleDataSet(self, nr):
+    def sampleDataSet(self, nr, native=False):
         """
         Returns a DataSet object of size 'nr'.
 
@@ -356,7 +356,7 @@ class MixtureModel(ProbDistribution):
 
         @return: DataSet object
         """
-        ls = self.sampleSet(nr)
+        ls = self.sampleSet(nr, native=native)
         data = DataSet()
         data.dataMatrix = ls
         data.N = nr

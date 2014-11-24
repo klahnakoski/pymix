@@ -118,6 +118,7 @@ from string import join
 from pyLibrary.maths import Math
 from pymix.distributions.multinormal import MultiNormalDistribution
 from pymix.distributions.normal import NormalDistribution
+from pymix.distributions.normal_left import NormalLeft
 from pymix.distributions.normal_right import NormalRight
 from pymix.distributions.uniform import UniformDistribution
 
@@ -1198,7 +1199,7 @@ class HMM(object):
         return SequenceSet(self.emissionDomain, seqPtr)
 
 
-    def sampleSingle(self, T, seed=0):
+    def sampleSingle(self, T, seed=0, native=False):
         """ Sample a single emission sequence of length at most T.
 
         @param T maximal length of the sequence
@@ -1207,7 +1208,7 @@ class HMM(object):
         @returns a EmissionSequence object.
         """
         Log.note("HMM.sampleSingle() -- begin")
-        seqPtr = self.cmodel.generate_sequences(seed, T, 1, -1)
+        seqPtr = self.cmodel.generate_sequences(seed, T, 1, -1, native=native)
         Log.note("HMM.sampleSingle() -- end")
         return EmissionSequence(self.emissionDomain, seqPtr)
 
@@ -1962,8 +1963,8 @@ class StateLabelHMM(DiscreteEmissionHMM):
         else:
             return self.labelDomain.internal(external)
 
-    def sampleSingle(self, seqLength, seed=0):
-        seqPtr = self.cmodel.label_generate_sequences(seed, seqLength, 1, seqLength)
+    def sampleSingle(self, seqLength, seed=0, native=False):
+        seqPtr = self.cmodel.label_generate_sequences(seed, seqLength, 1, seqLength, native=native)
         return EmissionSequence(self.emissionDomain, seqPtr, labelDomain=self.labelDomain)
 
     def sample(self, seqNr, seqLength, seed=0):
@@ -2741,14 +2742,14 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         i = self.state(i)
         state = self.cmodel.s[i]
         emission = state.e[comp]
-        if isinstance(emission, NormalDistribution):
-            return emission.type, emission.mean, emission.variance, state.getWeight(comp)
-        elif isinstance(emission, NormalRight):
-            return emission.type, emission.mean, emission.variance, emission.minimum, state.getWeight(comp)
+        if isinstance(emission, NormalRight):
+            return NormalRight, emission.mean, emission.variance, emission.minimum, state.getWeight(comp)
         elif isinstance(emission, UniformDistribution):
-            return emission.type, emission.max, emission.min, state.getWeight(comp)
+            return UniformDistribution, emission.start, emission.end, state.getWeight(comp)
         elif isinstance(emission, NormalLeft):
-            return emission.type, emission.mean, emission.variance, emission.max, state.getWeight(comp)
+            return NormalLeft, emission.mean, emission.variance, emission.maximum, state.getWeight(comp)
+        elif isinstance(emission, NormalDistribution):
+            return NormalDistribution, emission.mean, emission.variance, state.getWeight(comp)
 
     def setEmission(self, i, comp, distType, values):
         """ Set the emission distribution parameters for a mixture component
@@ -2773,19 +2774,7 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 
         state = self.cmodel.s[i]
         state.setWeight(comp, weight)
-        emission = state.e[comp]
-        if isinstance(emission, (NormalDistribution, NormalRight, NormalLeft)):
-            emission.mean = mu
-            emission.variance = sigma
-            if isinstance(emission, NormalRight):
-                emission.minimum = a
-            if isinstance(emission, NormalLeft):
-                emission.max = a
-        elif isinstance(emission, UniformDistribution):
-            emission.min = sigma
-            emission.max = mu
-        else:
-            Log.error("Unknown distribution type" + str(distType))
+        state.e[comp] = distType(*values)
 
     def __str__(self):
         """ defines string representation """
@@ -2810,21 +2799,20 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
             for outp in range(state.M):
                 comp_str = "\n    " + str(state.getWeight(outp)) + " * "
                 emission = state.getEmission(outp)
-                type = emission.type
-                if type == wrapper.normal:
-                    comp_str += "normal(mean = " + str(emission.mean)
-                    comp_str += ", variance = " + str(emission.variance) + ")"
-                elif type == wrapper.normal_right:
+                if isinstance(emission, NormalRight):
                     comp_str += "normal right tail(mean = " + str(emission.mean)
                     comp_str += ", variance = " + str(emission.variance)
-                    comp_str += ", minimum = " + str(emission.min) + ")"
-                elif type == wrapper.normal_left:
+                    comp_str += ", minimum = " + str(emission.minimum) + ")"
+                elif isinstance(emission, NormalLeft):
                     comp_str += "normal left tail(mean = " + str(emission.mean)
                     comp_str += ", variance = " + str(emission.variance)
-                    comp_str += ", maximum = " + str(emission.max) + ")"
-                elif type == wrapper.uniform:
-                    comp_str += "uniform(minimum = " + str(emission.min)
-                    comp_str += ", maximum = " + str(emission.max) + ")"
+                    comp_str += ", maximum = " + str(emission.maximum) + ")"
+                elif isinstance(emission, UniformDistribution):
+                    comp_str += "uniform(minimum = " + str(emission.start)
+                    comp_str += ", maximum = " + str(emission.end) + ")"
+                elif isinstance(emission, NormalDistribution):
+                    comp_str += "normal(mean = " + str(emission.mean)
+                    comp_str += ", variance = " + str(emission.variance) + ")"
 
                 strout.append(comp_str)
 
@@ -2862,15 +2850,15 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
             parlist = []
             for j in range(state.M):
                 emission = state.getEmission(j)
-                denList.append(emission.type)
-                if emission.type == wrapper.normal:
+                denList.append(emission.__class__)
+                if isinstance(emission, NormalRight):
+                    parlist.append([emission.mean, emission.variance, emission.minimum, state.getWeight(j)])
+                elif isinstance(emission, NormalLeft):
+                    parlist.append([emission.mean, emission.variance, emission.maximum, state.getWeight(j)])
+                elif isinstance(emission, NormalDistribution):
                     parlist.append([emission.mean, emission.variance, 0, state.getWeight(j)])
-                elif emission.type == wrapper.normal_right:
-                    parlist.append([emission.mean, emission.variance, emission.min, state.getWeight(j)])
-                elif emission.type == wrapper.normal_left:
-                    parlist.append([emission.mean, emission.variance, emission.max, state.getWeight(j)])
-                elif emission.type == wrapper.uniform:
-                    parlist.append([emission.max, emission.min, 0, state.getWeight(j)])
+                elif isinstance(emission, UniformDistribution):
+                    parlist.append([emission.start, emission.end, 0, state.getWeight(j)])
                 else:
                     Log.error("Unsupported distribution" + str(emission.type))
 
@@ -2902,10 +2890,10 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         @returns mean and covariance matrix of component m in state i
         """
         i = self.state(i)
-        state = self.cmodel.s[i].e[m].get_param()
+        state = self.cmodel.s[i]
         assert 0 <= m < state.M, "Index " + str(m) + " out of bounds."
 
-        emission = state.getEmission(m)
+        emission = state.e[m]
         mu = wrapper.double_array2list(emission.mean, emission.dimension)
         sigma = wrapper.double_array2list(emission.variance, emission.dimension * emission.dimension)
         return (mu, sigma)
@@ -2940,28 +2928,15 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
 
             for m in range(state.M):
                 strout.append("\n\n  Emission number " + str(m) + ":")
-
-                weight = ""
-                mue = ""
-                u = ""
-                uinv = ""
-                ucd = ""
-
-                weight += str(wrapper.double_array_getitem(state.c, m))
-
                 emission = state.getEmission(m)
-                mue += str(wrapper.double_array2list(emission.mean, emission.dimension))
-                u += str(wrapper.double_array2list(emission.variance, emission.dimension * emission.dimension))
-                uinv += str(wrapper.double_array2list(emission.sigmainv, emission.dimension * emission.dimension))
-                ucd += str(wrapper.double_array2list(emission.sigmacd, emission.dimension * emission.dimension))
 
-                strout.append("\n    emission type: " + str(emission.type))
-                strout.append("\n    emission weight: " + str(weight))
-                strout.append("\n    mean: " + str(mue))
-                strout.append("\n    covariance matrix: " + str(u))
-                strout.append("\n    inverse of covariance matrix: " + str(uinv))
-                strout.append("\n    determinant of covariance matrix: " + str(emission.det))
-                strout.append("\n    cholesky decomposition of covariance matrix: " + str(ucd))
+                strout.append("\n    emission type: " + emission.__class__.__name__)
+                strout.append("\n    emission weight: " + str(state.c[m]))
+                strout.append("\n    mean: " + str(emission.mean))
+                strout.append("\n    covariance matrix: " + str(emission.variance))
+                strout.append("\n    inverse of covariance matrix: " + str(emission.variance_inv))
+                strout.append("\n    determinant of covariance matrix: " + str(emission.variance_det))
+                strout.append("\n    cholesky decomposition of covariance matrix: " + str(emission.sigmacd))
                 strout.append("\n    fix: " + str(state.fix))
 
             for c in range(self.cmodel.cos):

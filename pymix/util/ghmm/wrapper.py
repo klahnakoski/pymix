@@ -386,27 +386,6 @@ class ghmm_dpseq():
         return self.d_value[index]
 
 
-def ighmm_cholesky_decomposition(dim, cov):
-    sigmacd = deepcopy(cov)
-
-    for row in range(dim):
-        # First compute U[row][row]
-        total = cov[row][row]
-        for j in range(row - 1):
-            total -= sigmacd[j][row] * sigmacd[j][row]
-        if total > DBL_MIN:
-            sigmacd[row][row] = sqrt(total)
-            # Now find elements sigmacd[row*dim+k], k > row.
-            for k in range(row + 1, dim):
-                total = cov[row][k]
-                for j in range(row - 1):
-                    total -= sigmacd[j][row] * sigmacd[j][k]
-                sigmacd[row][k] = total / sigmacd[row][row]
-
-        else:  # blast off the entire row.
-            for k in range(row, dim):
-                sigmacd[row][k] = 0.0
-    return sigmacd
 
 class ghmm_dsmodel():
     def __init__(self):

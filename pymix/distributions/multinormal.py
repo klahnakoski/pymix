@@ -41,6 +41,8 @@ import numpy as np
 from numpy import linalg as la
 from .prob import ProbDistribution
 from pyLibrary.env.logs import Log
+from pyLibrary.testing.fuzzytestcase import assertAlmostEqual
+from pymix.distributions.normal import NormalDistribution
 from pymix.util.ghmm.matrixop import ighmm_determinant, ighmm_inverse
 from ..util.dataset import DataSet
 
@@ -66,6 +68,7 @@ class MultiNormalDistribution(ProbDistribution):
         self.variance_det = ighmm_determinant(self.variance, len(sigma))
         self.variance_inv = ighmm_inverse(self.variance, len(sigma))
         self.fixed = 0  #allow parameter update
+        self.sigmacd=None  #PLACEHOLDER FOR IF NEEDED TO BE CALCULATED
 
 
     @property
@@ -107,21 +110,34 @@ class MultiNormalDistribution(ProbDistribution):
         else:
             raise TypeError, "Unknown/Invalid input type."
 
-        ff = math.pow(2 * math.pi, -self.dimension / 2.0) * math.pow(self.variance_det, -0.5);
+        ff = math.pow(2 * math.pi, -self.dimension / 2.0) * math.pow(self.variance_det, -0.5)
 
         # centered input values
         centered = np.subtract(x, np.repeat([self.mean], len(x), axis=0))
 
-        res = ff * np.exp(-0.5 * np.sum(np.multiply(centered, np.dot(centered, self.variance_inv)), 1))
+        res = ff * np.exp(-0.5 * np.sum(centered * centered.dot(self.variance_inv), axis=1))
 
         return np.log(res)
 
 
     def linear_pdf(self, x):
+        ay = 0
+        for i in range(self.dimension):
+            tempv = 0
+            for j in range(self.dimension):
+                tempv += (x[j] - self.mean[j]) * self.variance_inv[j][i]  # sigmainv == transpose(sigmainv) so i, j mixup has no effect
+
+            ay += tempv * (x[i] - self.mean[i])
+
+        res2 = math.exp(-0.5 * ay) / math.sqrt(pow(2* math.pi, self.dimension) * self.variance_det)
+
+        #--------------------------------------------------
+
         ff = math.pow(2 * math.pi, -self.dimension / 2.0) * math.pow(self.variance_det, -0.5)
         centered = x-self.mean
-        res = ff * np.exp(-0.5 * np.sum(np.multiply(centered, np.dot(centered, self.variance_inv)), 1))
+        res = ff * np.exp(-0.5 * np.sum(centered * centered.dot(self.variance_inv)))
 
+        assertAlmostEqual(res2, res)
         return res
 
 
@@ -142,7 +158,7 @@ class MultiNormalDistribution(ProbDistribution):
         self.variance = np.dot(np.transpose(np.dot(np.identity(len(posterior)) * posterior, centered)), centered) / post
 
 
-    def sample(self, A=None):
+    def sample(self, A=None, native=False):
         """
         Samples from the mulitvariate Normal distribution.
 
@@ -154,16 +170,19 @@ class MultiNormalDistribution(ProbDistribution):
 
         z = np.zeros(self.dimension, dtype='Float64')
         for i in range(self.dimension):
-            z[i] = random.normalvariate(0.0, 1.0)  # sample p iid N(0,1) RVs
+            if native:
+                z[i] = random.normalvariate(0.0, 1.0)  # sample p iid N(0,1) RVs
+            else:
+                z[i] = NormalDistribution(0, 1).sample(native)
 
         X = np.dot(A, z) + self.mean
         return X.tolist()  # return value of sample must be Python list
 
-    def sampleSet(self, nr):
+    def sampleSet(self, nr, native=False):
         A = la.cholesky(self.variance)
         res = np.zeros((nr, self.dimension), dtype='Float64')
         for i in range(nr):
-            res[i, :] = self.sample(A=A)
+            res[i, :] = self.sample(A=A, native=native)
         return res
 
     def isValid(self, x):
@@ -178,5 +197,3 @@ class MultiNormalDistribution(ProbDistribution):
     def flatStr(self, offset):
         offset += 1
         return "\t" * offset + ";MultiNormal;" + str(self.dimension) + ";" + str(self.mean.tolist()) + ";" + str(self.variance.tolist()) + "\n"
-
-

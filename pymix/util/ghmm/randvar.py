@@ -142,42 +142,6 @@ def ighmm_rand_binormal_density(x, mean, cov):
     numerator = exp(-1 * (part3) / ( 2 * (1 - sqr(rho)) ))
     return (numerator / ( 2 * pi * sqrt(1 - sqr(rho)) ))
 
-#============================================================================
-# matrices are linearized
-def ighmm_rand_multivariate_normal_density(length, x, mean, sigmainv, det):
-    # multivariate normal density function
-    #
-    #   *       length     dimension of the random vetor
-    #   *       x          point at which to evaluate the pdf
-    #   *       mean       vector of means of size n
-    #   *       sigmainv   inverse variance matrix of dimension n x n
-    #   *       det        determinant of covariance matrix
-    #
-
-    ay = 0
-    for i in range(length):
-        tempv = 0
-        for j in range(length):
-            tempv += (x[j] - mean[j]) * sigmainv[j][i]  # sigmainv == transpose(sigmainv) so i, j mixup has no effect
-
-        ay += tempv * (x[i] - mean[i])
-
-    ay = exp(-0.5 * ay) / sqrt(pow(2*pi, length) * det)
-
-    return ay
-
-#============================================================================
-def ighmm_rand_uniform_density(x, max, min):
-    if max <= min:
-        Log.error("max <= min not allowed \n")
-
-    prob = 1.0 / (max - min)
-
-    if (x <= max) and (x >= min):
-        return prob
-    else:
-        return 0.0
-
 
 #============================================================================
 # special ghmm_cmodel pdf need it: smo.density==normal_approx:
@@ -329,6 +293,3 @@ def ighmm_rand_uniform_cdf(x, max, min):
 def cmbm_binormal(emission, omega):
     return ighmm_rand_binormal_density(omega, emission.mean, emission.variance)
 
-
-def cmbm_multinormal(emission, omega):
-    return ighmm_rand_multivariate_normal_density(emission.dimension, omega, emission.mean, emission.sigmainv, emission.det)

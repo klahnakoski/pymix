@@ -29,6 +29,7 @@
 #******************************************************************************
 
 #============================================================================
+from copy import deepcopy
 from math import sqrt
 from pymix.util.ghmm.wrapper import matrix_alloc, DBL_MIN
 
@@ -40,7 +41,10 @@ from pymix.util.logs import Log
 
 #============================================================================
 # calculate determinant of a square matrix
-def ighmm_determinant(cov, n):
+def ighmm_determinant(cov, n=None):
+    if n is None:
+        n = len(cov)
+
     if n == 1:
         return cov[0][0]
     if n == 2:
@@ -72,7 +76,10 @@ def ighmm_determinant(cov, n):
 #  The i,j'th minor of A is the matrix A without the i'th column or
 #  the j'th row.
 #
-def ighmm_inverse(cov, n, det=None):
+def ighmm_inverse(cov, n=None, det=None):
+    if n is None:
+        n = len(cov)
+
     if det is None:
         det = ighmm_determinant(cov, n)
 
@@ -112,26 +119,25 @@ def ighmm_inverse(cov, n, det=None):
     except Exception, e:
         Log.error("no inverse")
 
-#============================================================================
-def ighmm_cholesky_decomposition(sigmacd, dim, cov):
-    # copy cov to sigmacd
-    for row in range(dim):
-        for j in range(dim):
-            sigmacd[row][j] = cov[row][j]
+
+def cholesky(dim, cov):
+    sigmacd = deepcopy(cov)
 
     for row in range(dim):
         # First compute U[row][row]
-        sum = cov[row][row]
+        total = cov[row][row]
         for j in range(row - 1):
-            sum -= sigmacd[j][row] * sigmacd[j][row]
-        if sum > DBL_MIN:
-            sigmacd[row][row] = sqrt(sum)
+            total -= sigmacd[j][row] * sigmacd[j][row]
+        if total > DBL_MIN:
+            sigmacd[row][row] = sqrt(total)
             # Now find elements sigmacd[row*dim+k], k > row.
             for k in range(row + 1, dim):
-                sum = cov[row][k]
-                for j in range((row - 1)):
-                    sum -= sigmacd[j][row] * sigmacd[j][k]
-                sigmacd[row][k] = sum / sigmacd[row][row]
+                total = cov[row][k]
+                for j in range(row - 1):
+                    total -= sigmacd[j][row] * sigmacd[j][k]
+                sigmacd[row][k] = total / sigmacd[row][row]
+
         else:  # blast off the entire row.
             for k in range(row, dim):
                 sigmacd[row][k] = 0.0
+    return sigmacd

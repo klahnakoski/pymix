@@ -46,12 +46,13 @@ class UniformDistribution(ProbDistribution):
     """
     Uniform distribution over a given intervall.
     """
-    def __init__(self, start, end):
+    def __init__(self, start, end, *dummy_args):
         """
         Constructor
 
         @param start: begin of interval
         @param end: end of interval
+        @param dummy_args: extra args for initialization using 4-tuples
         """
         assert start < end
 
@@ -60,7 +61,8 @@ class UniformDistribution(ProbDistribution):
 
         self.start = start
         self.end = end
-        self.density = np.log(1.0 / (end - start))   # compute log density value only once
+        self.density = 1.0 / (end - start)
+        self.log_density = np.log(self.density)   # compute log density value only once
 
     def __eq__(self,other):
         raise NotImplementedError
@@ -82,13 +84,18 @@ class UniformDistribution(ProbDistribution):
         for i in range(len(x)):
             # density is self.density inside the interval and -inf (i.e. 0) outside
             if self.start <= x[i][0] <= self.end:
-                res[i] = self.density
+                res[i] = self.log_density
             else:
                 res[i] = float('-inf')
 
         return res
 
-    def MStep(self,posterior,data,mix_pi=None):
+    def linear_pdf(self, x):
+        if self.start <= x <= self.end:
+            return self.density
+        return 0
+
+    def MStep(self, posterior, data, mix_pi=None):
         # nothing to be done...
         pass
 

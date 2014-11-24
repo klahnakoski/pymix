@@ -128,10 +128,10 @@ class ProductDistribution(ProbDistribution):
         else:
             raise TypeError, 'DataSet object required, got ' + str(type(data))
 
-    def sample(self):
+    def sample(self, native=False):
         ls = []
         for i in range(len(self.distList)):
-            s = self.distList[i].sample()
+            s = self.distList[i].sample(native=native)
             if type(s) != list:
                 ls.append(s)
             else:

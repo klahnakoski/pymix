@@ -131,7 +131,7 @@ class MultinomialDistribution(ProbDistribution):
 
         return res
 
-    def sample(self):
+    def sample(self, native=False):
         sample = []
         for i in range(self.dimension):
             sum = 0.0

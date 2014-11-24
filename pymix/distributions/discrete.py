@@ -130,7 +130,7 @@ class DiscreteDistribution(MultinomialDistribution):
             dsum = sum(self.phi[ind])
             self.phi[ind] = (self.phi[ind] * fix_phi) / dsum
 
-    def sample(self):
+    def sample(self, native=False):
         for i in range(self.dimension):
             sum = 0.0
             p = random.random()

@@ -15,7 +15,7 @@ class NormalRight(NormalDistribution):
 
     """
 
-    def __init__(self, mu, sigma, minimum):
+    def __init__(self, mu, sigma, minimum, *dummy_args):
         """
         Constructor
 
@@ -76,7 +76,7 @@ class NormalRight(NormalDistribution):
         return 1.0 + (math.erf((x -self.mean) / math.sqrt(2*self.variance)) - 1.0) / math.erfc((self.minimum - self.mean) / math.sqrt(self.variance*2))
 
 
-    def sample(self, seed=0):
+    def sample(self, seed=0, native=False):
         C0 = 2.515517
         C1 = 0.802853
         C2 = 0.010328
@@ -91,7 +91,7 @@ class NormalRight(NormalDistribution):
         sigma = math.sqrt(self.variance)
 
         if seed != 0:
-            random_mt.set_seed( seed)
+            random_mt.set_seed(seed)
 
 
         # Inverse transformation with restricted sampling by Fishman

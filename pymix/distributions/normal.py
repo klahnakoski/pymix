@@ -42,7 +42,9 @@ from scipy import stats
 import numpy as np
 from .prob import ProbDistribution
 from pyLibrary.maths import Math
+from pyLibrary.testing.fuzzytestcase import assertAlmostEqual
 from pymix.util.ghmm import random_mt
+from pymix.util.ghmm.randvar import sqr
 from ..util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from ..util.dataset import DataSet
 
@@ -53,13 +55,13 @@ class NormalDistribution(ProbDistribution):
 
     """
 
-    def __init__(self, mu, sigma, dummy=0):
+    def __init__(self, mu, sigma, *dummy_args):
         """
         Constructor
 
         @param mu: mean parameter
         @param sigma: standard deviation parameter
-        @param dummy: for when initialization from number arrays
+        @param dummy_args: for when initialization from number arrays
         """
         self.dimension = 1
         self.suff_p = 1
@@ -115,20 +117,29 @@ class NormalDistribution(ProbDistribution):
 
     def linear_pdf(self, x):
         # computing log likelihood
-        res = stats.norm.pdf(x, loc=self.mean, scale=self.variance)
+        res = stats.norm.pdf(x, loc=self.mean, scale=math.sqrt(self.variance))
+
+        expo = math.exp(-1 * sqr(self.mean - x) / (2 * self.variance))
+        res2 = expo / math.sqrt(2 * math.pi * self.variance)
+
+        assertAlmostEqual(res, res2, places=10)
+
         return res
 
-    def sample(self):
-        r2 = -2.0 * Math.log(random_mt.float23())   # r2 ~ chi-square(2)
-        theta = 2.0 * math.pi * random_mt.float23()  # theta ~ uniform(0, 2 \pi)
-        return math.sqrt(self.variance) * math.sqrt(r2) * math.cos(theta) + self.mean
+    def sample(self, native=False):
+        if native:
+            return random.normalvariate(self.mean, self.variance)
+        else:
+            r2 = -2.0 * Math.log(random_mt.float23())   # r2 ~ chi-square(2)
+            theta = 2.0 * math.pi * random_mt.float23()  # theta ~ uniform(0, 2 \pi)
+            return math.sqrt(self.variance) * math.sqrt(r2) * math.cos(theta) + self.mean
 
 
-    def sampleSet(self, nr):
+    def sampleSet(self, nr, native=False):
         res = np.zeros(nr, dtype='Float64')
 
         for i in range(nr):
-            res[i] = self.sample()
+            res[i] = self.sample(native=native)
 
         return res
 
@@ -202,3 +213,4 @@ class NormalDistribution(ProbDistribution):
 
     def merge(self, dlist, weights):
         raise DeprecationWarning, 'Part of the outdated structure learning implementation.'
+

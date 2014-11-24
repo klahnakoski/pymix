@@ -4,6 +4,7 @@ import numpy as np
 from pyLibrary.env.logs import Log
 from pyLibrary.maths import Math
 from pymix.distributions.normal import NormalDistribution
+from pymix.distributions.normal_right import NormalRight
 from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.randvar import ighmm_rand_get_1overa, ighmm_rand_get_PHI
 from ..util.errors import InvalidDistributionInput
@@ -15,7 +16,7 @@ class NormalLeft(NormalDistribution):
 
     """
 
-    def __init__(self, mu, sigma, maximum):
+    def __init__(self, mu, sigma, maximum, *dummy_args):
         """
         Constructor
 
@@ -71,46 +72,14 @@ class NormalLeft(NormalDistribution):
         return 1.0 + (math.erf((x -self.mean) / math.sqrt(2*self.variance)) - 1.0) / math.erfc((self.minimum - self.mean) / math.sqrt(self.variance*2))
 
 
-    def sample(self, seed=0):
-        C0 = 2.515517
-        C1 = 0.802853
-        C2 = 0.010328
-        D1 = 1.432788
-        D2 = 0.189269
-        D3 = 0.001308
+    def sample(self, seed=0, native=False):
+        return -NormalRight(-self.mean, self.variance, -self.maximum).sample(seed=seed, native=native)
 
 
-        if self.variance <= 0.0:
-            Log.error("u <= 0.0 not allowed\n")
+    def sampleSet(self, nr, native=False):
+        gen = NormalRight(-self.mean, self.variance, -self.maximum)
+        return [-gen.sample(native=native) for _ in range(nr)]
 
-        sigma = math.sqrt(self.variance)
-
-        if seed != 0:
-            random_mt.set_seed( seed)
-
-
-        # Inverse transformation with restricted sampling by Fishman
-        U = random_mt.float23()
-        Feps = ighmm_rand_get_PHI((self.minimum - self.mean) / sigma)
-
-        Us = Feps + (1 - Feps) * U
-        Us1 = 1 - Us
-        t = min(Us, Us1)
-
-        t = math.sqrt(-Math.log(t))
-
-        T = sigma * (t - (C0 + t * (C1 + t * C2)) / (1 + t * (D1 + t * (D2 + t * D3))))
-
-        if Us < Us1:
-            x = self.mean - T
-        else:
-            x = self.mean + T
-
-        return x
-
-
-    def sampleSet(self, nr):
-        pass
 
     def sufficientStatistics(self, posterior, data):
         """

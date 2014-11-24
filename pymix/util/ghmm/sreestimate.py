@@ -255,7 +255,7 @@ def sreestimate_setlambda(r, smo):
 
                     # update the inverse and the determinant of covariance matrix
                     smo.s[i].e[m].sigma_det = ighmm_determinant(smo.s[i].e[m].variance)
-                    smo.s[i].e[m].sigma_inv,  = ighmm_inverse(smo.s[i].e[m].variance)
+                    smo.s[i].e[m].sigma_inv = ighmm_inverse(smo.s[i].e[m].variance)
 
                 else:
                     u_im = r.u_num[i][m][0][0] / r.mue_u_denom[i][m]
