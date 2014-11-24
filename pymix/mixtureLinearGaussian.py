@@ -73,7 +73,7 @@ class LinearGaussianDistribution(ProbDistribution):
         self.dimension = p
         self.suff_p = p
         self.beta = np.array(beta, dtype='Float64')        # create a array (numpy) for variable beta
-        self.variance.= np.array(sigma, dtype='Float64')    # create a array (numpy) for variable sigma
+        self.variance = np.array(sigma, dtype='Float64')    # create a array (numpy) for variable sigma
         self.freeParams = p + 1
         self.predicted = []
         self.noise = noise

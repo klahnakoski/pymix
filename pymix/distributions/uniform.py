@@ -38,6 +38,7 @@
 import random
 import numpy as np
 from .prob import ProbDistribution
+from pymix.util.ghmm import random_mt
 from ..util.errors import InvalidDistributionInput
 from ..util.dataset import DataSet
 
@@ -99,8 +100,11 @@ class UniformDistribution(ProbDistribution):
         # nothing to be done...
         pass
 
-    def sample(self):
-        return random.uniform(self.start, self.end)
+    def sample(self, native=False):
+        if native:
+            return random.uniform(self.start, self.end)
+        else:
+            return (random_mt.float23()*(self.end-self.start))+self.start
 
 
     def sampleSet(self,nr):

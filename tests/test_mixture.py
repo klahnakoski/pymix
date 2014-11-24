@@ -748,11 +748,11 @@ class MultiNormalDistributionTests(FuzzyTestCase):
 
 
     def testsample(self):
-        s = self.dist.sample()
-        self.assertEqual([round(v, 14) for v in s], [-1.3330318465269, 1.2010161194550599, 0.35547714589259])
+        s = self.dist.sample(native=True)
+        self.assertEqual(s, [-1.3330318465269, 1.2010161194550599, 0.35547714589259], places=14)
 
     def testsampleset(self):
-        s = self.dist.sampleSet(3)
+        s = self.dist.sampleSet(3, native=True)
         self.assertEqual(s, [[-1.33303185, 1.20101612, 0.35547715], [0.45069163, 0.39710096, 3.32416995], [0.29382531, 1.33373668, 2.58634925]])
 
 

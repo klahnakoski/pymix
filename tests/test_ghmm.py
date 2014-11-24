@@ -1802,7 +1802,7 @@ class MultivariateMixtureHMMTests(FuzzyTestCase):
     def testprobfunctions(self):
         # get probability of value [1.0, 1.0] in state 0
         p = self.CMMmodel.getEmissionProbability([1.0, 1.0], 0)
-        self.assertEqual(round(p, 12), round(7.5129999999999992e-09, 12))
+        self.assertEqual(p, 7.5129999999999992e-09, digits=12)
         seq = self.CMMmodel.sampleSingle(5, seed=3586662, native=False)
         lp = self.CMMmodel.joined(seq, [0, 2, 1, 2, 0])
         self.assertAlmostEqual(lp, -115.70197178468406)

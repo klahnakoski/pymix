@@ -142,7 +142,8 @@ class ghmm_dmodel():
         seed,
         global_len,
         seq_number,
-        Tmax
+        Tmax,
+        native=False
     ):
 
 
@@ -1566,7 +1567,7 @@ class ghmm_dmodel():
                         self.s[i].b[j] = (1.0 - background_weight[i]) * self.s[i].b[j] + background_weight[i] * self.bp.b[self.background_id[i]][j]
 
 
-    def label_generate_sequences(self, seed, len, seq_number, Tmax):
+    def label_generate_sequences(self, seed, len, seq_number, Tmax, native=False):
         n = 0
 
         sq = sequence(seq_number)
