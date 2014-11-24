@@ -41,6 +41,8 @@ import math
 from scipy import stats
 import numpy as np
 from .prob import ProbDistribution
+from pyLibrary.maths import Math
+from pymix.util.ghmm import random_mt
 from ..util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from ..util.dataset import DataSet
 
@@ -117,7 +119,9 @@ class NormalDistribution(ProbDistribution):
         return res
 
     def sample(self):
-        return random.normalvariate(self.mean, self.variance)
+        r2 = -2.0 * Math.log(random_mt.float23())   # r2 ~ chi-square(2)
+        theta = 2.0 * math.pi * random_mt.float23()  # theta ~ uniform(0, 2 \pi)
+        return math.sqrt(self.variance) * math.sqrt(r2) * math.cos(theta) + self.mean
 
 
     def sampleSet(self, nr):
