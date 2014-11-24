@@ -2,10 +2,9 @@ from pyLibrary.maths import Math
 from pymix.util.ghmm import random_mt
 from pymix.util.ghmm.sequences import sequence
 from pymix.util.ghmm.cstate import ghmm_cstate
-from pymix.util.ghmm.randvar import ighmm_rand_normal, ighmm_rand_multivariate_normal, ighmm_rand_uniform_cont, ighmm_rand_normal_right
 from pymix.util.ghmm.sfoba import sfoba_initforward, LOWER_SCALE_BOUND, sfoba_stepforward
 from pymix.util.ghmm.types import kContinuousHMM, kSilentStates
-from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_MAX_SEQ_LEN, multinormal, binormal, normal, normal_approx, normal_right, normal_left, uniform, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC, DBL_MIN, ighmm_cmatrix_stat_alloc, ighmm_cvector_normalize
+from pymix.util.ghmm.wrapper import ARRAY_REALLOC, GHMM_MAX_SEQ_LEN, ighmm_cholesky_decomposition, ARRAY_CALLOC, matrix_alloc, GHMM_EPS_PREC, DBL_MIN, ighmm_cmatrix_stat_alloc, ighmm_cvector_normalize
 from pymix.util.logs import Log
 
 
@@ -46,22 +45,7 @@ class ghmm_cmodel:
         # PARAMETER x IS THE RETURN VALUES
         # define CUR_PROC "ghmm_cmodel_get_random_var"
         emission = self.s[state].e[m]
-        if emission.type in (normal_approx, normal):
-            return ighmm_rand_normal(emission.mean, emission.variance, 0)
-        elif emission.type == binormal:
-            #return ighmm_rand_binormal(emission.mean, emission.variance, 0)
-            pass
-        elif emission.type == multinormal:
-            return ighmm_rand_multivariate_normal(emission.dimension, emission.mean, emission.sigmacd, 0)
-        elif emission.type == normal_right:
-            return ighmm_rand_normal_right(emission.min, emission.mean, emission.variance, 0)
-        elif emission.type == normal_left:
-            return -ighmm_rand_normal_right(-emission.max, -emission.mean, emission.variance, 0)
-        elif emission.type == uniform:
-            return ighmm_rand_uniform_cont(0, emission.max, emission.min)
-        else:
-            Log.error("unknown density function specified!")
-            return -1
+        return emission.sample()
 
     def generate_sequences(self, seed, global_len, seq_number, Tmax):
         # An end state is characterized by not having an output probabiliy.
@@ -407,7 +391,7 @@ class ghmm_cmodel:
             # printf("1: cos = %d, k = %d, t = %d\n",smo.cos,smo.class_change.k,t)
             osc = self.class_change.get_class(self, O, self.class_change.k, t)
             if osc >= self.cos:
-                Log.error("get_class returned index %d but model has only %d classes not \n", osc, self.cos)
+                Log.error("get_class returned index %d but model has only %d classes! \n", osc, self.cos)
 
         for t in range(1, T):
             scale[t] = 0.0
@@ -443,7 +427,7 @@ class ghmm_cmodel:
                 # printf("1: cos = %d, k = %d, t = %d\n",smo.cos,smo.class_change.k,t)
                 osc = self.class_change.get_class(self, O, self.class_change.k, t)
                 if osc >= self.cos:
-                    Log.error("get_class returned index %d but model has only %d classes not \n", osc, self.cos)
+                    Log.error("get_class returned index %d but model has only %d classes! \n", osc, self.cos)
         return log_p
 
 

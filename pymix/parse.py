@@ -192,7 +192,7 @@ def parseProd(fileHandle, true_p):
     while p < true_p:
         d = parseFile(fileHandle)
         distList.append(d)
-        p += d.p
+        p += d.dimension
     return ProductDistribution(distList)
 
 
@@ -247,7 +247,7 @@ def parseFile(fileHandle):
         # XXX the tokenize package used in simple_eval cannot deal with negative values in
         # mu or sigma. A hack solution to that would be to change simple_eval to a direct
         # call to eval in the line below. This carries all the usual implications for security.
-        return MultiNormalDistribution(int(p), simple_eval(mu), simple_eval(sigma))
+        return MultiNormalDistribution(simple_eval(mu), simple_eval(sigma))
     elif l[1] == "Dirichlet":
         from pymix.distributions.dirichlet import DirichletDistribution
         [offset, head, M, alpha] = l

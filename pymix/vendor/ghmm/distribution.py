@@ -2,6 +2,9 @@
 
 #-------------------------------------------------------------------------------
 #- Distribution and derived  ---------------------------------------------------
+from pymix.distributions.uniform import UniformDistribution
+
+
 class Distribution(object):
     """ Abstract base class for distribution over EmissionDomains
     """
@@ -32,41 +35,23 @@ class ContinuousDistribution(Distribution):
     pass
 
 
-class UniformDistribution(ContinuousDistribution):
-    def __init__(self, domain):
-        self.emissionDomain = domain
-        self.max = None
-        self.min = None
-
-    def set(self, values):
-        """
-        @param values tuple of maximum, minimum
-        """
-        maximum, minimum = values
-        self.max = maximum
-        self.min = minimum
-
-    def get(self):
-        return (self.max, self.min)
-
-
 class GaussianDistribution(ContinuousDistribution):
     # XXX attributes unused at this point
     def __init__(self, domain):
         self.emissionDomain = domain
-        self.mu = None
-        self.sigma = None
+        self.mean = None
+        self.variance = None
 
     def set(self, values):
         """
         @param values tuple of mu, sigma, trunc
         """
         mu, sigma = values
-        self.mu = mu
-        self.sigma = sigma
+        self.mean = mu
+        self.variance = sigma
 
     def get(self):
-        return (self.mu, self.sigma)
+        return (self.mean, self.variance)
 
 
 class TruncGaussianDistribution(GaussianDistribution):
@@ -80,12 +65,12 @@ class TruncGaussianDistribution(GaussianDistribution):
         @param values tuple of mu, sigma, trunc
         """
         mu, sigma, trunc = values
-        self.mu = mu
-        self.sigma = sigma
+        self.mean = mu
+        self.variance = sigma
         self.trunc = trunc
 
     def get(self):
-        return (self.mu, self.sigma, self.trunc)
+        return (self.mean, self.variance, self.trunc)
 
 
 class GaussianMixtureDistribution(ContinuousDistribution):
@@ -93,8 +78,8 @@ class GaussianMixtureDistribution(ContinuousDistribution):
     def __init__(self, domain):
         self.emissionDomain = domain
         self.M = None   # number of mixture components
-        self.mu = []
-        self.sigma = []
+        self.mean = []
+        self.variance = []
         self.weight = []
 
     def set(self, index, values):

@@ -57,7 +57,7 @@ class ProductDistribution(ProbDistribution):
         """
         # initialize attributes
         self.distList = distList
-        self.p = 0
+        self.dimension = 0
         self.freeParams = 0
         self.dataRange = []
         self.dist_nr = len(distList)
@@ -67,8 +67,8 @@ class ProductDistribution(ProbDistribution):
         self.suff_dataRange = None
         for dist in distList:
             assert isinstance(dist, ProbDistribution)
-            self.p += dist.p
-            self.dataRange.append(self.p)
+            self.dimension += dist.dimension
+            self.dataRange.append(self.dimension)
             self.freeParams += dist.freeParams
             self.suff_p += dist.suff_p
 
@@ -76,7 +76,7 @@ class ProductDistribution(ProbDistribution):
         self.update_suff_p()
 
     def __eq__(self, other):
-        if other.p != self.p or other.dist_nr != self.dist_nr:
+        if other.dimension != self.dimension or other.dist_nr != self.dist_nr:
             return False
         for i in range(self.dist_nr):
             if not (other.distList[i] == self.distList[i]):
@@ -159,13 +159,13 @@ class ProductDistribution(ProbDistribution):
         data = DataSet()
         data.dataMatrix = ls
         data.N = nr
-        data.p = self.p
+        data.dimension = self.dimension
         data.sampleIDs = []
 
         for i in range(data.N):
             data.sampleIDs.append("sample" + str(i))
 
-        for h in range(data.p):
+        for h in range(data.dimension):
             data.headers.append("X_" + str(h))
 
         data.internalInit(self)
@@ -190,7 +190,7 @@ class ProductDistribution(ProbDistribution):
             # XXX HACK: if distList[i] is an HMM feature there is nothing to be done
             # since all the HMM code was moved to mixtureHMM.py we check whether self.distList[i]
             # is an HMM by string matching  __class__ (for now).
-            if self.distList[i].p == 1:
+            if self.distList[i].dimension == 1:
                 strg = str(self.distList[i].__class__)
                 if strg.endswith('mixtureHMM.HMM'):
                     continue
@@ -211,7 +211,7 @@ class ProductDistribution(ProbDistribution):
     def isValid(self, x):
         last_index = 0
         for i in range(len(self.distList)):
-            if self.distList[i].p == 1:
+            if self.distList[i].dimension == 1:
                 try:
                     self.distList[i].isValid(x[self.dataRange[i] - 1])
                 except InvalidDistributionInput, ex:
@@ -227,7 +227,7 @@ class ProductDistribution(ProbDistribution):
 
     def flatStr(self, offset):
         offset += 1
-        s = "\t" * offset + ";Prod;" + str(self.p) + "\n"
+        s = "\t" * offset + ";Prod;" + str(self.dimension) + "\n"
         for d in self.distList:
             s += d.flatStr(offset)
         return s

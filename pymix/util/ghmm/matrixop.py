@@ -37,10 +37,6 @@ from pymix.util.ghmm.wrapper import matrix_alloc, DBL_MIN
 from pymix.util.logs import Log
 
 
-def ighmm_invert_det(length, cov):
-    det = ighmm_determinant(cov, length)
-    return ighmm_inverse(cov, length, det), det
-
 
 #============================================================================
 # calculate determinant of a square matrix
@@ -76,7 +72,10 @@ def ighmm_determinant(cov, n):
 #  The i,j'th minor of A is the matrix A without the i'th column or
 #  the j'th row.
 #
-def ighmm_inverse(cov, n, det):
+def ighmm_inverse(cov, n, det=None):
+    if det is None:
+        det = ighmm_determinant(cov, n)
+
     try:
         inv = matrix_alloc(n, n)
         if n == 1:

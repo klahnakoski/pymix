@@ -1,7 +1,6 @@
 #*
 #    State class for continuous emission HMMs.
 #
-from pymix.util.ghmm.randvar import density_func
 from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_alloc
 
 
@@ -12,7 +11,7 @@ class ghmm_cstate:
         #* weight vector for output function components
         self.c = ARRAY_CALLOC(M)  # double *
         #* vector of Emission (type and parameters of output function components)
-        self.e = ARRAY_CALLOC(M)  # Emission *
+        self.e = [None]*M  # Emission *
 
 
         #* initial prob.
@@ -85,11 +84,11 @@ class ghmm_cstate:
         b = 0.0
 
         for m in range(self.M):
-            b += self.c[m] * density_func[self.e[m].type](self.e[m], omega)
+            b += self.c[m] * self.e[m].linear_pdf(omega)
         return b
 
     def calc_cmbm(self, m, omega):
         emission = self.e[m]
         # return self.c[m] * density_func[emission.type](emission, omega)
-        return density_func[emission.type](emission, omega)
+        return emission.linear_pdf(omega)
 

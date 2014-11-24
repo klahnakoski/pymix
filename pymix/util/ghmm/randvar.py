@@ -36,11 +36,11 @@
 
 # A list of already calculated values of the density function of a
 #   N(0,1)-distribution, with x in [0.00, 19.99]
-from math import erf, exp, pi, log, cos, erfc, sqrt
+from math import erf, exp, pi, cos, erfc, sqrt
 from numpy.random.mtrand import dirichlet
 from pyLibrary.maths import Math
 from pymix.util.ghmm import random_mt
-from pymix.util.ghmm.wrapper import DBL_MIN, multinormal, binormal, uniform, normal_left, normal_approx, normal_right, normal
+from pymix.util.ghmm.wrapper import DBL_MIN
 from pymix.util.logs import Log
 
 def sqr(x):
@@ -100,47 +100,21 @@ def ighmm_rand_get_xPHIless1():
     return x_PHI_1
 
 
-def ighmm_rand_get_1overa(x, mean, u):
+def ighmm_rand_get_1overa(x, mean, variance):
     # Calulates 1/a(x, mean, u), with a = the integral from x til \infty over
     #     the Gauss density function
-    if u <= 0.0:
+    if variance <= 0.0:
         Log.error("u <= 0.0 not allowed\n")
 
-    erfc_value = erfc((x - mean) / sqrt(u*2))
+    erfc_value = erfc((x - mean) / sqrt(variance*2))
 
     if erfc_value <= DBL_MIN:
-        Log.error("a ~= 0.0 critical!  (mue = %.2f, u =%.2f)\n", mean, u)
+        Log.error("a ~= 0.0 critical!  (mue = %.2f, u =%.2f)\n", mean, variance)
         return erfc_value
 
-    return (2.0 / erfc_value)
+    return 2.0 / erfc_value
 
 
-#============================================================================
-# REMARK:
-#   The calulation of this density function was testet, by calculating the
-#   following integral sum for arbitrary mue and u:
-#     for (x = 0, x < ..., x += step(=0.01/0.001/0.0001))
-#       isum += step * ighmm_rand_normal_density_pos(x, mue, u)
-#   In each case, the sum "converged" evidently towards 1not
-#   (BK, 14.6.99)
-#   CHANGE:
-#   Truncate at -EPS_NDT (.h), so that x = 0 doesn't lead to a problem.
-#   (BK, 15.3.2000)
-#
-def ighmm_rand_normal_density_pos(x, mean, u):
-    return ighmm_rand_normal_density_trunc(x, mean, u, -GHMM_EPS_NDT)
-
-#============================================================================
-def ighmm_rand_normal_density_trunc(x, mean, u, a):
-    if u <= 0.0:
-        Log.error("u <= 0.0 not allowed")
-
-    if x < a:
-        return 0.0
-
-    # move mean to the right position
-    c = ighmm_rand_get_1overa(a, mean, u)
-    return c * ighmm_rand_normal_density(x, mean, u)
 
 
 def ighmm_rand_normal_density(x, mean, variance):
@@ -302,43 +276,8 @@ def ighmm_rand_multivariate_normal(dim, mue, sigmacd, seed):
             x[j] += randuni * sigmacd[j][i]
     return x
 
-C0 = 2.515517
-C1 = 0.802853
-C2 = 0.010328
-D1 = 1.432788
-D2 = 0.189269
-D3 = 0.001308
 
 
-def ighmm_rand_normal_right(a, mue, u, seed):
-    x = -1
-    if u <= 0.0:
-        Log.error("u <= 0.0 not allowed\n")
-
-    sigma = sqrt(u)
-
-    if seed != 0:
-        random_mt.set_seed( seed)
-
-
-    # Inverse transformation with restricted sampling by Fishman
-    U = random_mt.float23()
-    Feps = ighmm_rand_get_PHI((a - mue) / sigma)
-
-    Us = Feps + (1 - Feps) * U
-    Us1 = 1 - Us
-    t = min(Us, Us1)
-
-    t = sqrt(-Math.log(t))
-
-    T = sigma * (t - (C0 + t * (C1 + t * C2)) / (1 + t * (D1 + t * (D2 + t * D3))))
-
-    if Us < Us1:
-        x = mue - T
-    else:
-        x = mue + T
-
-    return x
 
 
 #============================================================================
@@ -367,19 +306,7 @@ def ighmm_rand_normal_cdf(x, mean, u):
 
     return (erf((x - mean) / sqrt(u * 2.0)) + 1.0) / 2.0
 
-#============================================================================
-# cumalative distribution function of a-truncated N(mean, u)
-def ighmm_rand_normal_right_cdf(x, mean, u, a):
-    if x <= a:
-        return 0.0
-    if u <= a:
-        Log.error("u <= a not allowed\n")
-        #
-    #     Function: int erfc (x, result)
-    #     These routines compute the complementary error function
-    #     erfc(x) = 1 - erf(x) = 2/\sqrt(\pi) \int_x^\infty \exp(-t^2).
-    #
-    return 1.0 + (erf((x - mean) / sqrt(2*u)) - 1.0) / erfc((a - mean) / sqrt(u*2))
+
 
 #============================================================================
 # cumalative distribution function of a uniform distribution in the range [min,max]
@@ -398,11 +325,6 @@ def ighmm_rand_uniform_cdf(x, max, min):
 
 
 
-#===========================================================================
-# defining function with identical signatures for function pointer
-def cmbm_normal(emission, omega):
-    return ighmm_rand_normal_density(omega, emission.mean, emission.variance)
-
 
 def cmbm_binormal(emission, omega):
     return ighmm_rand_binormal_density(omega, emission.mean, emission.variance)
@@ -410,32 +332,3 @@ def cmbm_binormal(emission, omega):
 
 def cmbm_multinormal(emission, omega):
     return ighmm_rand_multivariate_normal_density(emission.dimension, omega, emission.mean, emission.sigmainv, emission.det)
-
-
-def cmbm_normal_right(emission, omega):
-    return ighmm_rand_normal_density_trunc(omega, emission.mean, emission.variance, emission.min)
-
-
-def cmbm_normal_left(emission, omega):
-    return ighmm_rand_normal_density_trunc(-omega, -emission.mean, emission.variance, -emission.max)
-
-
-def cmbm_normal_approx(emission, omega):
-    return ighmm_rand_normal_density_approx(omega, emission.mean, emission.variance)
-
-
-def cmbm_uniform(emission, omega):
-    return ighmm_rand_uniform_density(omega, emission.max, emission.min)
-
-
-# function pointer array for the PDFs of the density types
-density_func = {
-    normal: cmbm_normal,
-    normal_right: cmbm_normal_right,
-    normal_approx: cmbm_normal_approx,
-    normal_left: cmbm_normal_left,
-    uniform: cmbm_uniform,
-    binormal: cmbm_binormal,
-    multinormal: cmbm_multinormal
-}
-

@@ -34,12 +34,13 @@
 #*
 #******************************************************************************
 from math import sqrt
+from pymix.distributions.normal_right import NormalRight
 from pymix.util.ghmm.gauss_tail import ighmm_gtail_pmue_umin
-from pymix.util.ghmm.matrixop import ighmm_invert_det
-from pymix.util.ghmm.randvar import GHMM_EPS_NDT, ighmm_rand_normal_density_pos, ighmm_rand_get_xPHIless1, sqr
+from pymix.util.ghmm.matrixop import ighmm_determinant, ighmm_inverse
+from pymix.util.ghmm.randvar import GHMM_EPS_NDT, ighmm_rand_get_xPHIless1, sqr
 from pymix.util.ghmm.root_finder import ghmm_zbrent_AB
 from pymix.util.ghmm.types import kMultivariate
-from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, DBL_MIN, GHMM_EPS_PREC, DBL_MAX, normal_right, matrix_alloc
+from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_stat_alloc, DBL_MIN, GHMM_EPS_PREC, DBL_MAX, matrix_alloc
 from pymix.util.logs import Log
 from pyLibrary.maths import Math
 
@@ -253,7 +254,8 @@ def sreestimate_setlambda(r, smo):
                             smo.s[i].e[m].variance[d1][d2] = u_im
 
                     # update the inverse and the determinant of covariance matrix
-                    smo.s[i].e[m].sigmainv, smo.s[i].e[m].det = ighmm_invert_det(smo.dim, smo.s[i].e[m].variance)
+                    smo.s[i].e[m].sigma_det = ighmm_determinant(smo.s[i].e[m].variance)
+                    smo.s[i].e[m].sigma_inv,  = ighmm_inverse(smo.s[i].e[m].variance)
 
                 else:
                     u_im = r.u_num[i][m][0][0] / r.mue_u_denom[i][m]
@@ -266,7 +268,7 @@ def sreestimate_setlambda(r, smo):
             # modification for truncated normal density:
             #         1-dim optimization for mue, calculate u directly
             #         note: if denom == 0 -. mue and u not recalculated above
-            if smo.s[i].e[m].type == normal_right and abs(r.mue_u_denom[i][m]) > DBL_MIN:
+            if isinstance(smo.s[i].e[m], NormalRight) and abs(r.mue_u_denom[i][m]) > DBL_MIN:
                 A = smo.s[i].e[m].mean
                 B = r.sum_gt_otot[i][m] / r.mue_u_denom[i][m]
 
@@ -291,7 +293,7 @@ def sreestimate_setlambda(r, smo):
                     Btil = B + GHMM_EPS_NDT * A
                     mue_left = (-C_PHI * sqrt(Btil + GHMM_EPS_NDT * Atil + CC_PHI * sqrt(Atil) / 4.0) - CC_PHI * Atil / 2.0 - GHMM_EPS_NDT) * 0.99
                     mue_right = A
-                    if A < Btil * ighmm_rand_normal_density_pos(-GHMM_EPS_NDT, 0, Btil):
+                    if A < Btil *  NormalRight(-GHMM_EPS_NDT, 0, -GHMM_EPS_NDT).linear_pdf(Btil):
                         mue_right = min(GHMM_EPS_NDT, mue_right)
                     else:
                         mue_left = max(-GHMM_EPS_NDT, mue_left)
@@ -454,7 +456,7 @@ def ghmm_cmodel_baum_welch(cs):
     #     CC_PHI
     for i in range(cs.smo.N):
         for j in range(cs.smo.s[i].M):
-            if cs.smo.s[i].e[j].type == normal_right:
+            if isinstance(cs.smo.s[i].e[j], NormalRight):
                 globals()["C_PHI"] = ighmm_rand_get_xPHIless1()
                 globals()["CC_PHI"] = sqr(C_PHI)
                 break

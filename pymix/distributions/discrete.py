@@ -71,7 +71,7 @@ class DiscreteDistribution(MultinomialDistribution):
 
     def pdf(self, data):
         if isinstance(data, DataSet):
-            assert data.p == 1
+            assert data.dimension == 1
             x = data.getInternalFeature(0)
         elif hasattr(data, "__iter__"):
             x = data
@@ -131,7 +131,7 @@ class DiscreteDistribution(MultinomialDistribution):
             self.phi[ind] = (self.phi[ind] * fix_phi) / dsum
 
     def sample(self):
-        for i in range(self.p):
+        for i in range(self.dimension):
             sum = 0.0
             p = random.random()
             for k in range(self.M):

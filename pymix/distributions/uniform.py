@@ -55,7 +55,7 @@ class UniformDistribution(ProbDistribution):
         """
         assert start < end
 
-        self.p = self.suff_p = 1
+        self.dimension = self.suff_p = 1
         self.freeParams = 0
 
         self.start = start
@@ -93,7 +93,7 @@ class UniformDistribution(ProbDistribution):
         pass
 
     def sample(self):
-        return random.uniform( self.start, self.end)
+        return random.uniform(self.start, self.end)
 
 
     def sampleSet(self,nr):
@@ -102,7 +102,7 @@ class UniformDistribution(ProbDistribution):
             set.append(self.sample())
         return set
 
-    def isValid(self,x):
+    def isValid(self, x):
         try:
             float(x)
         except (ValueError):
@@ -112,7 +112,7 @@ class UniformDistribution(ProbDistribution):
         if isinstance(x,list) and len(x) == 1:
             x = x[0]
         self.isValid(x)  # make sure x is valid argument
-        return [self.p,[x]]
+        return [self.dimension,[x]]
 
 
     def flatStr(self,offset):

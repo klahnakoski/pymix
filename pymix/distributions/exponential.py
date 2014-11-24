@@ -56,7 +56,7 @@ class ExponentialDistribution(ProbDistribution):
         @param lambd: shape parameter lambda
         """
 
-        self.p = self.suff_p = 1
+        self.dimension = self.suff_p = 1
         self.lambd = lambd  # lambd is a rate: 0.0 < lambd <= 1.0
         self.freeParams = 1
 
@@ -130,7 +130,7 @@ class ExponentialDistribution(ProbDistribution):
         if type(x) == list and len(x) == 1:
             x = x[0]
         self.isValid(x)
-        return [self.p, [x]]
+        return [self.dimension, [x]]
 
     def flatStr(self, offset):
         offset += 1

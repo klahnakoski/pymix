@@ -55,7 +55,7 @@ class DataSet(object):
         Creates and returns an empty DataSet object
         """
         self.N = None   # number of samples
-        self.p = None   # number of dimensions
+        self.dimension = None   # number of dimensions
         self.seq_p = None  # number of GHMM sequence features
         self.complex = None
 
@@ -102,7 +102,7 @@ class DataSet(object):
         cop = DataSet()
 
         cop.N = self.N
-        cop.p = self.p
+        cop.dimension = self.dimension
         cop.sampleIDs = copy.copy(self.sampleIDs)
         cop.row_headers = copy.copy(self.row_headers)
         cop.headers = copy.copy(self.headers)
@@ -135,7 +135,7 @@ class DataSet(object):
     def center(self, columns=None):
         dataAux = np.array(self.dataMatrix)
         if columns == None:
-            columns = range(self.p)
+            columns = range(self.dimension)
         for c in columns:
             dataAux[:, c] = dataAux[:, c] - np.mean(dataAux[:, c])
         self.dataMatrix = dataAux.tolist()
@@ -170,13 +170,13 @@ class DataSet(object):
         self.sampleIDs = aux
 
         self.N = len(self.dataMatrix)
-        self.p = len(self.dataMatrix[0])
+        self.dimension = len(self.dataMatrix[0])
 
     def logTransform(self, columns=None, base=2):
         dataAux = self.dataMatrix
         #np.array(self.dataMatrix,dtype='Float64')
         if columns == None:
-            columns = range(self.p)
+            columns = range(self.dimension)
         for d in dataAux:
             for c in columns:
                 try:
@@ -206,7 +206,7 @@ class DataSet(object):
     def normalize(self, columns=None, mad=0):
         dataAux = np.array(self.dataMatrix)
         if columns == None:
-            columns = range(self.p)
+            columns = range(self.dimension)
         for c in columns:
             if mad:
                 #print (np.median(dataAux[:,c]-np.median(dataAux[:,c])))
@@ -219,7 +219,7 @@ class DataSet(object):
     def shuffle(self, columns=None):
         dataAux = np.array(self.dataMatrix)
         if columns == None:
-            columns = range(self.p)
+            columns = range(self.dimension)
         for c in columns:
             np.random.shuffle(dataAux[:, c])
         self.dataMatrix = dataAux.tolist()
@@ -238,9 +238,9 @@ class DataSet(object):
 
         self.N = len(array)
         try:
-            self.p = len(array[0])
+            self.dimension = len(array[0])
         except TypeError:  # if len() raises an exception array[0] is not a list -> p = 1
-            self.p = 1
+            self.dimension = 1
 
         if not IDs:
             self.sampleIDs = range(self.N)
@@ -248,7 +248,7 @@ class DataSet(object):
             self.sampleIDs = IDs
 
         if not headers:
-            self.headers = range(self.p)
+            self.headers = range(self.dimension)
         else:
             self.headers = headers
 
@@ -273,9 +273,9 @@ class DataSet(object):
 
         self.N = len(List)
         try:
-            self.p = len(List[0])
+            self.dimension = len(List[0])
         except TypeError:  # if len() raises an exception array[0] is not a list -> p = 1
-            self.p = 1
+            self.dimension = 1
 
         if IDs:
             self.sampleIDs = IDs
@@ -284,7 +284,7 @@ class DataSet(object):
         if headers:
             self.headers = headers
         else:
-            self.headers = range(self.p)
+            self.headers = range(self.dimension)
 
         if col_headers:
             self.col_headers = col_headers
@@ -394,7 +394,7 @@ class DataSet(object):
             assert len(self.dataMatrix[i]) == len(self.headers), "Different numbers of headers and data columns in files " + str(fileNames) + ", sample " + str(self.sampleIDs[i]) + " ," + str(
                 len(self.dataMatrix[i])) + " != " + str(len(self.headers))
 
-        self.p = len(self.dataMatrix[0])
+        self.dimension = len(self.dataMatrix[0])
 
     def fromFile(self, fileName, sep='\t', col_headers=False, row_headers=False):
 
@@ -427,7 +427,7 @@ class DataSet(object):
             assert len(self.dataMatrix[i]) == len(self.headers), "Different numbers of headers and data columns in files " + str(fileName) + ", sample " + str(self.sampleIDs[i]) + " ," + str(
                 len(self.dataMatrix[i])) + " != " + str(len(self.headers))
 
-        self.p = len(self.dataMatrix[0])
+        self.dimension = len(self.dataMatrix[0])
 
     def __str__(self):
         """
@@ -437,7 +437,7 @@ class DataSet(object):
         """
         strout = "Data set overview:\n"
         strout += "N = " + str(self.N) + "\n"
-        strout += "p = " + str(self.p) + "\n\n"
+        strout += "p = " + str(self.dimension) + "\n\n"
         strout += "sampleIDs = " + str(self.sampleIDs) + "\n\n"
         strout += "row_headers = " + str(self.row_headers) + "\n\n"
         strout += "headers = " + str(self.headers) + "\n\n"
@@ -518,7 +518,7 @@ class DataSet(object):
 
         @param m: MixtureModel object
         """
-        assert m.p == self.p, "Invalid dimensions in data and model." + str(m.p) + ' ' + str(self.p)
+        assert m.dimension == self.dimension, "Invalid dimensions in data and model." + str(m.dimension) + ' ' + str(self.dimension)
 
         templist = []
         for i in range(len(self.dataMatrix)):
@@ -547,7 +547,7 @@ class DataSet(object):
                 prev_index = self.suff_dataRange[i - 1]
 
             this_index = self.suff_dataRange[i]
-            if self.p == 1:   # only a single feature
+            if self.dimension == 1:   # only a single feature
                 self._internalData_views.append(self.internalData)
             else:
                 self._internalData_views.append(self.internalData[:, prev_index:this_index])
@@ -591,7 +591,7 @@ class DataSet(object):
             r = self.headers.pop(ind)
             if self.col_headers:
                 self.col_headers.pop(ind)
-            self.p -= 1
+            self.dimension -= 1
             if not silent:
                 print "Feature " + str(r) + " has been removed."
 
@@ -622,7 +622,7 @@ class DataSet(object):
             r = self.headers.pop(ind)
             if self.col_headers:
                 self.col_headers.pop(ind)
-            self.p -= 1
+            self.dimension -= 1
             if not silent:
                 print "Feature " + str(r) + " has been removed."
 
@@ -832,7 +832,7 @@ class DataSet(object):
         """
         count = 0
         for i in range(self.N):
-            for j in range(self.p):
+            for j in range(self.dimension):
                 if self.dataMatrix[i][j] == valueToMask:
                     self.dataMatrix[i][j] = maskValue
                     count += 1
@@ -920,7 +920,7 @@ class DataSet(object):
         res = DataSet()
 
         res.N = len(ids)
-        res.p = self.p
+        res.dimension = self.dimension
         res.suff_dataRange = copy.copy(self.suff_dataRange)
         res.suff_p = self.suff_p
         res.suff_p_list = self.suff_p_list
@@ -977,7 +977,7 @@ class DataSet(object):
         res = DataSet()
 
         res.N = self.N    # number of samples
-        res.p = 1    # number of dimensions
+        res.dimension = 1    # number of dimensions
         res.seq_p = self.seq_p  # number of GHMM sequence features
         res.suff_p = self.suff_p_list[index]
         res.suff_p_list = [self.suff_p_list[index]]

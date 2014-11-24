@@ -35,11 +35,11 @@ class LinearGaussianDistributionTests(FuzzyTestCase):
 
         self.dist.beta = [0.5, 0.87]
         self.assertEqual(self.dist.beta, [0.5, 0.87])
-        self.dist.sigma = [3.2]
-        self.assertEqual(self.dist.sigma, [3.2])
+        self.dist.variance = [3.2]
+        self.assertEqual(self.dist.variance, [3.2])
 
         self.assertEqual(cp.beta, [0.6, 0.7])
-        self.assertEqual(cp.sigma, [1.0])
+        self.assertEqual(cp.variance, [1.0])
 
     def testpdf(self):
         # TODO: FIX ME
@@ -55,7 +55,7 @@ class LinearGaussianDistributionTests(FuzzyTestCase):
         # post1 = np.array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5])
         # self.dist.MStep(post1, a)
         # self.assertEqual(self.dist.beta, [1.53596949, 1.15134484])
-        # self.assertEqual(self.dist.sigma[0], 1.55468583309)
+        # self.assertEqual(self.dist.variance[0], 1.55468583309)
 
     def testsample(self):
         # TODO: FIX ME

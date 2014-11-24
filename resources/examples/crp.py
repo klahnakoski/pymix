@@ -22,7 +22,7 @@ class NormalGammaPrior:
         self.scale = scale    # scale parameter of the inverse Gamma  (S)
 
         # parameters on normal prior on the mean
-        self.mu = mu
+        self.mean = mu
         self.tau = tau
 
 
@@ -37,8 +37,8 @@ class NormalGammaPrior:
         sigma = 1.0 / grand
 
         #print sigma
-        mu = random.normalvariate(self.mu, math.sqrt(self.tau*sigma) )
-        #mu = random.normalvariate(self.mu, self.tau*sigma )
+        mu = random.normalvariate(self.mean, math.sqrt(self.tau*sigma) )
+        #mu = random.normalvariate(self.mean, self.tau*sigma )
 
         if returnType == 'tuple':
             return (mu,sigma)
@@ -264,7 +264,7 @@ class GibbsSampler:
 #                print M
 
                 #                       alpha                          y_i           m
-                weights.append( (self.CRP.alpha * c_shape * ( 1 + ((data[i][0] - self.CRP.G0.mu)**2 / (self.CRP.G0.shape * M)) )**-((1+self.CRP.G0.shape)/2)) * (1.0 / math.sqrt(M)))
+                weights.append( (self.CRP.alpha * c_shape * ( 1 + ((data[i][0] - self.CRP.G0.mean)**2 / (self.CRP.G0.shape * M)) )**-((1+self.CRP.G0.shape)/2)) * (1.0 / math.sqrt(M)))
 
 
                 #print "q"+str(i), weights
@@ -336,9 +336,9 @@ class GibbsSampler:
                     # for new component sample from prior with updated parameters
                     #   def __init__(self, shape, scale, mu, tau  ):
                     shape_i = (1.0 + self.CRP.G0.shape) / 2.0
-                    scale_i = ((self.CRP.G0.scale) + (( data[i][0] - self.CRP.G0.mu )**2.0  / ( 1 + self.CRP.G0.tau ))) / 2.0
+                    scale_i = ((self.CRP.G0.scale) + (( data[i][0] - self.CRP.G0.mean )**2.0  / ( 1 + self.CRP.G0.tau ))) / 2.0
 
-                    mu_i = ( self.CRP.G0.mu + self.CRP.G0.tau * data[i][0] ) / ( 1.0 + self.CRP.G0.tau )
+                    mu_i = ( self.CRP.G0.mean + self.CRP.G0.tau * data[i][0] ) / ( 1.0 + self.CRP.G0.tau )
                     tau_i =  self.CRP.G0.tau / ( 1 + self.CRP.G0.tau )
                     prior_i = NormalGammaPrior( shape_i, scale_i, mu_i, tau_i )
 
@@ -556,7 +556,7 @@ class GibbsSamplerVariant2:
 #                print M
 
                 #                       alpha                          y_i           m
-                weights.append( (self.CRP.alpha * c_shape * ( 1 + ((data[i][0] - self.CRP.G0.mu)**2 / (self.CRP.G0.shape * M)) )**-((1+self.CRP.G0.shape)/2)) * (1.0 / math.sqrt(M)))
+                weights.append( (self.CRP.alpha * c_shape * ( 1 + ((data[i][0] - self.CRP.G0.mean)**2 / (self.CRP.G0.shape * M)) )**-((1+self.CRP.G0.shape)/2)) * (1.0 / math.sqrt(M)))
 
 
                 #print "q"+str(i), weights
@@ -617,9 +617,9 @@ class GibbsSamplerVariant2:
                 # update distribution parameters by sampling from posterior
                 #   def __init__(self, shape, scale, mu, tau  ):
                 shape_i = (nr_dat + self.CRP.G0.shape)  / 2.0
-                scale_i = ((self.CRP.G0.scale) + (0.5 * SSE ) + ( nr_dat* self.CRP.G0.tau * ( mean - self.CRP.G0.mu )**2.0 ) / ( 2 * (self.CRP.G0.tau + nr_dat ))) /2.0
+                scale_i = ((self.CRP.G0.scale) + (0.5 * SSE ) + ( nr_dat* self.CRP.G0.tau * ( mean - self.CRP.G0.mean )**2.0 ) / ( 2 * (self.CRP.G0.tau + nr_dat ))) /2.0
 
-                mu_i = ( self.CRP.G0.tau * self.CRP.G0.mu + nr_dat * mean ) / ( nr_dat + self.CRP.G0.tau )
+                mu_i = ( self.CRP.G0.tau * self.CRP.G0.mean + nr_dat * mean ) / ( nr_dat + self.CRP.G0.tau )
                 tau_i =  self.CRP.G0.tau + nr_dat
                 prior_i = NormalGammaPrior( shape_i, scale_i, mu_i, tau_i )
 

@@ -9,9 +9,8 @@
 #
 ################################################################################
 from copy import deepcopy
-from math import exp, log, sqrt
+from math import exp, sqrt
 from pyLibrary.maths import Math
-from pymix.util.ghmm.emissions import Emission
 from pymix.util.logs import Log
 
 
@@ -27,11 +26,7 @@ GHMM_EPS_PREC = 1e-8
 GHMM_PENALTY_LOGP = -500.0
 
 
-normal = 0        #< gaussian
-normal_right = 1  #< right tail
-normal_approx = 2 #< approximated gaussian
-normal_left = 3   #< left tail
-uniform = 4
+
 binormal = 5      #< two dimensional gaussian
 multinormal = 6   #< multivariate gaussian
 density_number = 7 #< number of density types, has to stay last
@@ -94,10 +89,6 @@ def matrix_alloc(n, m):
 
 def int_matrix_alloc_row(rows):
     return [0] * rows
-
-
-def c_emission_array_alloc(n):
-    return [Emission() for i in range(n)]
 
 
 def double_array_alloc(length):

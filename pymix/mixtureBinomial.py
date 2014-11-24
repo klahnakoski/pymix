@@ -62,7 +62,7 @@ class BernoulliDistribution(ProbDistribution):
 
         @param theta
         """
-        self.p = 1
+        self.dimension = 1
         self.suff_p = 1
         self.freeParams = 1
         self.theta = theta
@@ -79,7 +79,7 @@ class BernoulliDistribution(ProbDistribution):
         return BernoulliDistribution(copy.deepcopy(self.theta))
 
     def __str__(self):
-        return "Binomial:  [" + str(self.theta) + " " + str(self.p) + "]"
+        return "Binomial:  [" + str(self.theta) + " " + str(self.dimension) + "]"
 
 
     def pdf(self, data):
@@ -174,7 +174,7 @@ class BernoulliDistribution(ProbDistribution):
         if isinstance(x, list) and len(x) == 1:
             x = x[0]
         self.isValid(x)  # make sure x is valid argument
-        return [self.p, [x]]
+        return [self.dimension, [x]]
 
 
     def flatStr(self, offset):
@@ -206,7 +206,7 @@ class BinomialRegularizedDistribution(ProbDistribution):
 
         @param theta
         """
-        self.p = 1
+        self.dimension = 1
         self.suff_p = 1
         self.freeParams = 1
         self.theta = theta
@@ -361,7 +361,7 @@ class BinomialRegularizedDistribution(ProbDistribution):
         if isinstance(x, list) and len(x) == 1:
             x = x[0]
         self.isValid(x)  # make sure x is valid argument
-        return [self.p, [x]]
+        return [self.dimension, [x]]
 
 
     def flatStr(self, offset):

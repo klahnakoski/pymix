@@ -318,8 +318,8 @@ class hmmer:
         # intitializing pi vector, always starting in B state (index 0)
         pi = [1] + [0] * ((self.n * 3) + 4)
 
-        silent = [0] * (self.m)  # emissions for silent states
-        equal = [1.0/(self.m)] * self.m  # uniform distribution over the number of symbols
+        silent = [0] * self.m  # emissions for silent states
+        equal = [1.0/self.m] * self.m  # uniform distribution over the number of symbols
 
         # conversion of the HMMER emission matrices into ghmm format
         # emmission probs in HMMER: [match=0/insert=1][state][emission-letter]

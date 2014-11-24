@@ -53,7 +53,7 @@ def kl_dist(d1, d2):
 
     @return: Kullback-Leibler divergence between input distributions
     """
-    # Kullback = sum[1..P](ln(SIGMA2/SIGMA1))
+    # Kullback = sum[1..dimension](ln(SIGMA2/SIGMA1))
     # + sum[1..P](SIGMA1^2 / (2*(SIGMA2^2)))
     # + sum[1..P]((MU1-MU2)^2 / (2*(SIGMA2^2))) - P/2
     from ..distributions.multinomial import MultinomialDistribution
@@ -61,8 +61,8 @@ def kl_dist(d1, d2):
     from ..distributions.product import ProductDistribution
 
     if isinstance(d1, NormalDistribution) and isinstance(d2, NormalDistribution):
-        res = ( (0.5 * np.log(d2.sigma ** 2 / d1.sigma ** 2)) - 0.5 + d1.sigma ** 2 / (2 * d2.sigma ** 2)
-                + (abs(d2.mu - d1.mu) ** 2) / (2 * d2.sigma ** 2) )
+        res = ( (0.5 * np.log(d2.variance ** 2 / d1.variance ** 2)) - 0.5 + d1.variance ** 2 / (2 * d2.variance ** 2)
+                + (abs(d2.mean - d1.mean) ** 2) / (2 * d2.variance ** 2) )
         return res
     elif isinstance(d1, MultinomialDistribution) and isinstance(d2, MultinomialDistribution):
         assert d1.M == d2.M

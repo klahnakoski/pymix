@@ -94,7 +94,7 @@ class NormalGammaPrior(PriorDistribution):
     def pdf(self, n):
 
         if isinstance(n, NormalDistribution):
-            res = mixextend.get_log_normal_inverse_gamma_prior_density(self.mu_p, self.kappa, self.dof, self.scale, [n.mu], [n.sigma])[0]
+            res = mixextend.get_log_normal_inverse_gamma_prior_density(self.mu_p, self.kappa, self.dof, self.scale, [n.mean], [n.variance])[0]
             return res
 
         elif isinstance(n, list):
@@ -102,8 +102,8 @@ class NormalGammaPrior(PriorDistribution):
             d_sigma = np.zeros(len(n))
             d_mu = np.zeros(len(n))
             for i, d in enumerate(n):
-                d_sigma[i] = d.sigma
-                d_mu[i] = d.mu
+                d_sigma[i] = d.variance
+                d_mu[i] = d.mean
 
             # call to extension function
             return mixextend.get_log_normal_inverse_gamma_prior_density(self.mu_p, self.kappa, self.dof, self.scale, d_mu, d_sigma)
@@ -147,8 +147,8 @@ class NormalGammaPrior(PriorDistribution):
         new_sigma = math.sqrt(n_sig_num / n_sig_denom)
 
         # assigning updated parameter values
-        dist.mu = new_mu
-        dist.sigma = new_sigma
+        dist.mean = new_mu
+        dist.variance = new_sigma
 
 
     def mapMStepMerge(self, group_list):

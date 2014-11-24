@@ -39,6 +39,7 @@ import math
 import numpy as np
 from .prob import ProbDistribution
 from pyLibrary.maths import Math
+from pymix.distributions.normal import NormalDistribution
 from pymix.util.errors import InvalidDistributionInput
 from pymix.util.ghmm import randvar
 
@@ -65,33 +66,33 @@ class ConditionalGaussDistribution(ProbDistribution):
         """
         assert p == len(mu) == len(w) == len(sigma) == len(parents)
 
-        self.p = p
+        self.dimension = p
         self.suff_p = p
         self.freeParams = p * 3
-        self.mu = mu  # mean values
+        self.mean = mu  # mean values
         self.w = w    # conditional weights
-        self.sigma = sigma  # standard deviations
+        self.variance = sigma  # standard deviations
 
         self.parents = parents  # tree structure encoded by parent index relationship
 
     def __str__(self):
-        return 'ConditionalGaussian: \nmu=' + str(self.mu) + ', \nsigma=' + str(self.sigma) + ', \nw=' + str(self.w) + ', \nparents=' + str(self.parents)
+        return 'ConditionalGaussian: \nmu=' + str(self.mean) + ', \nsigma=' + str(self.variance) + ', \nw=' + str(self.w) + ', \nparents=' + str(self.parents)
 
 
     def sample(self):
-        s = [None] * self.p
-        s[0] = randvar.cmbm_normal(self.mu[0], self.sigma[0])
+        s = [None] * self.dimension
+        s[0] = NormalDistribution(self.mean[0], self.variance[0]).sample()
 
-        for i in range(1, self.p):
+        for i in range(1, self.dimension):
             pid = self.parents[i]
             assert s[pid] != None   # XXX assumes that the features are in topological order
-            shift_mu = self.mu[i] - (self.w[i] * self.mu[pid])
-            s[i] = randvar.cmbm_normal(shift_mu + (self.w[i] * s[pid]), self.sigma[i])
+            shift_mu = self.mean[i] - (self.w[i] * self.mean[pid])
+            s[i] = NormalDistribution(shift_mu + (self.w[i] * s[pid]), self.variance[i]).sample()
 
         return s
 
     def sampleSet(self, nr):
-        s = np.zeros((nr, self.p))
+        s = np.zeros((nr, self.dimension))
         for i in range(nr):
             s[i, :] = self.sample()
 
@@ -107,11 +108,11 @@ class ConditionalGaussDistribution(ProbDistribution):
         res = np.zeros(len(data))
 
         for i in range(len(data)):
-            res[i] = Math.log((1.0 / (math.sqrt(2.0 * math.pi) * self.sigma[0])) * math.exp(( data[i, 0] - self.mu[0]  ) ** 2 / (-2.0 * self.sigma[0] ** 2)))
-            for j in range(1, self.p):
+            res[i] = Math.log((1.0 / (math.sqrt(2.0 * math.pi) * self.variance[0])) * math.exp(( data[i, 0] - self.mean[0]  ) ** 2 / (-2.0 * self.variance[0] ** 2)))
+            for j in range(1, self.dimension):
                 pind = self.parents[j]
                 res[i] += Math.log(
-                    (1.0 / (math.sqrt(2.0 * math.pi) * self.sigma[j])) * math.exp(( data[i, j] - self.mu[j] - self.w[j] * ( data[i, pind] - self.mu[pind] )  ) ** 2 / (-2.0 * self.sigma[j] ** 2)))
+                    (1.0 / (math.sqrt(2.0 * math.pi) * self.variance[j])) * math.exp(( data[i, j] - self.mean[j] - self.w[j] * ( data[i, pind] - self.mean[pind] )  ) ** 2 / (-2.0 * self.variance[j] ** 2)))
 
         return res
 
@@ -124,29 +125,29 @@ class ConditionalGaussDistribution(ProbDistribution):
         # for this data set
         if post_sum != 0.0:
             # reestimate mu
-            for j in range(self.p):
-                self.mu[j] = np.dot(posterior, data[:, j]) / post_sum
-                var[j] = np.dot(posterior, (data[:, j] - self.mu[j]) ** 2) / post_sum
+            for j in range(self.dimension):
+                self.mean[j] = np.dot(posterior, data[:, j]) / post_sum
+                var[j] = np.dot(posterior, (data[:, j] - self.mean[j]) ** 2) / post_sum
 
-            for j in range(self.p):
+            for j in range(self.dimension):
                 # computing ML estimates for w and sigma
                 pid = self.parents[j]
-                cov_j = np.dot(posterior, (data[:, j] - self.mu[j]) * (data[:, pid] - self.mu[pid])) / post_sum
+                cov_j = np.dot(posterior, (data[:, j] - self.mean[j]) * (data[:, pid] - self.mean[pid])) / post_sum
 
                 if pid <> -1:  # has parents
                     self.w[j] = cov_j / var[pid]
                     print  var[j], self.w[j] ** 2, var[pid], var[j] - (self.w[j] ** 2 * var[pid])
-                    self.sigma[j] = math.sqrt(var[j] - (self.w[j] ** 2 * var[pid]))
+                    self.variance[j] = math.sqrt(var[j] - (self.w[j] ** 2 * var[pid]))
                 else:
-                    self.sigma[j] = math.sqrt(var[j])
+                    self.variance[j] = math.sqrt(var[j])
 
         else:
             raise ValueError, 'Invalid posterior.'
 
 
     def isValid(self, x):
-        if not len(x) == self.p:
-            raise InvalidDistributionInput, "\n\tInvalid data: wrong dimension(s) " + str(len(x)) + " in MultiNormalDistribution(p=" + str(self.p) + ")."
+        if not len(x) == self.dimension:
+            raise InvalidDistributionInput, "\n\tInvalid data: wrong dimension(s) " + str(len(x)) + " in MultiNormalDistribution(p=" + str(self.dimension) + ")."
         for v in x:
             try:
                 float(v)

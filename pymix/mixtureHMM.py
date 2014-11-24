@@ -91,10 +91,10 @@ class SequenceDataSet(ConstrainedDataSet):
 
         # consistency checks between non-sequence and sequence data
         self.N = len(sequences[0])
-        self.p = len(sequences)
+        self.dimension = len(sequences)
         if len(List) > 0:
             assert self.N == len(List)
-            self.p += len(List[0])
+            self.dimension += len(List[0])
 
         if not IDs:
             self.sampleIDs = range(self.N)
@@ -103,9 +103,9 @@ class SequenceDataSet(ConstrainedDataSet):
             self.sampleIDs = IDs
 
         if not col_header:
-            self.headers = [str(k) for k in range(self.p)]
+            self.headers = [str(k) for k in range(self.dimension)]
         else:
-            assert len(col_header) == self.p
+            assert len(col_header) == self.dimension
             self.headers = col_header
 
         # set non-sequence data
@@ -127,13 +127,13 @@ class SequenceDataSet(ConstrainedDataSet):
 
 
         """
-        assert m.p == self.p, "Invalid dimensions in data and model." + str(m.p) + ' ' + str(self.p)
+        assert m.dimension == self.dimension, "Invalid dimensions in data and model." + str(m.dimension) + ' ' + str(self.dimension)
 
         if self.complex:
             # set complexFeature flags
             self.complexFeature = []
 
-            if self.p == 1:
+            if self.dimension == 1:
                 if isinstance(m.components[0], ProductDistribution):
                     assert m.components[0].dist_nr == 1
                     assert isinstance(m.components[0].distList[0], HMM)
@@ -173,7 +173,7 @@ class SequenceDataSet(ConstrainedDataSet):
 
         self.suff_p = m.components[0].suff_p
 
-        #print 'p',self.p
+        #print 'p',self.dimension
         #print 'seq_p',self.seq_p
 
 
@@ -226,7 +226,7 @@ class SequenceDataSet(ConstrainedDataSet):
                 internal_index = self.complexDataIndexMap[i]
                 return self.complexData[internal_index]
 
-        if self.p == 1:   # only a single feature
+        if self.dimension == 1:   # only a single feature
             return self.internalData[:]
 
         elif (this_index - prev_index) == 1:   # multiple features, feature 'i' has single dimension
@@ -260,7 +260,7 @@ class HMM(ProbDistribution):
 
         self.hmm = hmm
 
-        self.p = 1   # we consider each sequence set to be a single features, so p is one.
+        self.dimension = 1   # we consider each sequence set to be a single features, so p is one.
 
         #  getting the free parameters of a GHMM object requires iteration over all states
         self.freeParams = self.hmm.N - 1 # pi

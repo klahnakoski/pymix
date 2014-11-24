@@ -116,6 +116,10 @@ import math
 import os
 from string import join
 from pyLibrary.maths import Math
+from pymix.distributions.multinormal import MultiNormalDistribution
+from pymix.distributions.normal import NormalDistribution
+from pymix.distributions.normal_right import NormalRight
+from pymix.distributions.uniform import UniformDistribution
 
 from pymix.util.ghmm import types
 from pymix.util.ghmm import wrapper
@@ -125,12 +129,10 @@ from pymix.util.ghmm.dmodel import ghmm_dmodel
 from pymix.util.ghmm.dstate import ghmm_dstate
 from pymix.util.ghmm.gradescent import ghmm_dmodel_label_gradient_descent
 from pymix.util.ghmm.kbest import ghmm_dmodel_label_kbest
-from pymix.util.ghmm.matrixop import ighmm_invert_det
 from pymix.util.ghmm.sreestimate import ghmm_cmodel_baum_welch
 from pymix.util.ghmm.sviterbi import ghmm_cmodel_viterbi
 from pymix.util.ghmm.types import kSilentStates, kHigherOrderEmissions, kTiedEmissions, kBackgroundDistributions, kLabeledStates, kNotSpecified, kMultivariate, kContinuousHMM, kDiscreteHMM, \
     kTransitionClasses, kPairHMM
-from pymix.util.ghmm.wrapper import matrix_alloc
 from pymix.util.ghmm.viterbi import ghmm_dmodel_viterbi
 from pymix.vendor.ghmm import ghmmhelper
 import modhmmer
@@ -578,15 +580,8 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.M = 1
 
                     # set up emission(s), density type is normal
-                    emissions = wrapper.c_emission_array_alloc(1)
-                    emission = emissions[0]
-                    emission.type = wrapper.normal
-                    emission.dimension = 1
                     (mu, sigma) = B[i]
-                    emission.mean = mu #mu = mue in GHMM C-lib.
-                    emission.variance = sigma
-                    emission.fixed = 0  # fixing of emission deactivated by default
-                    emission.setDensity(0)
+                    emissions = [NormalDistribution(mu, sigma)]
 
                     # append emission to state
                     state.e = emissions
@@ -620,18 +615,10 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.c = weight_list
 
                     # set up emission(s), density type is normal
-                    emissions = wrapper.c_emission_array_alloc(state.M)
+                    emissions = [None] * state.M
 
-                    for j in range(state.M):
-                        emission = emissions[j]
-                        emission.type = wrapper.normal
-                        emission.dimension = 1
-                        mu = mu_list[j]
-                        sigma = sigma_list[j]
-                        emission.mean = mu #mu = mue in GHMM C-lib.
-                        emission.variance = sigma
-                        emission.fixed = 0  # fixing of emission deactivated by default
-                        emission.setDensity(0)
+                    for n in range(state.M):
+                        emissions[n] = NormalDistribution(mu_list[n], sigma_list[n])
 
                     # append emissions to state
                     state.e = emissions
@@ -660,32 +647,12 @@ class HMMFromMatricesFactory(HMMFactory):
                     state.M = len(B[i][0])
 
                     # set up emission(s), density type is normal
-                    emissions = wrapper.c_emission_array_alloc(state.M)
+                    emissions = [None] * state.M
                     weight_list = B[i][3]
 
-                    combined_map = [(first, B[i][0][n], B[i][1][n], B[i][2][n])
-                        for n, first in enumerate(densities[i])]
-
-                    for j, parameters in enumerate(combined_map):
-                        emission = emissions[j]
-                        emission.type = densities[i][j]
-                        emission.dimension = 1
-                        if (emission.type == wrapper.normal or emission.type == wrapper.normal_approx):
-                            emission.mean = parameters[1]
-                            emission.variance = parameters[2]
-                        elif emission.type == wrapper.normal_right:
-                            emission.mean = parameters[1]
-                            emission.variance = parameters[2]
-                            emission.min = parameters[3]
-                        elif emission.type == wrapper.normal_left:
-                            emission.mean = parameters[1]
-                            emission.variance = parameters[2]
-                            emission.max = parameters[3]
-                        elif emission.type == wrapper.uniform:
-                            emission.max = parameters[1]
-                            emission.min = parameters[2]
-                        else:
-                            Log.error("Unknown Distribution type:" + str(emission.type))
+                    for n, density in enumerate(densities[i]):
+                        parameters = (B[i][0][n], B[i][1][n], B[i][2][n])
+                        emissions[n] = density(*parameters)
 
                     # append emissions to state
                     state.e = emissions
@@ -738,20 +705,10 @@ class HMMFromMatricesFactory(HMMFactory):
                         state.c = wrapper.list2double_array([1.0])
 
                     # set up emission(s), density type is normal
-                    emissions = wrapper.c_emission_array_alloc(state.M) # M emission components in this state
+                    emissions = [None] * state.M # M emission components in this state
 
                     for em in range(state.M):
-                        emission = emissions[em]
-                        emission.dimension = len(B[0][0]) # dimension must be same in all states and emissions
-                        mu = B[i][em * 2]
-                        sigma = B[i][em * 2 + 1]
-                        emission.mean = mu
-                        emission.variance = sigma
-                        emission.sigmacd = matrix_alloc(len(sigma), len(sigma[0])) # just for allocating the space
-                        emission.fixed = 0  # fixing of emission deactivated by default
-                        emission.setDensity(6)
-                        # calculate inverse and determinant of covariance matrix
-                        emission.sigmainv, emission.det = ighmm_invert_det(emission.dimension, emission.variance)
+                        emissions[em] = MultiNormalDistribution(B[i][em * 2], B[i][em * 2 + 1])
 
                     # append emissions to state
                     state.e = emissions
@@ -2783,17 +2740,15 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
         """
         i = self.state(i)
         state = self.cmodel.s[i]
-        emission = state.getEmission(comp)
-        if (emission.type == wrapper.normal or emission.type == wrapper.normal_approx):
-            return (emission.type, emission.mean, emission.variance, state.getWeight(comp))
-        elif emission.type == wrapper.normal_right:
-            return (emission.type, emission.mean, emission.variance,
-            emission.min, state.getWeight(comp))
-        elif emission.type == wrapper.normal_left:
-            return (emission.type, emission.mean, emission.variance,
-            emission.max, state.getWeight(comp))
-        elif emission.type == wrapper.uniform:
-            return (emission.type, emission.max, emission.min, state.getWeight(comp))
+        emission = state.e[comp]
+        if isinstance(emission, NormalDistribution):
+            return emission.type, emission.mean, emission.variance, state.getWeight(comp)
+        elif isinstance(emission, NormalRight):
+            return emission.type, emission.mean, emission.variance, emission.minimum, state.getWeight(comp)
+        elif isinstance(emission, UniformDistribution):
+            return emission.type, emission.max, emission.min, state.getWeight(comp)
+        elif isinstance(emission, NormalLeft):
+            return emission.type, emission.mean, emission.variance, emission.max, state.getWeight(comp)
 
     def setEmission(self, i, comp, distType, values):
         """ Set the emission distribution parameters for a mixture component
@@ -2818,19 +2773,15 @@ class ContinuousMixtureHMM(GaussianMixtureHMM):
 
         state = self.cmodel.s[i]
         state.setWeight(comp, weight)
-        emission = state.getEmission(comp)
-        emission.type = distType
-        if (emission.type == wrapper.normal or
-                emission.type == wrapper.normal_approx or
-                emission.type == wrapper.normal_right or
-                emission.type == wrapper.normal_left):
+        emission = state.e[comp]
+        if isinstance(emission, (NormalDistribution, NormalRight, NormalLeft)):
             emission.mean = mu
             emission.variance = sigma
-            if emission.type == wrapper.normal_right:
-                emission.min = a
-            if emission.type == wrapper.normal_left:
+            if isinstance(emission, NormalRight):
+                emission.minimum = a
+            if isinstance(emission, NormalLeft):
                 emission.max = a
-        elif emission.type == wrapper.uniform:
+        elif isinstance(emission, UniformDistribution):
             emission.min = sigma
             emission.max = mu
         else:
@@ -2951,7 +2902,7 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         @returns mean and covariance matrix of component m in state i
         """
         i = self.state(i)
-        state = self.cmodel.s[i]
+        state = self.cmodel.s[i].e[m].get_param()
         assert 0 <= m < state.M, "Index " + str(m) + " out of bounds."
 
         emission = state.getEmission(m)
@@ -2971,17 +2922,7 @@ class MultivariateGaussianMixtureHMM(GaussianEmissionHMM):
         mu, sigma = values
         i = self.state(i)
 
-        state = self.cmodel.s[i]
-        assert 0 <= m < state.M, "Index " + str(m) + " out of bounds."
-
-        emission = state.getEmission(m)
-        emission.mean = mu
-        emission.variance = sigma
-
-        emission.sigmacd = matrix_alloc(len(sigma), len(sigma[0])) # just for allocating the space
-        emission.fixed = 0  # fixing of emission deactivated by default
-        emission.setDensity(6)
-        emission.sigmainv, emission.det = ighmm_invert_det(emission.dimension, emission.variance)
+        self.cmodel.s[i].e[m] = MultiNormalDistribution(mu, sigma)
 
 
     def __str__(self):

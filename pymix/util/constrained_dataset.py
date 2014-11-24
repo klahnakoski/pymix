@@ -152,9 +152,9 @@ class ConstrainedDataSet(DataSet):
         XXX add params
         """
         #if positive != None:
-        #    assert len(positive) == self.p, 'Pairwise Constraints should cover the all observations'
+        #    assert len(positive) == self.dimension, 'Pairwise Constraints should cover the all observations'
         #if negative != None:
-        #    assert len(negative) == self.p, 'Pairwise Constraints should cover the all observations'
+        #    assert len(negative) == self.dimension, 'Pairwise Constraints should cover the all observations'
         self.pairwisepositive = positive
         self.pairwisenegative = negative
 

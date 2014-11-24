@@ -76,7 +76,7 @@ class MixtureModel(ProbDistribution):
         assert abs((1.0 - sum(pi))) < 1e-12, "sum(pi) = " + str(sum(pi)) + ", " + str(abs((1.0 - sum(pi))))
 
         self.freeParams = 0
-        self.p = components[0].p
+        self.dimension = components[0].dimension
 
         # Internally components must be a list of ProductDistribution objects. In case the input is a list of
         # ProbDistributions we convert components accordingly.
@@ -84,7 +84,7 @@ class MixtureModel(ProbDistribution):
             # make sure all elements of components are ProbDistribution of the same dimension
             for c in components:
                 assert isinstance(c, ProbDistribution)
-                assert c.p == self.p
+                assert c.dimension == self.dimension
             for i, c in enumerate(components):
                 components[i] = ProductDistribution([c])
 
@@ -94,7 +94,7 @@ class MixtureModel(ProbDistribution):
         for c in components:
             # components have to be either ProductDistribution objects or a list of univariate ProbDistribution objects
             assert isinstance(c, ProductDistribution), "Got " + str(c.__class__) + " as component."
-            assert self.p == c.p, str(self.p) + " != " + str(c.p)
+            assert self.dimension == c.dimension, str(self.dimension) + " != " + str(c.dimension)
             assert self.dist_nr == c.dist_nr
             self.freeParams += c.freeParams
 
@@ -172,7 +172,7 @@ class MixtureModel(ProbDistribution):
 
     def __str__(self):
         s = "G = " + str(self.G)
-        s += "\np = " + str(self.p)
+        s += "\np = " + str(self.dimension)
         s += "\npi =" + str(self.pi) + "\n"
         s += "compFix = " + str(self.compFix) + "\n"
         for i in range(self.G):
@@ -201,7 +201,7 @@ class MixtureModel(ProbDistribution):
                 assert self.components[i].dist_nr == nr
                 # checking for consistent dimensionality of elementar distributions among components
                 for j in range(nr):
-                    assert self.components[i][j].p == self.components[0][j].p
+                    assert self.components[i][j].dimension == self.components[0][j].dimension
                     assert self.components[i][j].freeParams == self.components[0][j].freeParams
 
             # if there is already a CSI structure in the model, components within the same group
@@ -360,13 +360,13 @@ class MixtureModel(ProbDistribution):
         data = DataSet()
         data.dataMatrix = ls
         data.N = nr
-        data.p = self.p
+        data.dimension = self.dimension
         data.sampleIDs = []
 
         for i in range(data.N):
             data.sampleIDs.append("sample" + str(i))
 
-        for h in range(data.p):
+        for h in range(data.dimension):
             data.headers.append("X_" + str(h))
 
         data.internalInit(self)
@@ -386,13 +386,13 @@ class MixtureModel(ProbDistribution):
         data = DataSet()
         data.dataMatrix = ls
         data.N = nr
-        data.p = self.p
+        data.dimension = self.dimension
         data.sampleIDs = []
 
         for i in range(data.N):
             data.sampleIDs.append("sample" + str(i))
 
-        for h in range(data.p):
+        for h in range(data.dimension):
             data.headers.append("X_" + str(h))
 
         data.internalInit(self)
@@ -1272,7 +1272,7 @@ class MixtureModel(ProbDistribution):
 
         l, log_p = self.EStep(data)
 
-        print "seqLen = ", data.p
+        print "seqLen = ", data.dimension
         print "pi = ", self.pi
         max_en = entropy([1.0 / self.G] * self.G)
         for c in range(self.G):
@@ -1810,9 +1810,9 @@ class MixtureModel(ProbDistribution):
                 suff_stat.append([float('-inf'), float('inf')])
                 continue
 
-            np = sub_post[i] + posterior
-            inds = np.where(np != float('-inf'))
-            suff_stat.append(self.components[i][0].sufficientStatistics(np[inds], dat[inds]))
+            np_ = sub_post[i] + posterior
+            inds = np.where(np_ != float('-inf'))
+            suff_stat.append(self.components[i][0].sufficientStatistics(np_[inds], dat[inds]))
 
         return suff_stat
 

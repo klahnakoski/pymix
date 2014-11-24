@@ -1502,13 +1502,6 @@ class ghmm_dmodel():
         self.topo_order_length = len(self.topo_order)
 
 
-    # def ghmm_cmodel_calc_b(state, omega):
-    #     b=0
-    #     for m in range(state.M):
-    #         b += state.c[m] * density_func[state.e[m].type](state.e + m, omega)
-    #     return b
-
-
     def normalize(self):
     # Scales the output and transitions probs of all states in a given model
         pi_sum = 0.0

@@ -145,7 +145,7 @@ class ProbDistribution:
 
         @return: two element list: first element = dimension of self, second element = sufficient statistics for samples 'x'
         """
-        return [self.p, x]
+        return [self.dimension, x]
 
 
     def flatStr(self, offset):

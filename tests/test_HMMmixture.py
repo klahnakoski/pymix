@@ -97,7 +97,7 @@ class HMMTests(FuzzyTestCase):
         data.internalInit(self.m)
 
         self.assertEqual(str(data.complexFeature), '[0, 0, 1]')
-        self.assertEqual(data.p, 5)
+        self.assertEqual(data.dimension, 5)
         self.assertEqual(data.suff_p, 6)
 
 
@@ -123,7 +123,7 @@ class HMMTests(FuzzyTestCase):
         data.internalInit(hm)
 
         self.assertEqual(str(data.complexFeature), '[1]')
-        self.assertEqual(data.p, 1)
+        self.assertEqual(data.dimension, 1)
         self.assertEqual(data.suff_p, 1)
 
 
@@ -247,48 +247,6 @@ class HMMTests(FuzzyTestCase):
 
         hm.EM(data, 80, 0.1, silent=1)
 
-
-        # XXX test with continuous HMMs...
-
-#    def testeq(self):
-#        pass
-#
-#    def testcopy(self):
-#        pass
-#
-#    def testpdf(self):
-#        pass
-#
-#    def testmstep(self):
-#        pass
-#
-#    def testsample(self):
-#        pass
-#
-#    def testsampleset(self):
-#        pass
-#
-#
-#    def testisvalid(self):
-#        pass
-#
-#
-#
-#    def testflatstr(self):
-#        pass
-#
-#    def testposteriortraceback(self):
-#        pass
-#
-#    def testupdatesuffp(self):
-#        pass
-#
-#    def testmerge(self):
-#        pass
-#
-#
-#
-
 # Run ALL tests (comment out to deactivate)
 if __name__ == '__main__':
     unittest.main()
@@ -298,4 +256,4 @@ suiteHMMTests = unittest.makeSuite(HMMTests, 'test')
 
 # Call to individual test suites, uncomment to activate as needed.
 runner = unittest.TextTestRunner(verbosity=2)
-#runner.run(suiteHMMTests)
+

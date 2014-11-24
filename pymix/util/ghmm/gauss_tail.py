@@ -34,7 +34,8 @@
 #*
 #******************************************************************************
 from math import sqrt
-from pymix.util.ghmm.randvar import ighmm_rand_normal_density_trunc, ighmm_rand_get_xstepphi, ighmm_rand_get_xfaktphi, ighmm_rand_get_philen
+from pymix.distributions.normal_right import NormalRight
+from pymix.util.ghmm.randvar import ighmm_rand_get_xstepphi, ighmm_rand_get_xfaktphi, ighmm_rand_get_philen
 from pymix.util.ghmm.wrapper import DBL_MIN
 
 GHMM_EPS_U = 1E-4
@@ -45,11 +46,11 @@ def ighmm_gtail_pmue(mue, A, B, eps):
     u = Btil - mue * Atil
 
     # if u < EPS_U) u = (double:
-    #EPS_U DANGEROUS: would fudge the function valuenot
+    #EPS_U DANGEROUS: would fudge the function value!
     if u <= DBL_MIN:
         return (mue - A)
 
-    feps = ighmm_rand_normal_density_trunc(-eps, mue, u, -eps)
+    feps = NormalRight(mue, u, -eps).linear_pdf(-eps)
     return (A - mue - u * feps)
 
 
@@ -70,7 +71,7 @@ def ighmm_gtail_pmue_interpol(mue, A, B, eps):
 
         # Compute like normally where mue positiv.
     if mue >= 0.0:
-        return A - mue - u * ighmm_rand_normal_density_trunc(-eps, mue, u, -eps)
+        return A - mue - u * NormalRight(mue, u, -eps).linear_pdf(-eps)
 
         # Otherwise: Interpolate the function itself between 2 sampling points.
     z = (eps + mue) / sqrt(u)
@@ -87,8 +88,8 @@ def ighmm_gtail_pmue_interpol(mue, A, B, eps):
     m2 = -z2 * sqrt(Btil + eps * Atil + Atil * Atil * z2 * z2 * 0.25) - (eps + Atil * z2 * z2 * 0.5)
     u1 = Btil - m1 * Atil
     u2 = Btil - m2 * Atil
-    p1 = A - m1 - u1 * ighmm_rand_normal_density_trunc(-eps, m1, u1, -eps)
-    p2 = A - m1 - u1 * ighmm_rand_normal_density_trunc(-eps, m2, u2, -eps)
+    p1 = A - m1 - u1 * NormalRight(m1, u1, -eps).linear_pdf(-eps)
+    p2 = A - m1 - u1 * NormalRight(m2, u2, -eps).linear_pdf(-eps)
     if i1 >= ighmm_rand_get_philen() - 1:
         pz = p1
     else:
@@ -102,7 +103,7 @@ def ighmm_gtail_pmue_interpol(mue, A, B, eps):
 #============================================================================
 def ighmm_gtail_pmue_umin(mue, A, B, eps):
     u = GHMM_EPS_U
-    feps = ighmm_rand_normal_density_trunc(-eps, mue, u, -eps)
+    feps = NormalRight(mue, u, -eps).linear_pdf(-eps)
     return A - mue - u * feps
 
 
