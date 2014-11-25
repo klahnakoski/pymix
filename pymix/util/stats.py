@@ -38,6 +38,7 @@
 ## function sumlogs is borrowed from GQLMixture.py
 import math
 import numpy as np
+import scipy
 from pyLibrary.maths import Math
 from ..util import mixextend
 from .maths import sum_logs
@@ -228,7 +229,7 @@ def random_vector(nr):
     """
 
     alpha = np.array([1.0] * nr)
-    p = mixextend.wrap_gsl_dirichlet_sample(alpha, nr)
+    p = scipy.random.dirichlet(alpha)
     return p.tolist()
 
 

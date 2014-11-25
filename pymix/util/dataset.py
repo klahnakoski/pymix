@@ -518,7 +518,7 @@ class DataSet(object):
 
         @param m: MixtureModel object
         """
-        assert m.dimension == self.dimension, "Invalid dimensions in data and model." + str(m.dimension) + ' ' + str(self.dimension)
+        assert m.dimension == self.dimension, "Invalid dimensions in data and model. " + str(m.dimension) + ' ' + str(self.dimension)
 
         templist = []
         for i in range(len(self.dataMatrix)):

@@ -386,17 +386,6 @@ class SequenceSetTests(FuzzyTestCase):
         l = self.d_seq.getSeqLabel(3)
         self.assertEqual(l, 8)
 
-        #obsolete test
-
-    def testfilereading(self):
-        if not ASCI_SEQ_FILE:
-            return True
-        Log.note("SequenceSetTests.testfilereading")
-        dom = IntegerRange(0, 12)
-        seqs = SequenceSetOpen(dom, 'testdata/d_seq.sqd')
-        seqs = SequenceSetOpen(self.d_alph, 'testdata/test10.sqd')
-        seqs = SequenceSetOpen(Float(), 'testdata/tiny.txt.sqd')
-
 
 class HMMBaseClassTests(FuzzyTestCase):
     def setUp(self):

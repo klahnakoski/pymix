@@ -37,6 +37,7 @@
 
 import copy
 import numpy as np
+import scipy
 from ..distributions.discrete import DiscreteDistribution
 from ..distributions.multinomial import MultinomialDistribution
 from ..util import mixextend
@@ -88,7 +89,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
         """
         Samples from Dirichlet distribution
         """
-        phi = mixextend.wrap_gsl_dirichlet_sample(self.alpha, self.M)
+        phi = scipy.random.dirichlet(self.alpha, self.M)
 
         d = DiscreteDistribution(self.M, phi)
         return d

@@ -1,11 +1,8 @@
-from pymix import mixture
-import numpy as np
 import random
 from pymix.distributions.conditional_gauss import ConditionalGaussDistribution
 from pymix.distributions.dependence_tree import DependenceTreeDistribution
 from pymix.distributions.product import ProductDistribution
 from pymix.models.mixture import MixtureModel
-from pymix.util.dataset import DataSet
 
 
 def testdtree():
@@ -52,34 +49,6 @@ def testdtree():
     train.EM(data, 100, 0.01, silent=1)
 
 
-def testLymphData():
-    k = 5
-    d = 11
-
-    aux = [0] * d
-
-    models = []
-
-    for i in range(k):
-        aux1 = [0] * d
-        aux2 = [0] * d
-        aux3 = [0] * d
-        models.append(ProductDistribution([DependenceTreeDistribution(d, aux1, aux2, aux3)]))
-
-    pi = [1.0] * k
-    pi = np.array(pi) / k
-
-    train = MixtureModel(k, pi, models)
-
-    data = DataSet()
-    data.fromFiles(['data/ltree2_2fold.txt'], )
-
-    train.modelInitialization(data)
-
-    train.EM(data, 100, 0.01, silent=1)
-
 
 testdtree()
 
-
-#testLymphData()

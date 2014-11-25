@@ -80,17 +80,17 @@ class LinearGaussianDistribution(ProbDistribution):
         self.alpha = alpha
 
     def __copy__(self):
-        return LinearGaussianDistribution(self.dimension, self.beta, self.variance. alpha=self.alpha)
+        return LinearGaussianDistribution(self.dimension, self.beta, self.variance, alpha=self.alpha)
 
     def __str__(self):
-        return "LinearGaussian:  [" + str(self.beta) + ", " + str(self.variance. + "]"
+        return "LinearGaussian:  [" + str(self.beta) + ", " + str(self.variance) + "]"
 
     def __eq__(self, other):
         if not isinstance(other, LinearGaussianDistribution):
             return False
         if self.dimension != other.dimension:
             return False
-        if not np.allclose(self.beta, other.beta) or not np.allclose(self.variance. other.variance.:
+        if not np.allclose(self.beta, other.beta) or not np.allclose(self.variance, other.variance):
             return False
         return True
 
@@ -111,7 +111,7 @@ class LinearGaussianDistribution(ProbDistribution):
         ## Calculating the expoent (y - x*beta)^2 / (sigma)^2
         #exp = np.divide(np.power(np.subtract(y, np.dot(x, self.beta)),2), self.variance.0] ** 2)
         ## Calculating the factor 1/sqrt(2*pi)*sigma)
-        #fat = 1 / (((2 * np.pi)**2) * self.variance.0])
+        #fat = 1 / (((2 * np.pi)**2) * self.variance[0])
         ## Probability result
         #res = np.log(fat) - exp
 
@@ -119,7 +119,7 @@ class LinearGaussianDistribution(ProbDistribution):
         # computing log likelihood
 
 
-        res = scipy.stats.norm.pdf(y - xbt, 0, self.variance.0])
+        res = scipy.stats.norm.pdf(y - xbt, 0, self.variance[0])
         if self.noise > 0:
             print self.noise
             res = (1 - self.noise) * res + self.noise * scipy.stats.norm.pdf(y, 0, 5)
@@ -166,7 +166,7 @@ class LinearGaussianDistribution(ProbDistribution):
         sigma_numerator = np.dot(np.multiply(y_x_betat, posterior), y_x_betat)
         sigma_denominator = posterior.sum()
 
-        self.variance.0] = max(0.0001, np.sqrt(sigma_numerator / sigma_denominator))
+        self.variance[0] = max(0.0001, np.sqrt(sigma_numerator / sigma_denominator))
         self.currentPosterior = posterior
 
     def predict(self, data, posterior=[]):
@@ -203,7 +203,7 @@ class LinearGaussianDistribution(ProbDistribution):
             res = res + self.beta[i] * s[i]
 
         # y sample
-        s[0] = random.normalvariate(res, self.variance.0])
+        s[0] = random.normalvariate(res, self.variance[0])
 
         return s
 

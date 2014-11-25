@@ -1,6 +1,7 @@
 from random import *
 from pymix.distributions.multinomial import MultinomialDistribution
 from pymix.models.mixture import MixtureModel
+from pymix.util.dataset import DataSet
 
 dList = []
 piList = [random(), random(), random(), random(), random(), random(), random(), random(), random(), random()]
@@ -20,7 +21,7 @@ for i in range(10):
 
 mix = MixtureModel(10, piList, dList)
 
-s = mix.sample()
+s = DataSet().fromList(mix.sample())
 
 dList2 = []
 piList2 = [random(), random(), random(), random(), random(), random(), random(), random(), random(), random()]
