@@ -166,6 +166,9 @@ class MultiNormalDistribution(ProbDistribution):
         the sampling
         """
 
+        if self.sigmacd == None:
+            self.sigmacd = la.cholesky(self.variance)
+
         if not native:
             # multivariate random numbers without gsl
             x=[0]*self.dimension
@@ -174,16 +177,13 @@ class MultiNormalDistribution(ProbDistribution):
                 for j in range(self.dimension):
                     if i == 0:
                         x[j] = self.mean[j]
-                    x[j] += randuni * self.variance[j][i]
+                    x[j] += randuni * self.sigmacd[j][i]
             return x
-
-        if A == None:
-            A = la.cholesky(self.variance)
 
         z = np.zeros(self.dimension, dtype='Float64')
         for i in range(self.dimension):
             z[i] = random.normalvariate(0.0, 1.0)  # sample p iid N(0,1) RVs
-        X = np.dot(A, z) + self.mean
+        X = np.dot(self.sigmacd, z) + self.mean
         return X.tolist()  # return value of sample must be Python list
 
     def sampleSet(self, nr, native=False):
