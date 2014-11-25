@@ -131,7 +131,10 @@ class ProductDistribution(ProbDistribution):
     def sample(self, native=False):
         ls = []
         for i in range(len(self.distList)):
-            s = self.distList[i].sample(native=native)
+            try:
+                s = self.distList[i].sample(native=native)
+            except Exception, e:
+                raise e
             if type(s) != list:
                 ls.append(s)
             else:

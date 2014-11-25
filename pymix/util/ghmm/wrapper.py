@@ -8,8 +8,7 @@
 # Changes made by: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 ################################################################################
-from copy import deepcopy
-from math import exp, sqrt
+from math import exp
 from pyLibrary.maths import Math
 from pymix.util.logs import Log
 
@@ -324,34 +323,6 @@ def set_to_boolean_or(pccc, seq_index, offset_x, offset_y):
     pccc.get_class = boolean_or
 
 
-class ghmm_alphabet:
-    def __init__(self, length, description):
-        self.id = 0
-        self.description = description
-        self.size = length
-        self.symbols = [None] * length
-
-
-    def setSymbol(self, index, value):
-        self.symbols[index] = str(value)
-
-    def getSymbol(self, index):
-        return self.symbols[index]
-
-    # class ghmm_dpmodel_class_change_context:
-#
-# def __init(self):
-# # Names of class change module/function (for python callback)
-# python_module=""
-# python_function=""
-#
-# # pointer to class function called with seq X, Y and resp indices
-# # in the void you can pass the user data
-# int (*get_class)(struct ghmm_dpmodel*, ghmm_dpseq*, ghmm_dpseq*, int, int,void*)
-#
-# # space for any data necessary for class switch, USER is RESPONSIBLE
-# void* user_data
-#
 
 class threshold_user_data():
     def __init__(self):

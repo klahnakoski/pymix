@@ -106,10 +106,7 @@ class Alphabet(EmissionDomain):
         """
         self.index = {}  # Which index belongs to which character
 
-        if isinstance(listOfCharacters, wrapper.ghmm_alphabet):
-            self.listOfCharacters = [listOfCharacters.getSymbol(i) for i in range(listOfCharacters.size)]
-        else:
-            self.listOfCharacters = copy.deepcopy(listOfCharacters)
+        self.listOfCharacters = copy.deepcopy(listOfCharacters)
 
         for i, c in enumerate(self.listOfCharacters):
             self.index[c] = i
@@ -203,13 +200,6 @@ class Alphabet(EmissionDomain):
         """ Check whether emission is admissable (contained in) the domain
         """
         return emission in self.listOfCharacters
-
-    def toCstruct(self):
-        calphabet = wrapper.ghmm_alphabet(len(self), "<unused>")
-        for i, symbol in enumerate(self.listOfCharacters):
-            calphabet.setSymbol(i, str(symbol))
-
-        return calphabet
 
 
 DNA = Alphabet(['a', 'c', 'g', 't'])

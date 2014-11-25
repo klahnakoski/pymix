@@ -96,6 +96,15 @@ class UniformDistribution(ProbDistribution):
             return self.density
         return 0
 
+    def cdf(self, x):
+        if x < self.start:
+            return 0.0
+
+        if x >= self.end:
+            return 1.0
+
+        return (x - self.start) / (self.end - self.start)
+
     def MStep(self, posterior, data, mix_pi=None):
         # nothing to be done...
         pass

@@ -49,7 +49,7 @@ class SequenceSet(object):
         if isinstance(sequenceSetInput, str) or isinstance(sequenceSetInput, unicode):
             if sequenceSetInput[-3:] == ".fa" or sequenceSetInput[-6:] == ".fasta":
                 # assuming FastA file:
-                alfa = emissionDomain.toCstruct()
+                alfa = emissionDomain
                 cseq = sequence(sequenceSetInput, alfa)
                 if cseq is None:
                     Log.error("invalid FastA file: " + sequenceSetInput)

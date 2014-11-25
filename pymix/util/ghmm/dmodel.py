@@ -120,9 +120,9 @@ class ghmm_dmodel():
         else:
             self.label = None
 
-        self.label_alphabet = None #ghmm_alphabet*
+        self.label_alphabet = None
 
-        self.alphabet = None #ghmm_alphabet*
+        self.alphabet = None
 
 
     def getStateName(self, index):

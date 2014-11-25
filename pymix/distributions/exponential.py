@@ -98,7 +98,7 @@ class ExponentialDistribution(ProbDistribution):
         return Math.log(self.lambd) + (-self.lambd * x)  # XXX pure Python implementation for now
 
 
-    def sample(self):
+    def sample(self, native=False):
         return random.expovariate(self.lambd)
 
     def MStep(self, posterior, data, mix_pi=None):

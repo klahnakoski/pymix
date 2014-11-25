@@ -41,7 +41,6 @@ from .prob import ProbDistribution
 from pyLibrary.maths import Math
 from pymix.distributions.normal import NormalDistribution
 from pymix.util.errors import InvalidDistributionInput
-from pymix.util.ghmm import randvar
 
 
 class ConditionalGaussDistribution(ProbDistribution):
@@ -79,7 +78,7 @@ class ConditionalGaussDistribution(ProbDistribution):
         return 'ConditionalGaussian: \nmu=' + str(self.mean) + ', \nsigma=' + str(self.variance) + ', \nw=' + str(self.w) + ', \nparents=' + str(self.parents)
 
 
-    def sample(self):
+    def sample(self, native=False):
         s = [None] * self.dimension
         s[0] = NormalDistribution(self.mean[0], self.variance[0]).sample()
 

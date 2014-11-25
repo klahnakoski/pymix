@@ -130,11 +130,6 @@ class AlphabetTests(FuzzyTestCase):
         self.assertEqual(self.dnaAlphabet == self.dna2, True)
         self.assertEqual(self.dnaAlphabet == self.binaryAlphabet, False)
 
-    def testToCStruct(self):
-        self.c = self.dnaAlphabet.toCstruct()
-        self.dna3 = Alphabet(self.c)
-        self.assertEqual(self.dna3 == self.dnaAlphabet, True)
-
     def testlen(self):
         Log.note("AlphabetTests.testlen()")
 

@@ -1801,7 +1801,7 @@ class DiscreteEmissionHMM(HMM):
         Writes HMM to file 'fileName'.
         """
         if self.cmodel.alphabet is None:
-            self.cmodel.alphabet = self.emissionDomain.toCstruct()
+            self.cmodel.alphabet = self.emissionDomain
 
         self.cmodel.write_xml(fileName)
 
@@ -2170,10 +2170,10 @@ class StateLabelHMM(DiscreteEmissionHMM):
 
         """
         if self.cmodel.alphabet is None:
-            self.cmodel.alphabet = self.emissionDomain.toCstruct()
+            self.cmodel.alphabet = self.emissionDomain
 
         if self.cmodel.label_alphabet is None:
-            self.cmodel.label_alphabet = self.labelDomain.toCstruct()
+            self.cmodel.label_alphabet = self.labelDomain
 
         self.cmodel.write_xml(fileName)
 

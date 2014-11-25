@@ -71,8 +71,6 @@ class ghmm_cmodel:
         if Tmax <= 0:
             Tmax = GHMM_MAX_SEQ_LEN
 
-
-        # rng is also used by ighmm_rand_std_normal
         # seed == -1: Initialization, has already been done outside the function
         if seed >= 0:
             if seed > 0:
