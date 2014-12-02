@@ -360,10 +360,10 @@ def scanSequence(mix, bg, seq,scoring='mix'):
     f = lambda x: alph.internal(x)
     seq=map(f,seq)
 
-    dnr = mix.components[0].dist_nr
+    dnr = len(mix.components[0])
 
     # init with dummy value at first position
-    s = nump.array([[-1]+ seq[0:dnr-1]])
+    s = numpy.array([[-1]+ seq[0:dnr-1]])
 
 
     score = []

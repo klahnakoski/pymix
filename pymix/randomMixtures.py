@@ -56,7 +56,7 @@ from pymix.util.stats import sym_kl_dist, get_loglikelihood, random_vector
 
 from examples import fullEnumerationExhaustive
 from pymix import mixture
-from examples.crp import NormalGammaPrior
+from pymix.priors import NormalGammaPrior
 
 
 def updateHyperparameters(model, data, delta):
@@ -74,7 +74,7 @@ def product_distribution_sym_kl_dist(p1, p2):
     the component-wise KL distances
     """
     d = 0.0
-    for j in range(p1.dist_nr):
+    for j in range(len(p1)):
         d += sym_kl_dist(p1[j], p2[j])
     return d
 
@@ -559,7 +559,7 @@ def getRandomCSIMixture_conditionalDists(G, p, KL_lower, KL_upper, M=8, dtypes='
 def printModel(m, title):
     print '\n' + title + ':'
     print 'pi:', ['%.3f' % m.pi[i] for i in range(m.G)]
-    for jj in range(m.dist_nr):
+    for jj in range(len(m.components[0])):
         print 'Feature', jj, ':'
         for ll in m.leaders[jj]:
             if isinstance(m.components[ll][jj], DiscreteDistribution):
@@ -572,7 +572,7 @@ def printModel(m, title):
 
 def printStructure(m):
     s = []
-    for j in range(m.dist_nr):
+    for j in range(len(m.groups)):
         s.append([])
         for l in m.leaders[j]:
             s[j].append((l,) + tuple(m.groups[j][l]))
@@ -660,14 +660,14 @@ def matchModelStructures(gen, m):
     #print '**** matchModelStructures'
 
     gen_csi = []
-    for j in range(gen.dist_nr):
+    for j in range(len(gen.groups)):
         gen_csi.append({})
         for l in gen.leaders[j]:
             gen_csi[j][tuple([l] + gen.groups[j][l])] = []
 
     #print gen_csi
 
-    for j in range(gen.dist_nr):
+    for j in range(len(m.components[0])):
         #print 'feature:',j
         for i1 in range(m.G):
             kldists = np.zeros(m.G)
@@ -681,7 +681,7 @@ def matchModelStructures(gen, m):
     #print gen_csi
     # check easy case: all components match in gen and m
     match = 1
-    for j in range(gen.dist_nr):
+    for j in range(len(gen_csi)):
         for cg in gen_csi[j]:
             if cg != tuple(gen_csi[j][cg]):
                 match = 0
@@ -691,7 +691,7 @@ def matchModelStructures(gen, m):
 
     # check whether component indices have changed but the structures are consistent otherwise
     cmaps = []
-    for j in range(gen.dist_nr):
+    for j in range(len(gen.components[0])):
         cmaps.append({})
         for i1 in range(m.G):
             kldists = np.zeros(m.G)
@@ -714,7 +714,7 @@ def matchModelStructures(gen, m):
     for i in range(m.G):
         m_to_gen[i] = -1
 
-    for j in range(gen.dist_nr):
+    for j in range(len(cmaps)):
         for i in cmaps[j]:
             if len(cmaps[j][i]) == 1:
                 if m_to_gen[i] == -1:
@@ -736,7 +736,7 @@ def matchModelStructures(gen, m):
 
     for k in m_to_gen:
         if m_to_gen[k] == -1:  # no assignment so far
-            for j in range(gen.dist_nr):
+            for j in range(len(cmaps)):
                 #print gen_compred
                 #print k, cmaps[j][k].tolist(),gen_compred[0]
                 if not cmaps[j][k].tolist() == gen_compred[0]:
@@ -801,7 +801,7 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 
 
     # XXX update NormalGammaPrior hyperparameters
-    for j in range(gen.dist_nr):
+    for j in range(len(gen.prior.compPrior)):
         if isinstance(gen.prior.compPrior[j], NormalGammaPrior):
             gen.prior.compPrior[j].setParams(data.getInternalFeature(j), gen.G)
 
@@ -850,7 +850,7 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
     if silent == False:
         cmap = {}
 
-        for j in range(gen.dist_nr):
+        for j in range(len(m.components[0])):
             print '\nfeature:', j
 
             for i1 in range(m.G):
@@ -1088,7 +1088,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
 
     # XXX update NormalGammaPrior hyperparameters
-    for j in range(gen.dist_nr):
+    for j in range(len(gen.prior.compPrior)):
         if isinstance(gen.prior.compPrior[j], NormalGammaPrior):
             gen.prior.compPrior[j].setParams(data.getInternalFeature(j), gen.G)
 
@@ -1271,7 +1271,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
         print '\nGenerating distances to self:'
         cmap = {}
-        for j in range(gen.dist_nr):
+        for j in range(len(gen.components[0])):
             print 'feature:', j
             for i1 in range(m.G):
                 kldists = np.zeros(m.G)
@@ -1281,7 +1281,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
         print '\nTrained distances to self:'
         cmap = {}
-        for j in range(gen.dist_nr):
+        for j in range(len(gen.components[0])):
             print 'feature:', j
             for i1 in range(m.G):
                 kldists = np.zeros(m.G)
@@ -1291,7 +1291,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
         print '\nTrained distances to generating:'
         cmap = {}
-        for j in range(gen.dist_nr):
+        for j in range(len(gen.components[0])):
             print 'feature:', j
             for i1 in range(m.G):
                 kldists = np.zeros(m.G)
@@ -1342,7 +1342,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
         print '\nGenerating distances to self:'
         cmap = {}
-        for j in range(gen.dist_nr):
+        for j in range(len(gen.components[0])):
             print 'feature:', j
             for i1 in range(m.G):
                 kldists = np.zeros(m.G)
@@ -1352,7 +1352,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
         print '\nTrained distances to self:'
         cmap = {}
-        for j in range(gen.dist_nr):
+        for j in range(len(gen.components[0])):
             print 'feature:', j
             for i1 in range(m.G):
                 kldists = np.zeros(m.G)
@@ -1362,7 +1362,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
         print '\nTrained distances to generating:'
         cmap = {}
-        for j in range(gen.dist_nr):
+        for j in range(len(gen.components[0])):
             print 'feature:', j
 
             for i1 in range(m.G):
@@ -1481,7 +1481,7 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
 
         m = copy.copy(gen)
         # XXX update NormalGammaPrior hyperparameters
-        for j in range(m.dist_nr):
+        for j in range(len(m.prior.compPrior)):
             if isinstance(m.prior.compPrior[j], NormalGammaPrior):
                 m.prior.compPrior[j].setParams(data.getInternalFeature(j), m.G)
                 #m.prior.compPrior[j].scale = m.prior.compPrior[j].scale * 100 # XXX TEST

@@ -180,7 +180,7 @@ class ConstrainedMixtureModel(MixtureModel):
                 # components are product distributions that may contain mixtures
                 if isinstance(self.components[i], ProductDistribution):
                     last_index = 0
-                    for j in range(self.components[i].dist_nr):
+                    for j in range(len(self.components[i].distList)):
                         if isinstance(self.components[i].distList[j], MixtureModel):
                             dat_j = data.singleFeatureSubset(j)
                             self.components[i].distList[j].modelInitialization(dat_j, rtype=rtype)

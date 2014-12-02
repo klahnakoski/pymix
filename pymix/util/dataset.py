@@ -531,7 +531,7 @@ class DataSet(object):
 
         self.internalData = np.array(templist, dtype='Float64')
 
-        if m.dist_nr > 1:
+        if len(m.components[0]) > 1:
             self.suff_dataRange = copy.copy(m.components[0].suff_dataRange)
         else:
             self.suff_dataRange = [m.suff_p]
@@ -539,7 +539,7 @@ class DataSet(object):
         self.suff_p = m.components[0].suff_p
 
         self._internalData_views = []
-        for i in range(m.components[0].dist_nr):
+        for i in range(len(m.components[0])):
             self.suff_p_list.append(m.components[0][i].suff_p)  # XXX suff_p_list should go away, only need in singleFeatureSubset
             if i == 0:
                 prev_index = 0

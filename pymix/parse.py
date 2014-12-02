@@ -172,7 +172,7 @@ def parseMix(fileHandle, mtype, G, pi, compFix, leaders=None, groups=None):
         m.initStructure()
         m.leaders = leaders
         m.groups = groups
-        for i in range(m.dist_nr):
+        for i in range(len(m.components[0])):
             for lead in m.leaders[i]:
                 for g in m.groups[i][lead]:
                     if not m.components[lead][i] == m.components[g][i]:

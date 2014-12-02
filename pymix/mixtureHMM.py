@@ -135,7 +135,7 @@ class SequenceDataSet(ConstrainedDataSet):
 
             if self.dimension == 1:
                 if isinstance(m.components[0], ProductDistribution):
-                    assert m.components[0].dist_nr == 1
+                    assert len(m.components[0].distList) == 1
                     assert isinstance(m.components[0].distList[0], HMM)
                 else:
                     assert isinstance(m.components[0], HMM)
@@ -145,7 +145,7 @@ class SequenceDataSet(ConstrainedDataSet):
 
             else:
                 ind = 0
-                for i in range(m.components[0].dist_nr):
+                for i in range(len(m.components[0].distList)):
                     if isinstance(m.components[0].distList[i], HMM):
                         self.complexFeature.append(1)
                         self.complexDataIndexMap[i] = ind
@@ -166,7 +166,7 @@ class SequenceDataSet(ConstrainedDataSet):
 
         self.internalData = sequence
 
-        if m.dist_nr > 1:
+        if len(m.components[0].distList) > 1:
             self.suff_dataRange = copy.copy(m.components[0].suff_dataRange)
         else:
             self.suff_dataRange = [m.suff_p]
@@ -276,7 +276,6 @@ class HMM(ProbDistribution):
                 raise TypeError, "Unknown EmissionDomain " + str(self.hmm.emissionDomain.__class__)
 
         self.suff_p = 1  # since we save the whole sequence set under on index suff_p is 1
-        self.dist_nr = 1
         self.iterations = iterations
 
 

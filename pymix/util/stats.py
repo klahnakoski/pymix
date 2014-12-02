@@ -72,7 +72,7 @@ def kl_dist(d1, d2):
             en += d1.phi[i] * np.log(d1.phi[i] / d2.phi[i])
         return en
     elif isinstance(d1, ProductDistribution) and isinstance(d2, ProductDistribution):
-        assert d1.dist_nr == d2.dist_nr == 1
+        assert len(d1.distList) == len(d2.distList) == 1
         return kl_dist(d1[0], d2[0])
 
     else:

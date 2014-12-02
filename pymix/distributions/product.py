@@ -60,7 +60,6 @@ class ProductDistribution(ProbDistribution):
         self.dimension = 0
         self.freeParams = 0
         self.dataRange = []
-        self.dist_nr = len(distList)
 
         # dimension and dataRange for sufficient statistics data
         self.suff_p = 0
@@ -76,9 +75,9 @@ class ProductDistribution(ProbDistribution):
         self.update_suff_p()
 
     def __eq__(self, other):
-        if other.dimension != self.dimension or other.dist_nr != self.dist_nr:
+        if other.dimension != self.dimension or len(other.distList) != len(self.distList):
             return False
-        for i in range(self.dist_nr):
+        for i in range(len(self.distList)):
             if not (other.distList[i] == self.distList[i]):
                 return False
         return True
@@ -100,26 +99,26 @@ class ProductDistribution(ProbDistribution):
         return outstr
 
     def __getitem__(self, ind):
-        if ind < 0 or ind > self.dist_nr - 1:
+        if ind < 0 or ind > len(self.distList) - 1:
             raise IndexError
         else:
             return self.distList[ind]
 
     def __setitem__(self, ind, value):
-        if ind < 0 or ind > self.dist_nr - 1:
+        if ind < 0 or ind > len(self.distList) - 1:
             raise IndexError
         else:
             self.distList[ind] = value
 
     def __len__(self):
-        return self.dist_nr
+        return len(self.distList)
 
     def pdf(self, data):
         from ..models.mixture import MixtureModel
         assert self.suff_dataRange and self.suff_p, "Attributes for sufficient statistics not initialized."
         if isinstance(data, DataSet):
             res = np.zeros(data.N, dtype='Float64')
-            for i in range(self.dist_nr):
+            for i in range(len(self.distList)):
                 if isinstance(self.distList[i], MixtureModel): # XXX only necessary for mixtures of mixtures
                     res += self.distList[i].pdf(data.singleFeatureSubset(i))
                 else:
@@ -179,7 +178,7 @@ class ProductDistribution(ProbDistribution):
         assert self.suff_dataRange and self.suff_p, "Attributes for sufficient statistics not initialized."
         assert isinstance(data, DataSet), 'DataSet required, got ' + str(type(data)) + '.'
 
-        for i in range(self.dist_nr):
+        for i in range(len(self.distList)):
             if isinstance(self.distList[i], MixtureModel):
                 self.distList[i].MStep(posterior, data.singleFeatureSubset(i), mix_pi)
             else:
@@ -198,7 +197,7 @@ class ProductDistribution(ProbDistribution):
                 if strg.endswith('mixtureHMM.HMM'):
                     continue
 
-            if self.dist_nr == 1:
+            if len(self.distList) == 1:
                 [new_p, dat] = self.distList[i].formatData(x)
                 res += dat
             else:
