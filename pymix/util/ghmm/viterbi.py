@@ -1,38 +1,38 @@
-#******************************************************************************
-#*
-#*       This file is part of the General Hidden Markov Model Library,
-#*       GHMM version __VERSION__, see http:# ghmm.org
-#*
-#*       Filename: ghmm/ghmm/viterbi.c
-#*       Authors:  Wasinee Rungsarityotin, Benjamin Georgi
-#*
-#*       Copyright (C) 1998-2004 Alexander Schliep
-#*       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
-#*       Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
-#*                               Berlin
-#*
-#*       Contact: schliep@ghmm.org
-#*
-#*       This library is free software you can redistribute it and/or
-#*       modify it under the terms of the GNU Library General Public
-#*       License as published by the Free Software Foundation either
-#*       version 2 of the License, or (at your option) any later version.
-#*
-#*       This library is distributed in the hope that it will be useful,
-#*       but WITHOUT ANY WARRANTY without even the implied warranty of
-#*       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#*       Library General Public License for more details.
-#*
-#*       You should have received a copy of the GNU Library General Public
-#*       License along with this library if not, write to the Free
-#*       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#*
-#*
-#*       This file is version $Revision: 1991 $
-#*                       from $Date: 2007-12-05 11:39:04 -0500 (Wed, 05 Dec 2007) $
-#*             last change by $Author: grunau $.
-#*
-#******************************************************************************
+# *****************************************************************************
+#
+#        This file is part of the General Hidden Markov Model Library,
+#        GHMM version __VERSION__, see http:# ghmm.org
+#
+#        Filename: ghmm/ghmm/viterbi.c
+#        Authors:  Wasinee Rungsarityotin, Benjamin Georgi
+#
+#        Copyright (C) 1998-2004 Alexander Schliep
+#        Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
+#        Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
+#                                Berlin
+#
+#        Contact: schliep@ghmm.org
+#
+#        This library is free software you can redistribute it and/or
+#        modify it under the terms of the GNU Library General Public
+#        License as published by the Free Software Foundation either
+#        version 2 of the License, or (at your option) any later version.
+#
+#        This library is distributed in the hope that it will be useful,
+#        but WITHOUT ANY WARRANTY without even the implied warranty of
+#        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#        Library General Public License for more details.
+#
+#        You should have received a copy of the GNU Library General Public
+#        License along with this library if not, write to the Free
+#        Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#
+#        This file is version $Revision: 1991 $
+#                        from $Date: 2007-12-05 11:39:04 -0500 (Wed, 05 Dec 2007) $
+#              last change by $Author: grunau $.
+#
+# *****************************************************************************
 from pyLibrary.maths import Math
 from pymix.util.ghmm.types import kSilentStates
 from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_dmatrix_stat_alloc, ighmm_cmatrix_alloc, DBL_MAX
@@ -102,7 +102,7 @@ def viterbi_silent(mo, t, v):
                 v.path_len[St] = v.path_len[max_id] + 1
 
 
-#* Return the viterbi path of the sequence.
+#  Return the viterbi path of the sequence.
 def ghmm_dmodel_viterbi(mo, o, len):
     # for silent states: initializing path length with a multiple
     #       of the sequence length

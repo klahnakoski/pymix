@@ -4,20 +4,20 @@ from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ARRAY_MALLOC
 class dbackground:
 
     def __init__(self, n, m, orders, B):
-        #* string ids of the background distributions
+        #  string ids of the background distributions
         self.name = ARRAY_CALLOC(n)
         for i in range(n):
             self.name[i] = None
 
-        #* Number of distributions
+        #  Number of distributions
         self.n = n
-        #* Number of symbols in alphabet
+        #  Number of symbols in alphabet
         self.m = m
-        #* Order of the respective distribution
+        #  Order of the respective distribution
         if orders:
             self.order = orders
 
-        #* The probabilities
+        #  The probabilities
         if B:
             self.b = B
 

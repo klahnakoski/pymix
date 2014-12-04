@@ -33,6 +33,7 @@ def add_matrix(a, b):
     result = np.add(a, b)
     return result
 
+
 def get_log_normal_inverse_gamma_prior_density(mu_p, kappa, dof, scale, cmu, csigma):
     output = [0] * len(cmu)
     for i in range(len(cmu)):

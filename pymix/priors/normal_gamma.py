@@ -92,7 +92,6 @@ class NormalGammaPrior(PriorDistribution):
 
 
     def pdf(self, n):
-
         if isinstance(n, NormalDistribution):
             res = mixextend.get_log_normal_inverse_gamma_prior_density(self.mu_p, self.kappa, self.dof, self.scale, [n.mean], [n.variance])[0]
             return res

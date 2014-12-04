@@ -38,23 +38,21 @@ m.evalStructure(data.headers)
 
 print m.groups
 
-plot = numarray.zeros(( m.G,m.dist_nr ) )
-for i in range(m.dist_nr):
+plot = numarray.zeros((m.G, len(m.leaders)))
+for i in range(len(m.leaders)):
     # check for noise variables
     if len(m.leaders[i]) == 1:
         l = m.leaders[i][0]
         for g in range(m.G):
-           plot[g,i] = 1
-
+           plot[g, i] = 1
     else:
         for l in m.leaders[i]:
-
             if len(m.groups[i][l]) == 0:
-                plot[l,i] = 2
+                plot[l, i] = 2
             else:
-               plot[l,i] = l+3
-               for g in m.groups[i][l]:
-                  plot[g,i] = l+3
+                plot[l, i] = l + 3
+                for g in m.groups[i][l]:
+                    plot[g, i] = l + 3
 print
 for j in range(m.dist_nr):
     t = {}

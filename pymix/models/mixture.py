@@ -36,13 +36,12 @@
 ################################################################################
 
 import copy
-import math
 import random
 import sys
 
 import numpy as np
-from pyLibrary.maths import Math
 
+from pyLibrary.maths import Math
 from ..util import mixextend
 from ..distributions.prob import ProbDistribution
 from ..distributions.product import ProductDistribution
@@ -51,7 +50,6 @@ from ..util.dataset import DataSet
 from ..util.maths import sum_logs, dict_intersection
 from ..util.stats import entropy, sym_kl_dist, get_posterior
 from pyLibrary.collections import array
-from pyLibrary.collections.matrix import Matrix
 
 
 class MixtureModel(ProbDistribution):

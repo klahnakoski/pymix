@@ -1,66 +1,66 @@
-#******************************************************************************
-#*
-#*       This file is part of the General Hidden Markov Model Library,
-#*       GHMM version __VERSION__, see http:# ghmm.org
-#*
-#*       Filename: ghmm/ghmm/kbest.c
-#*       Authors:  Anyess von Bock, Alexander Riemer, Janne Grunau
-#*
-#*       Copyright (C) 1998-2004 Alexander Schliep
-#*       Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
-#*       Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
-#*                               Berlin
-#*
-#*       Contact: schliep@ghmm.org
-#*
-#*       This library is free software you can redistribute it and/or
-#*       modify it under the terms of the GNU Library General Public
-#*       License as published by the Free Software Foundation either
-#*       version 2 of the License, or (at your option) any later version.
-#*
-#*       This library is distributed in the hope that it will be useful,
-#*       but WITHOUT ANY WARRANTY without even the implied warranty of
-#*       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-#*       Library General Public License for more details.
-#*
-#*       You should have received a copy of the GNU Library General Public
-#*       License along with this library if not, write to the Free
-#*       Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#*
-#*
-#*       This file is version $Revision: 2264 $
-#*                       from $Date: 2009-04-22 11:13:40 -0400 (Wed, 22 Apr 2009) $
-#*             last change by $Author: grunau $.
-#*
-#******************************************************************************
+# *****************************************************************************
+#
+#        This file is part of the General Hidden Markov Model Library,
+#        GHMM version __VERSION__, see http:# ghmm.org
+#
+#        Filename: ghmm/ghmm/kbest.c
+#        Authors:  Anyess von Bock, Alexander Riemer, Janne Grunau
+#
+#        Copyright (C) 1998-2004 Alexander Schliep
+#        Copyright (C) 1998-2001 ZAIK/ZPR, Universitaet zu Koeln
+#        Copyright (C) 2002-2004 Max-Planck-Institut fuer Molekulare Genetik,
+#                                Berlin
+#
+#        Contact: schliep@ghmm.org
+#
+#        This library is free software you can redistribute it and/or
+#        modify it under the terms of the GNU Library General Public
+#        License as published by the Free Software Foundation either
+#        version 2 of the License, or (at your option) any later version.
+#
+#        This library is distributed in the hope that it will be useful,
+#        but WITHOUT ANY WARRANTY without even the implied warranty of
+#        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#        Library General Public License for more details.
+#
+#        You should have received a copy of the GNU Library General Public
+#        License along with this library if not, write to the Free
+#        Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+#
+#        This file is version $Revision: 2264 $
+#                        from $Date: 2009-04-22 11:13:40 -0400 (Wed, 22 Apr 2009) $
+#              last change by $Author: grunau $.
+#
+# *****************************************************************************
 from math import exp
 from pyLibrary.maths import Math
 from pymix.util.ghmm.wrapper import ARRAY_MALLOC, ARRAY_CALLOC, ARRAY_REALLOC, ighmm_cvector_log_sum
 from pymix.util.logs import Log
 
 KBEST_THRESHOLD = -3.50655789732
-#* Math.log(0.03) => threshold: 3% of most probable partial hypothesis
+#  Math.log(0.03) => threshold: 3% of most probable partial hypothesis
 KBEST_EPS = 1E-15
 
 
 #============================================================================
 
-#* Data type for single linked list of hypotheses.
+#  Data type for single linked list of hypotheses.
 #
 class hypo_List:
     def __init__(self):
-        self.hyp_c = None                #*< hypothesis
-        self.refcount = 0             #*< counter of the links to this hypothesis
+        self.hyp_c = None                # < hypothesis
+        self.refcount = 0             # < counter of the links to this hypothesis
         self.chosen = None
         self.gamma_states = None
         self.gamma_a = None
         self.gamma_id = None
-        self.next = None  #*< next list element
-        self.parent = None #*< parent hypothesis
+        self.next = None  # < next list element
+        self.parent = None # < parent hypothesis
 
 
 #============================================================================
-#*
+#
 #  Builds logarithmic transition matrix from the states' in_a values
 #  the row for each state is the logarithmic version of the state's in_a
 #  @return transition matrix with logarithmic values, 1.0 if a[i,j] = 0
@@ -401,7 +401,7 @@ def ighmm_hlist_prop_forward(mo, h, hplus, labels, nr_s, max_out):
 
 
 #============================================================================
-#*
+#
 #   Calculates the logarithm of sum(exp(log_a[j,a_pos])+exp(log_gamma[j,g_pos]))
 #   which corresponds to the logarithm of the sum of a[j,a_pos]*gamma[j,g_pos]
 #   @return ighmm_log_sum for products of a row from gamma and a row from matrix A

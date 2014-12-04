@@ -467,7 +467,7 @@ def ighmm_cvector_normalize(v, start, len):
 
 
 class ghmm_cmodel_baum_welch_context():
-#* Baum-Welch-Algorithm for parameter reestimation (training) in
+#  Baum-Welch-Algorithm for parameter reestimation (training) in
 #    a continuous (continuous output functions) HMM. Scaled version
 #    for multiple sequences. Sequences may carry different weights
 #    For reference see:
@@ -476,21 +476,21 @@ class ghmm_cmodel_baum_welch_context():
 #        77, no 2, 1989, pp 257--285
 #
 
-#* structure that combines a continuous model sequence class.
+#  structure that combines a continuous model sequence class.
 #
 #    Is used by ghmm_cmodel_baum_welch() for parameter reestimation.
 #
     def __init__(self, model, seq):
-        #* pointer of continuous model
+        #  pointer of continuous model
         self.smo = model
-        #* sequence pointer
+        #  sequence pointer
         self.sqd = seq
-        #* calculated log likelihood
+        #  calculated log likelihood
         self.logp = 0
-        #* leave reestimation loop if diff. between successive logp values
+        #  leave reestimation loop if diff. between successive logp values
         #      is smaller than eps
         self.eps = 0
-        #* max. no of iterations
+        #  max. no of iterations
         self.max_iter = 0
 
 

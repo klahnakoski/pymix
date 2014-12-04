@@ -1,4 +1,4 @@
-#*
+#
 #    State class for continuous emission HMMs.
 #
 from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_alloc
@@ -6,37 +6,37 @@ from pymix.util.ghmm.wrapper import ARRAY_CALLOC, ighmm_cmatrix_alloc
 
 class ghmm_cstate:
     def __init__(self, M, N, cos):
-        #* Number of output densities per state
+        #  Number of output densities per state
         self.M = M  # int
-        #* weight vector for output function components
+        #  weight vector for output function components
         self.c = ARRAY_CALLOC(M)  # double *
-        #* vector of Emission (type and parameters of output function components)
+        #  vector of Emission (type and parameters of output function components)
         self.e = [None]*M  # Emission *
 
 
-        #* initial prob.
+        #  initial prob.
         self.pi = None  # double
 
         #   matrix in case of mult. transition matrices (COS > 1)
-        #* number of  successor states
+        #  number of  successor states
         self.out_a = ighmm_cmatrix_alloc(cos, N)
 
-        #* transition probs to successor states. It is a
-        #* transition probs from predecessor states. It is a
+        #  transition probs to successor states. It is a
+        #  transition probs from predecessor states. It is a
         #   matrix in case of mult. transition matrices (COS > 1)
         self.in_a = None  # double **
-        #* number of  predecessor states
+        #  number of  predecessor states
         self.in_a = ighmm_cmatrix_alloc(cos, N)
 
-        #* flag for fixation of parameter. If fix = 1 do not change parameters of
+        #  flag for fixation of parameter. If fix = 1 do not change parameters of
         #      output functions, if fix = 0 do normal training. Default is 0.
         self.fix = 0  # int
 
-        #* contains a description of the state (null terminated utf-8)
+        #  contains a description of the state (null terminated utf-8)
         self.desc = None  # char *
-        #* x coordinate position for graph representation plotting *
+        #  x coordinate position for graph representation plotting *
         self.xPosition = 0.0  # int
-        #* y coordinate position for graph representation plotting *
+        #  y coordinate position for graph representation plotting *
         self.yPosition = 0.0  # int
 
     def setDensity(self, i, type):
