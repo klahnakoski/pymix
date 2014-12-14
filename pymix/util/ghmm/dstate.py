@@ -21,10 +21,6 @@ class ghmm_dstate():
         self.fix = 0 #int
         # contains a description of the state (null terminated utf-8)
         self.desc = None #char*
-        # x coordinate position for graph representation plotting *
-        self.xPosition = 0 #int
-        # y coordinate position for graph representation plotting *
-        self.yPosition = 0 #int
 
 
     def forward_step(self, alpha_t, b_symb):

@@ -32,12 +32,9 @@ class ghmm_cstate:
         #      output functions, if fix = 0 do normal training. Default is 0.
         self.fix = 0  # int
 
-        #  contains a description of the state (null terminated utf-8)
-        self.desc = None  # char *
-        #  x coordinate position for graph representation plotting *
-        self.xPosition = 0.0  # int
-        #  y coordinate position for graph representation plotting *
-        self.yPosition = 0.0  # int
+        #  contains a description of the state
+        self.desc = None
+
 
     def setDensity(self, i, type):
         self.e[i].type = type
