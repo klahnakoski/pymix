@@ -36,6 +36,7 @@
 ################################################################################
 
 from ..distributions.product import ProductDistribution
+from pymix.util.logs import Log
 from ..util.errors import InvalidDistributionInput
 from ..models.mixture import MixtureModel
 from .prior import PriorDistribution
@@ -112,10 +113,10 @@ class ProductDistributionPrior(PriorDistribution):
 
     def isValid(self, p):
         if not isinstance(p, ProductDistribution):
-            raise InvalidDistributionInput, 'Not a ProductDistribution.'
+            Log.error('Not a ProductDistribution.')
+        for j in range(len(self.priorList)):
             try:
                 self[j].isValid(p[j])
             except InvalidDistributionInput, ex:
-                ex.message += "\n\tin ProductDistributionPrior.priorList[" + str(j) + "]"
-                raise
+                Log.error("in ProductDistributionPrior.priorList[" + str(j) + "]", ex)
 

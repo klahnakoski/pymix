@@ -38,6 +38,7 @@
 import copy
 import numpy as np
 from ..distributions.discrete import DiscreteDistribution
+from pymix.util.logs import Log
 from ..util.errors import InvalidDistributionInput
 
 from ..models.mixture import MixtureModel
@@ -231,8 +232,7 @@ class MixtureModelPrior(PriorDistribution):
                 for i in range(m.G):
                     self.compPrior.isValid(m.components[i])
             except InvalidDistributionInput, ex:
-                ex.message += "\n\tin MixtureModelPrior for component " + str(i)
-                raise
+                Log.error("in MixtureModelPrior for component " + str(i), ex)
 
     def structPriorHeuristic(self, delta, N):
         """
