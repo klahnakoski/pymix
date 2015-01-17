@@ -113,9 +113,6 @@ class ProductDistributionPrior(PriorDistribution):
     def isValid(self, p):
         if not isinstance(p, ProductDistribution):
             raise InvalidDistributionInput, 'Not a ProductDistribution.'
-        if len(p.distList) != len(self.priorList):
-            raise InvalidDistributionInput, 'Different dimensions in ProductDistributionPrior and ProductDistribution: ' + str(p.dist_nr) + ' != ' + str(len(self.priorList))
-        for j in range(len(p.distList)):
             try:
                 self[j].isValid(p[j])
             except InvalidDistributionInput, ex:

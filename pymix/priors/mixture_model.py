@@ -83,7 +83,7 @@ class MixtureModelPrior(PriorDistribution):
 
     def __str__(self):
         outstr = "MixtureModelPrior: \n"
-        outstr += "dist_nr=" + str(len(self.compPrior.priorList)) + "\n"
+        outstr += "num_prior=" + str(len(self.compPrior.priorList)) + "\n"
         outstr += "structPrior =" + str(self.structPrior) + "\n"
         outstr += "nrCompPrior =" + str(self.nrCompPrior) + "\n"
         outstr += "  piPrior = " + str(self.piPrior) + "\n"

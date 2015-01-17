@@ -89,7 +89,7 @@ class MultinomialDistribution(ProbDistribution):
         self.phi = np.array(phi, dtype='Float64')
 
         # minimal value for any component of self.phi, enforced in MStep
-        self.min_phi = ( 1.0 / self.M ) * 0.001
+        self.min_phi = (1.0 / self.M) * 0.001
 
     def __eq__(self, other):
         res = False

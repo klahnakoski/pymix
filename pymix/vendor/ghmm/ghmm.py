@@ -1414,7 +1414,7 @@ class DiscreteEmissionHMM(HMM):
             strout.append("initial=" + f(state.pi) + ')\n')
             strout.append("    Emissions: ")
             for outp in range(hmm.M ** (order[k] + 1)):
-                strout.append(f(wrapper.double_array_getitem(state.b, outp)))
+                strout.append(f(state.b[outp]))
                 if outp < hmm.M ** (order[k] + 1) - 1:
                     strout.append(', ')
                 else:
@@ -1450,7 +1450,7 @@ class DiscreteEmissionHMM(HMM):
             #strout.append("\nsilent state: " + str(self.cmodel.silent[k]))
             strout.append("\nOutput probabilites: ")
             for outp in range(hmm.M ** (order[k] + 1)):
-                strout.append(str(wrapper.double_array_getitem(state.b, outp)))
+                strout.append(str(state.b[ outp]))
                 if outp % hmm.M == hmm.M - 1:
                     strout.append("\n")
                 else:
@@ -1463,7 +1463,7 @@ class DiscreteEmissionHMM(HMM):
             strout.append("\nIngoing transitions:")
             for i, _ in enumerate(state.in_a):
                 strout.append("\ntransition from state " + str(i))
-                strout.append(" with probability " + str(wrapper.double_array_getitem(state.in_a, i)))
+                strout.append(" with probability " + str(state.in_a[ i]))
             strout.append("\nint fix:" + str(state.fix) + "\n")
 
         if self.hasFlags(kSilentStates):
@@ -1856,7 +1856,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             strout.append("initial= " + f(state.pi) + ', label= ' + str(self.labelDomain.external(label[k])) + ')\n')
             strout.append("    Emissions: ")
             for outp in range(hmm.M ** (order[k] + 1)):
-                strout.append(f(wrapper.double_array_getitem(state.b, outp)))
+                strout.append(f(state.b[ outp]))
                 if outp < hmm.M ** (order[k] + 1) - 1:
                     strout.append(', ')
                 else:
@@ -1894,7 +1894,7 @@ class StateLabelHMM(DiscreteEmissionHMM):
             strout.append("\nInitial probability: " + str(state.pi))
             strout.append("\nOutput probabilites:\n")
             for outp in range(hmm.M ** (order[k] + 1)):
-                strout += str(wrapper.double_array_getitem(state.b, outp))
+                strout += str(state.b[ outp])
                 if outp % hmm.M == hmm.M - 1:
                     strout.append("\n")
                 else:
@@ -2303,7 +2303,7 @@ class GaussianEmissionHMM(HMM):
             mue = ""
             u = ""
 
-            weight += str(wrapper.double_array_getitem(state.c, 0))
+            weight += str(state.c[ 0])
             mue += str(state.getMean(0))
             u += str(state.getStdDev(0))
 
@@ -2630,7 +2630,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
             for outp in range(state.M):
                 emission = state.getEmission(outp)
-                weight += str(wrapper.double_array_getitem(state.c, outp)) + ", "
+                weight += str(state.c[ outp]) + ", "
                 mue += str(emission.mean) + ", "
                 u += str(emission.variance) + ", "
 
@@ -2674,7 +2674,7 @@ class GaussianMixtureHMM(GaussianEmissionHMM):
 
             for outp in range(state.M):
                 emission = state.getEmission(outp)
-                weight += str(wrapper.double_array_getitem(state.c, outp)) + ", "
+                weight += str(state.c[ outp]) + ", "
                 mue += str(emission.mean) + ", "
                 u += str(emission.variance) + ", "
 
@@ -3211,7 +3211,7 @@ class PairHMM(HMM):
                 strout.append("\nState Name: " + state.desc)
             strout.append("\nInitial probability: " + str(state.pi))
             strout.append("\nOutput probabilites: ")
-            #strout.append(str(wrapper.double_array_getitem(state.b,outp)))
+            #strout.append(str(state.b[outp]))
             strout.append("\n")
 
             strout.append("\nOutgoing transitions:")
@@ -3246,7 +3246,7 @@ class PairHMM(HMM):
             complexEmissionSequenceY.cseq,
             log_p_ptr, length_ptr)
         # get the values from the pointers
-        log_p = wrapper.double_array_getitem(log_p_ptr, 0)
+        log_p = log_p_ptr[ 0]
         length = length_ptr[0]
         path = [cpath[x] for x in range(length)]
         return path, log_p
@@ -3289,7 +3289,7 @@ class PairHMM(HMM):
                 startLogp, stopLogp)
 
         # get the values from the pointers
-        log_p = wrapper.double_array_getitem(log_p_ptr, 0)
+        log_p = log_p_ptr[ 0]
         length = length_ptr[0]
         path = [cpath[x] for x in range(length)]
         return (path, log_p)

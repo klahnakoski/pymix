@@ -87,7 +87,7 @@ class ghmm_dmodel():
         if self.model_type & kHigherOrderEmissions:
             self.order = double_array_alloc(N)
         else:
-            self.order = None #int*
+            self.order = None  # int*
 
         # ghmm_dbackground is a pointer to a
         # ghmm_dbackground structure, which holds (essentially) an
@@ -269,7 +269,7 @@ class ghmm_dmodel():
             if self.order[S] > T:
                 return -1
             else:
-                # THE PROBLEM IS THIS MAKING A REF INTO MULTIDIMENSIONAL CUBE
+                # THIS MAKING A REF INTO MULTIDIMENSIONAL CUBE
                 output = (self.emission_history * self.M) % pow(self.M, self.order[S] + 1) + O
                 return output
         else:

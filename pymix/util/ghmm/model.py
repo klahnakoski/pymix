@@ -76,7 +76,7 @@ def ghmm_dmodel_from_sequence(sq):
 
 def ghmm_dmodel_copy(mo):
     m2 = ghmm_dmodel(mo.M, mo.N, mo.model_type, [0]*mo.N, [0]*mo.N)
-    m2.s = [ ghmm_dstate() for i in range(mo.N)]
+    m2.s = [ghmm_dstate() for i in range(mo.N)]
 
     if mo.model_type & kSilentStates:
         m2.silent = ARRAY_CALLOC(mo.N)
