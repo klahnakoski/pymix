@@ -5,6 +5,7 @@ Refactoring of PyMix so it is pure Python:
 
 * Split code into smaller files
 * Remove GSL GNU Scientific library dependency
+* Remove GHMM for mixtures of HMMs
 * Remove Numpy dependency (well, not yet)
 
 Requirements
@@ -17,7 +18,6 @@ Requirements
 
 **Optional Packages**
 
-* GHMM for mixtures of HMMs
 * pylab for plotting functions in plotMixture.py
 
 Installation
@@ -25,6 +25,13 @@ Installation
 
     git clone https://github.com/klahnakoski/pymix.git
 
+Run Tests
+---------
+
+From the `pymix` directory:
+
+	set PYTHONPATH=.
+	python -m unittest discover -s C:\Users\kyle\code\pymix\tests
 
 Documentation
 --------------
