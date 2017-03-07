@@ -134,7 +134,7 @@ def structureAccuracy(true, m):
     """
 
     tp = fn = tn = fp = 0
-    for j in range(true.dist_nr):
+    for j in range(len(true.leaders)):
 
         ltrue = setPartitions.encode_partition(true.leaders[j], true.groups[j], true.G)
         lm = setPartitions.encode_partition(m.leaders[j], m.groups[j], m.G)

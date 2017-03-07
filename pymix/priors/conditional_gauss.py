@@ -59,17 +59,17 @@ class ConditionalGaussPrior(PriorDistribution):
 
         self.constant_hyperparams = 0  # hyperparameters are updated as part of the mapEM
         self.nr_comps = nr_comps    # number of components in the mixture the prior is applied to
-        self.p = p   # number of features in the ConditionalGaussDistribution the prior is applied to
+        self.dimension = p   # number of features in the ConditionalGaussDistribution the prior is applied to
 
         # no initial value needed, is updated as part of EM in updateHyperparameters
-        self.beta = np.zeros((self.nr_comps, self.p))
-        self.nu = np.zeros((self.nr_comps, self.p))
+        self.beta = np.zeros((self.nr_comps, self.dimension))
+        self.nu = np.zeros((self.nr_comps, self.dimension))
 
         # XXX initialization of sufficient statistics, necessary for hyperparameter updates
         self.post_sums = np.zeros(self.nr_comps)
-        self.var = np.zeros((self.nr_comps, self.p))
-        self.cov = np.zeros((self.nr_comps, self.p))
-        self.mu = np.zeros((self.nr_comps, self.p))
+        self.var = np.zeros((self.nr_comps, self.dimension))
+        self.cov = np.zeros((self.nr_comps, self.dimension))
+        self.mean = np.zeros((self.nr_comps, self.dimension))
 
 
     def __str__(self):
@@ -82,7 +82,7 @@ class ConditionalGaussPrior(PriorDistribution):
 
             res = np.zeros(len(d))
             for i in range(len(d)):
-                for j in range(1, d[i].p):
+                for j in range(1, d[i].dimension):
                     pid = d[i].parents[j]
                     res[i] += (1.0 / self.cov[i, j] ** 2) / (self.nu[i, j] * (self.post_sums[i] / N))
                     res[i] += np.log(mixextend.wrap_gsl_ran_gaussian_pdf(
@@ -114,33 +114,33 @@ class ConditionalGaussPrior(PriorDistribution):
         if post_sum != 0.0:
 
             # reestimate mu
-            for j in range(dist.p):
+            for j in range(dist.dimension):
                 # computing ML estimates for w and sigma
-                self.mu[dist_ind, j] = np.dot(posterior, data[:, j]) / post_sum
-                #self.var[dist_ind,j] = np.dot(posterior, (data[:,j] - dist.mu[j])**2 ) / post_sum
-                self.var[dist_ind, j] = np.dot(posterior, (data[:, j] - self.mu[dist_ind, j]) ** 2) / post_sum
+                self.mean[dist_ind, j] = np.dot(posterior, data[:, j]) / post_sum
+                #self.var[dist_ind,j] = np.dot(posterior, (data[:,j] - dist.mean[j])**2 ) / post_sum
+                self.var[dist_ind, j] = np.dot(posterior, (data[:, j] - self.mean[dist_ind, j]) ** 2) / post_sum
 
                 if j > 0:  # w[0] = 0.0 is fixed
                     pid = dist.parents[j]
-                    self.cov[dist_ind, j] = np.dot(posterior, (data[:, j] - self.mu[dist_ind, j]) * (data[:, pid] - self.mu[dist_ind, pid])) / post_sum
+                    self.cov[dist_ind, j] = np.dot(posterior, (data[:, j] - self.mean[dist_ind, j]) * (data[:, pid] - self.mean[dist_ind, pid])) / post_sum
 
                     # update hyperparameters beta
                     self.beta[dist_ind, j] = post_sum / ( (( self.var[dist_ind, j] * self.var[dist_ind, pid]) / self.cov[dist_ind, j] ** 2) - 1 )
 
                     # update hyperparameters nu
-                    self.nu[dist_ind, j] = - post_sum / (2 * dist.sigma[j] ** 2)
+                    self.nu[dist_ind, j] = - post_sum / (2 * dist.variance[j] ** 2)
 
                     # update regression weights
-                    dist.w[j] = self.cov[dist_ind, j] / (dist.sigma[pid] ** 2 * (1 + self.beta[dist_ind, j] ** -1 ) )
+                    dist.w[j] = self.cov[dist_ind, j] / (dist.variance[pid] ** 2 * (1 + self.beta[dist_ind, j] ** -1 ) )
 
                     # update standard deviation
-                    dist.sigma[j] = math.sqrt(self.var[dist_ind, j] - (dist.w[j] ** 2 * dist.sigma[pid] ** 2 * (1 + (1.0 / self.beta[dist_ind, j])) ) - self.nu[dist_ind, j] ** -1)
+                    dist.variance[j] = math.sqrt(self.var[dist_ind, j] - (dist.w[j] ** 2 * dist.variance[pid] ** 2 * (1 + (1.0 / self.beta[dist_ind, j])) ) - self.nu[dist_ind, j] ** -1)
                     # update means
-                    dist.mu[j] = self.mu[dist_ind, j] #- (dist.w[j] * self.mu[dist_ind,pid])
+                    dist.mean[j] = self.mean[dist_ind, j] #- (dist.w[j] * self.mean[dist_ind,pid])
 
                 else:
-                    dist.sigma[j] = math.sqrt(self.var[dist_ind, j])  # root variance
-                    dist.mu[j] = self.mu[dist_ind, j]
+                    dist.variance[j] = math.sqrt(self.var[dist_ind, j])  # root variance
+                    dist.mean[j] = self.mean[dist_ind, j]
 
 
     def updateHyperparameters(self, dists, posterior, data):
@@ -153,15 +153,15 @@ class ConditionalGaussPrior(PriorDistribution):
         # update component-specific hyperparameters
         for i in range(self.nr_comps):
             self.post_sums[i] = np.sum(posterior[i, :])
-            for j in range(0, self.p):
-                #  var_j = np.dot(posterior, (data[:,j] - dist.mu[j])**2 ) / post_sum
-                self.var[i, j] = np.dot(posterior[i, :], (data[:, j] - dists[i].mu[j]) ** 2) / self.post_sums[i]
+            for j in range(self.dimension):
+                #  var_j = np.dot(posterior, (data[:,j] - dist.mean[j])**2 ) / post_sum
+                self.var[i, j] = np.dot(posterior[i, :], (data[:, j] - dists[i].mean[j]) ** 2) / self.post_sums[i]
 
                 if j > 0: # feature 0 is root by convention
                     pid_i_j = dists[i].parents[j]
-                    self.cov[i, j] = np.dot(posterior[i, :], (data[:, j] - dists[i].mu[j]) * (data[:, pid_i_j] - dists[i].mu[pid_i_j])) / self.post_sums[i]
+                    self.cov[i, j] = np.dot(posterior[i, :], (data[:, j] - dists[i].mean[j]) * (data[:, pid_i_j] - dists[i].mean[pid_i_j])) / self.post_sums[i]
                     self.beta[i, j] = self.post_sums[i] / ( (( self.var[i, j] * self.var[i, pid_i_j]) / self.cov[i, j] ** 2) - 1 )
-                    self.nu[i, j] = - self.post_sums[i] / (2 * dists[i].sigma[j] ** 2)
+                    self.nu[i, j] = - self.post_sums[i] / (2 * dists[i].variance[j] ** 2)
 
 
     def isValid(self, x):

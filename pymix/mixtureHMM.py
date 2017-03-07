@@ -42,7 +42,7 @@ Mixtures of HMMs (requires the GHMM package)
 import copy
 import numpy as np
 
-import ghmm
+from pymix.vendor.ghmm import ghmm
 from .distributions.prob import ProbDistribution
 from .distributions.product import ProductDistribution
 from .util.constrained_dataset import ConstrainedDataSet
@@ -91,10 +91,10 @@ class SequenceDataSet(ConstrainedDataSet):
 
         # consistency checks between non-sequence and sequence data
         self.N = len(sequences[0])
-        self.p = len(sequences)
+        self.dimension = len(sequences)
         if len(List) > 0:
             assert self.N == len(List)
-            self.p += len(List[0])
+            self.dimension += len(List[0])
 
         if not IDs:
             self.sampleIDs = range(self.N)
@@ -103,12 +103,9 @@ class SequenceDataSet(ConstrainedDataSet):
             self.sampleIDs = IDs
 
         if not col_header:
-            l = range(self.p)
-            self.headers = []
-            for k in l:
-                self.headers.append(str(k))
+            self.headers = [str(k) for k in range(self.dimension)]
         else:
-            assert len(col_header) == self.p
+            assert len(col_header) == self.dimension
             self.headers = col_header
 
         # set non-sequence data
@@ -130,15 +127,15 @@ class SequenceDataSet(ConstrainedDataSet):
 
 
         """
-        assert m.p == self.p, "Invalid dimensions in data and model." + str(m.p) + ' ' + str(self.p)
+        assert m.dimension == self.dimension, "Invalid dimensions in data and model." + str(m.dimension) + ' ' + str(self.dimension)
 
         if self.complex:
             # set complexFeature flags
             self.complexFeature = []
 
-            if self.p == 1:
+            if self.dimension == 1:
                 if isinstance(m.components[0], ProductDistribution):
-                    assert m.components[0].dist_nr == 1
+                    assert len(m.components[0].distList) == 1
                     assert isinstance(m.components[0].distList[0], HMM)
                 else:
                     assert isinstance(m.components[0], HMM)
@@ -148,9 +145,7 @@ class SequenceDataSet(ConstrainedDataSet):
 
             else:
                 ind = 0
-                for i in range(m.components[0].dist_nr):
-
-
+                for i in range(len(m.components[0].distList)):
                     if isinstance(m.components[0].distList[i], HMM):
                         self.complexFeature.append(1)
                         self.complexDataIndexMap[i] = ind
@@ -171,14 +166,14 @@ class SequenceDataSet(ConstrainedDataSet):
 
         self.internalData = sequence
 
-        if m.dist_nr > 1:
+        if len(m.components[0].distList) > 1:
             self.suff_dataRange = copy.copy(m.components[0].suff_dataRange)
         else:
             self.suff_dataRange = [m.suff_p]
 
         self.suff_p = m.components[0].suff_p
 
-        #print 'p',self.p
+        #print 'p',self.dimension
         #print 'seq_p',self.seq_p
 
 
@@ -197,7 +192,7 @@ class SequenceDataSet(ConstrainedDataSet):
     def getExternalFeature(self, fid):
         raise NotImplementedError, "Needs implementation"
 
-    def getInternalFeature(self, i):
+    def getInternalFeature(self, i, m=None):
         """
         Returns the columns of self.internalData containing the data of the feature with index 'i'
         """
@@ -231,11 +226,12 @@ class SequenceDataSet(ConstrainedDataSet):
                 internal_index = self.complexDataIndexMap[i]
                 return self.complexData[internal_index]
 
-        if self.p == 1:   # only a single feature
+        if self.dimension == 1:   # only a single feature
             return self.internalData[:]
 
         elif (this_index - prev_index) == 1:   # multiple features, feature 'i' has single dimension
-            return np.take(self.internalData, (this_index - 1,), axis=1)
+            output =np.take(self.internalData, (this_index - 1,), axis=1)
+            return output
         else:
             return self.internalData[:, prev_index:this_index]  # multiple features, feature 'i' has multiple dimensions
 
@@ -264,7 +260,7 @@ class HMM(ProbDistribution):
 
         self.hmm = hmm
 
-        self.p = 1   # we consider each sequence set to be a single features, so p is one.
+        self.dimension = 1   # we consider each sequence set to be a single features, so p is one.
 
         #  getting the free parameters of a GHMM object requires iteration over all states
         self.freeParams = self.hmm.N - 1 # pi
@@ -280,7 +276,6 @@ class HMM(ProbDistribution):
                 raise TypeError, "Unknown EmissionDomain " + str(self.hmm.emissionDomain.__class__)
 
         self.suff_p = 1  # since we save the whole sequence set under on index suff_p is 1
-        self.dist_nr = 1
         self.iterations = iterations
 
 
@@ -303,7 +298,6 @@ class HMM(ProbDistribution):
             pass
         else:
             raise TypeError, "Unknown/Invalid input type:" + str(data)
-
 
         #print "pdf "+str(self.hmm.cmodel.name) +":"
         #print self.hmm.loglikelihoods(data)

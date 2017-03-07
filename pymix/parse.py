@@ -37,12 +37,15 @@
 
 import tokenize
 import cStringIO
-from pymix.util.alphabet import Alphabet
+
 
 
 #----------------------------------- File IO --------------------------------------------------
 # XXX  While functional the flat file based file IO is somewhat crude. XXX
 # XXX  The whole thing ought to be redone in XML at some point.        XXX
+from pymix.vendor.ghmm.emission_domain import Alphabet
+from pymix.util.logs import Log
+
 
 def numerize(data):
     """
@@ -169,7 +172,7 @@ def parseMix(fileHandle, mtype, G, pi, compFix, leaders=None, groups=None):
         m.initStructure()
         m.leaders = leaders
         m.groups = groups
-        for i in range(m.dist_nr):
+        for i in range(len(m.components[0])):
             for lead in m.leaders[i]:
                 for g in m.groups[i][lead]:
                     if not m.components[lead][i] == m.components[g][i]:
@@ -189,7 +192,7 @@ def parseProd(fileHandle, true_p):
     while p < true_p:
         d = parseFile(fileHandle)
         distList.append(d)
-        p += d.p
+        p += d.dimension
     return ProductDistribution(distList)
 
 
@@ -244,7 +247,7 @@ def parseFile(fileHandle):
         # XXX the tokenize package used in simple_eval cannot deal with negative values in
         # mu or sigma. A hack solution to that would be to change simple_eval to a direct
         # call to eval in the line below. This carries all the usual implications for security.
-        return MultiNormalDistribution(int(p), simple_eval(mu), simple_eval(sigma))
+        return MultiNormalDistribution(simple_eval(mu), simple_eval(sigma))
     elif l[1] == "Dirichlet":
         from pymix.distributions.dirichlet import DirichletDistribution
         [offset, head, M, alpha] = l
@@ -311,12 +314,12 @@ def atom(next, token):
     elif token[1] == "{":
         seq = sequence(next, token, "}")
         res = {}
-        for i in range(0, len(seq), 2):
+        for i in range(len(seq), 2):
             res[seq[i]] = seq[i + 1]
         return res
     elif token[0] in (tokenize.STRING, tokenize.NUMBER):
         return eval(token[1]) # safe use of eval!
-    raise SyntaxError("malformed expression (%s)" % token[1])
+    Log.error("malformed expression (%s)" % token[1])
 
 
 def simple_eval(source):
@@ -325,7 +328,7 @@ def simple_eval(source):
     src = (token for token in src if token[0] is not tokenize.NL)
     res = atom(src.next, src.next())
     if src.next()[0] is not tokenize.ENDMARKER:
-        raise SyntaxError("bogus data after expression")
+        Log.error("bogus data after expression")
     return res
 
 

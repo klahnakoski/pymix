@@ -38,6 +38,8 @@
 ## function sumlogs is borrowed from GQLMixture.py
 import math
 import numpy as np
+import scipy
+from pyLibrary.maths import Math
 from ..util import mixextend
 from .maths import sum_logs
 
@@ -52,7 +54,7 @@ def kl_dist(d1, d2):
 
     @return: Kullback-Leibler divergence between input distributions
     """
-    # Kullback = sum[1..P](ln(SIGMA2/SIGMA1))
+    # Kullback = sum[1..dimension](ln(SIGMA2/SIGMA1))
     # + sum[1..P](SIGMA1^2 / (2*(SIGMA2^2)))
     # + sum[1..P]((MU1-MU2)^2 / (2*(SIGMA2^2))) - P/2
     from ..distributions.multinomial import MultinomialDistribution
@@ -60,8 +62,8 @@ def kl_dist(d1, d2):
     from ..distributions.product import ProductDistribution
 
     if isinstance(d1, NormalDistribution) and isinstance(d2, NormalDistribution):
-        res = ( (0.5 * np.log(d2.sigma ** 2 / d1.sigma ** 2)) - 0.5 + d1.sigma ** 2 / (2 * d2.sigma ** 2)
-                + (abs(d2.mu - d1.mu) ** 2) / (2 * d2.sigma ** 2) )
+        res = ( (0.5 * np.log(d2.variance ** 2 / d1.variance ** 2)) - 0.5 + d1.variance ** 2 / (2 * d2.variance ** 2)
+                + (abs(d2.mean - d1.mean) ** 2) / (2 * d2.variance ** 2) )
         return res
     elif isinstance(d1, MultinomialDistribution) and isinstance(d2, MultinomialDistribution):
         assert d1.M == d2.M
@@ -70,7 +72,7 @@ def kl_dist(d1, d2):
             en += d1.phi[i] * np.log(d1.phi[i] / d2.phi[i])
         return en
     elif isinstance(d1, ProductDistribution) and isinstance(d2, ProductDistribution):
-        assert d1.dist_nr == d2.dist_nr == 1
+        assert len(d1.distList) == len(d2.distList) == 1
         return kl_dist(d1[0], d2[0])
 
     else:
@@ -214,7 +216,7 @@ def specificity(classes, clusters):
         return 0.0
 
 
-def random_vector(nr, normal=1.0):
+def random_vector(nr):
     """
     Returns a random probability vector of length 'nr'.
     Can be used to generate random parametrizations of a multinomial distribution with
@@ -227,11 +229,7 @@ def random_vector(nr, normal=1.0):
     """
 
     alpha = np.array([1.0] * nr)
-
-    p = mixextend.wrap_gsl_dirichlet_sample(alpha, nr)
-
-    if float(normal) != 1.0:
-        p = p * normal
+    p = scipy.random.dirichlet(alpha)
     return p.tolist()
 
 
@@ -252,7 +250,7 @@ def entropy(p):
     res = 0.0
     for i in range(len(p)):
         if p[i] != 0.0:
-            res += p[i] * math.log(p[i], 2)
+            res += p[i] * Math.log(p[i], 2)
     return -res
 
 
@@ -274,7 +272,7 @@ def get_posterior(mix_model, data, logreturn=True):
 
     # computing log posterior distribution
     for i in range(mix_model.G):
-        log_l[i] = math.log(mix_model.pi[i]) + mix_model.components[i].pdf(data)
+        log_l[i] = Math.log(mix_model.pi[i]) + mix_model.components[i].pdf(data)
 
 
     # computing data log likelihood as criteria of convergence

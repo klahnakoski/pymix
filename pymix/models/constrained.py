@@ -180,7 +180,7 @@ class ConstrainedMixtureModel(MixtureModel):
                 # components are product distributions that may contain mixtures
                 if isinstance(self.components[i], ProductDistribution):
                     last_index = 0
-                    for j in range(self.components[i].dist_nr):
+                    for j in range(len(self.components[i].distList)):
                         if isinstance(self.components[i].distList[j], MixtureModel):
                             dat_j = data.singleFeatureSubset(j)
                             self.components[i].distList[j].modelInitialization(dat_j, rtype=rtype)
@@ -362,7 +362,7 @@ class ConstrainedMixtureModel(MixtureModel):
                             #          print - np.multiply(penn,prior_neg)
 
             log_l[:, i] += (-np.multiply(pen, prior_pos) - np.multiply(penn, prior_neg))
-            # l[k,i] = log( (a_k * * P[seq i| model k]) + P[W+|y] * P[W-|y] )
+            # l[k,i] = Math.log( (a_k * * P[seq i| model k]) + P[W+|y] * P[W-|y] )
 
             #          print '-> log_l=',log_l[:,i]
             #          print '-> norm l=',np.exp( log_l[:,i] - sumlogs(log_l[:,i]) )

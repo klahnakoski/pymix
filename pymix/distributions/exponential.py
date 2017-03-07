@@ -39,6 +39,7 @@ import math
 import random
 import numpy as np
 from .prob import ProbDistribution
+from pyLibrary.maths import Math
 from ..util.errors import InvalidDistributionInput
 from ..util.dataset import DataSet
 
@@ -55,7 +56,7 @@ class ExponentialDistribution(ProbDistribution):
         @param lambd: shape parameter lambda
         """
 
-        self.p = self.suff_p = 1
+        self.dimension = self.suff_p = 1
         self.lambd = lambd  # lambd is a rate: 0.0 < lambd <= 1.0
         self.freeParams = 1
 
@@ -94,10 +95,10 @@ class ExponentialDistribution(ProbDistribution):
         else:
             raise TypeError, "Unknown/Invalid input type:" + str(type(data))
 
-        return math.log(self.lambd) + (-self.lambd * x)  # XXX pure Python implementation for now
+        return Math.log(self.lambd) + (-self.lambd * x)  # XXX pure Python implementation for now
 
 
-    def sample(self):
+    def sample(self, native=False):
         return random.expovariate(self.lambd)
 
     def MStep(self, posterior, data, mix_pi=None):
@@ -129,7 +130,7 @@ class ExponentialDistribution(ProbDistribution):
         if type(x) == list and len(x) == 1:
             x = x[0]
         self.isValid(x)
-        return [self.p, [x]]
+        return [self.dimension, [x]]
 
     def flatStr(self, offset):
         offset += 1

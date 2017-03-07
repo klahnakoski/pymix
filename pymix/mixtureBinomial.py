@@ -40,8 +40,15 @@
 Mixtures of Bionomials and Related Distributions
 """
 from mixture import *
+
 import numpy as np
 import copy
+from pymix.distributions.prob import ProbDistribution
+from pymix.distributions.product import ProductDistribution
+from pymix.models.mixture import MixtureModel
+from pymix.util.dataset import DataSet
+from pymix.util.errors import InvalidPosteriorDistribution, InvalidDistributionInput, ConvergenceFailureEM
+
 
 class BernoulliDistribution(ProbDistribution):
     """
@@ -55,15 +62,15 @@ class BernoulliDistribution(ProbDistribution):
 
         @param theta
         """
-        self.p = 1
+        self.dimension = 1
         self.suff_p = 1
         self.freeParams = 1
         self.theta = theta
 
 
-    def __eq__(self,other):
+    def __eq__(self, other):
         res = False
-        if isinstance(other,BernoulliDistribution):
+        if isinstance(other, BernoulliDistribution):
             if (np.allclose(other.theta, self.theta)):
                 res = True
         return res
@@ -72,7 +79,7 @@ class BernoulliDistribution(ProbDistribution):
         return BernoulliDistribution(copy.deepcopy(self.theta))
 
     def __str__(self):
-        return "Binomial:  ["+str(self.theta)+" "+str(self.p)+"]"
+        return "Binomial:  [" + str(self.theta) + " " + str(self.dimension) + "]"
 
 
     def pdf(self, data):
@@ -81,34 +88,34 @@ class BernoulliDistribution(ProbDistribution):
         # [sample1,sample2, ...], the latter being the input format to the extension function,
         # so we might have to reformat the data
 
-        if isinstance(data, DataSet ):
+        if isinstance(data, DataSet):
             assert data.internalData is not None, "Internal data not initialized."
             nr = len(data.internalData)
-            assert data.internalData.shape == (nr,1), 'shape = '+str(data.internalData.shape)
+            assert data.internalData.shape == (nr, 1), 'shape = ' + str(data.internalData.shape)
             x = np.transpose(data.internalData)[0]
 
         elif hasattr(data, "__iter__"):
             nr = len(data)
 
-            if data.shape == (nr,1):  # data format needs to be changed
+            if data.shape == (nr, 1):  # data format needs to be changed
                 x = np.transpose(data)[0]
             elif data.shape == (nr,):
                 x = data
             else:
-                raise TypeError,'Invalid data shape: '+str(data.shape)
+                raise TypeError, 'Invalid data shape: ' + str(data.shape)
         else:
-            raise TypeError,"Unknown/Invalid input type:"+str(type(data))
+            raise TypeError, "Unknown/Invalid input type:" + str(type(data))
 
         # computing log likelihood
         # this pdf is a logit representation of a bionomial (with large n???)
-        res = np.power(self.theta,x)*np.power(1-self.theta,1-x)
+        res = np.power(self.theta, x) * np.power(1 - self.theta, 1 - x)
         return np.log(res)
 
     def sample(self):
-        return np.random.binomial(1,self.theta)
+        return np.random.binomial(1, self.theta)
 
-    def sampleSet(self,nr):
-        res = np.zeros(nr,dtype='Float64')
+    def sampleSet(self, nr):
+        res = np.zeros(nr, dtype='Float64')
 
         for i in range(nr):
             res[i] = self.sample()
@@ -125,18 +132,18 @@ class BernoulliDistribution(ProbDistribution):
 
         @return: list with dot(posterior, data) and sum(data)
         """
-        nu0 =  np.dot(posterior, data)[0],
+        nu0 = np.dot(posterior, data)[0],
         nu = np.sum(data)
 
-        return [nu,nu0]
+        return [nu, nu0]
 
 
-    def MStep(self,posterior,data,mix_pi=None):
+    def MStep(self, posterior, data, mix_pi=None):
         # data has to be reshaped for parameter estimation
-        if isinstance(data,DataSet):
-            x = data.internalData[:,0]
-        elif isinstance(data,np.ndarray):
-            x = data[:,0]
+        if isinstance(data, DataSet):
+            x = data.internalData[:, 0]
+        elif isinstance(data, np.ndarray):
+            x = data[:, 0]
 
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
@@ -151,33 +158,33 @@ class BernoulliDistribution(ProbDistribution):
         # for this data set
         if post_sum != 0.0:
 
-            new_theta =  np.dot(posterior, x) / post_sum
+            new_theta = np.dot(posterior, x) / post_sum
         else:
-            raise InvalidPosteriorDistribution, "Sum of posterior is zero: "+str(self)+" has zero likelihood for data set."
+            raise InvalidPosteriorDistribution, "Sum of posterior is zero: " + str(self) + " has zero likelihood for data set."
 
 
-    def isValid(self,x):
+    def isValid(self, x):
         try:
             float(x)
         except (ValueError):
             #print "Invalid data: ",x,"in BinomialDistribution."
-            raise InvalidDistributionInput, "\n\tInvalid data: "+str(x)+" in BinomialDistribution."
+            raise InvalidDistributionInput, "\n\tInvalid data: " + str(x) + " in BinomialDistribution."
 
-    def formatData(self,x):
-        if isinstance(x,list) and len(x) == 1:
+    def formatData(self, x):
+        if isinstance(x, list) and len(x) == 1:
             x = x[0]
         self.isValid(x)  # make sure x is valid argument
-        return [self.p,[x]]
+        return [self.dimension, [x]]
 
 
-    def flatStr(self,offset):
-        offset +=1
-        return "\t"*+offset + ";Bernouli;"+str(self.theta)+"\n"
+    def flatStr(self, offset):
+        offset += 1
+        return "\t" * +offset + ";Bernouli;" + str(self.theta) + "\n"
 
-    def posteriorTraceback(self,x):
+    def posteriorTraceback(self, x):
         return self.pdf(x)
 
-    def merge(self,dlist, weights):
+    def merge(self, dlist, weights):
         raise DeprecationWarning, 'Part of the outdated structure learning implementation.'
 
 
@@ -199,29 +206,29 @@ class BinomialRegularizedDistribution(ProbDistribution):
 
         @param theta
         """
-        self.p = 1
+        self.dimension = 1
         self.suff_p = 1
         self.freeParams = 1
         self.theta = theta
         self.lambd = lambd
-        self.flag_selected=1
-        self.nu=0
+        self.flag_selected = 1
+        self.nu = 0
         #self.theta0 = theta0
         #self.lambdal = lambdal
 
 
-    def __eq__(self,other):
+    def __eq__(self, other):
         res = False
-        if isinstance(other,BinomialRegularizedDistribution):
+        if isinstance(other, BinomialRegularizedDistribution):
             if (np.allclose(other.theta, self.theta)) and (np.allclose(other.lambd, self.lambd)):
                 res = True
         return res
 
     def __copy__(self):
-        return BinomialRegularizedDistribution(copy.deepcopy(self.theta),copy.deepcopy(self.lambd))
+        return BinomialRegularizedDistribution(copy.deepcopy(self.theta), copy.deepcopy(self.lambd))
 
     def __str__(self):
-        return "Binomial:  ["+str(self.theta)+" "+str(self.lambd)+"  "+str(self.flag_selected)+"]"
+        return "Binomial:  [" + str(self.theta) + " " + str(self.lambd) + "  " + str(self.flag_selected) + "]"
 
 
     def pdf(self, data):
@@ -230,23 +237,23 @@ class BinomialRegularizedDistribution(ProbDistribution):
         # [sample1,sample2, ...], the latter being the input format to the extension function,
         # so we might have to reformat the data
 
-        if isinstance(data, DataSet ):
+        if isinstance(data, DataSet):
             assert data.internalData is not None, "Internal data not initialized."
             nr = len(data.internalData)
-            assert data.internalData.shape == (nr,1), 'shape = '+str(data.internalData.shape)
+            assert data.internalData.shape == (nr, 1), 'shape = ' + str(data.internalData.shape)
             x = np.transpose(data.internalData)[0]
 
         elif hasattr(data, "__iter__"):
             nr = len(data)
 
-            if data.shape == (nr,1):  # data format needs to be changed
+            if data.shape == (nr, 1):  # data format needs to be changed
                 x = np.transpose(data)[0]
             elif data.shape == (nr,):
                 x = data
             else:
-                raise TypeError,'Invalid data shape: '+str(data.shape)
+                raise TypeError, 'Invalid data shape: ' + str(data.shape)
         else:
-            raise TypeError,"Unknown/Invalid input type:"+str(type(data))
+            raise TypeError, "Unknown/Invalid input type:" + str(type(data))
 
         # computing log likelihood
         # this pdf is a logit representation of a bionomial (with large n???)
@@ -254,12 +261,12 @@ class BinomialRegularizedDistribution(ProbDistribution):
         dem = 1 + np.exp(self.theta);
         #print self.theta,dem
         try:
-          res = np.exp(x*self.theta);
+            res = np.exp(x * self.theta);
         except FloatingPointError:
-          print self.theta
-          raise FloatingPointError
-        #print res
-        res = res/dem
+            print self.theta
+            raise FloatingPointError
+            #print res
+        res = res / dem
         #print "pdf", self.theta, np.log(res)
         return np.log(res)
 
@@ -268,8 +275,8 @@ class BinomialRegularizedDistribution(ProbDistribution):
         return 0;
 
 
-    def sampleSet(self,nr):
-        res = np.zeros(nr,dtype='Float64')
+    def sampleSet(self, nr):
+        res = np.zeros(nr, dtype='Float64')
 
         for i in range(nr):
             res[i] = self.sample()
@@ -292,12 +299,12 @@ class BinomialRegularizedDistribution(ProbDistribution):
         return 0
 
 
-    def MStep(self,posterior,data,mix_pi=None):
+    def MStep(self, posterior, data, mix_pi=None):
         # data has to be reshaped for parameter estimation
-        if isinstance(data,DataSet):
-            x = data.internalData[:,0]
-        elif isinstance(data,np.ndarray):
-            x = data[:,0]
+        if isinstance(data, DataSet):
+            x = data.internalData[:, 0]
+        elif isinstance(data, np.ndarray):
+            x = data[:, 0]
 
         else:
             raise TypeError, "Unknown/Invalid input to MStep."
@@ -312,28 +319,28 @@ class BinomialRegularizedDistribution(ProbDistribution):
         # for this data set
         if post_sum != 0.0:
             # computing ML estimates for nu
-            new_nu =   min(max(np.dot(posterior, x) / post_sum, 0.000000001),0.9999999999)# eq 15
-            new_nu0 =  min(max(np.sum(x) / nr, 0.000000001),0.9999999999) # eq 13 plus pseudo count
+            new_nu = min(max(np.dot(posterior, x) / post_sum, 0.000000001), 0.9999999999)# eq 15
+            new_nu0 = min(max(np.sum(x) / nr, 0.000000001), 0.9999999999) # eq 13 plus pseudo count
             new_theta0 = np.log(new_nu0) - np.log(1 - new_nu0); # eq (12)
             #print self.lambd
-            new_lambdl = self.lambd*nr/post_sum;
+            new_lambdl = self.lambd * nr / post_sum;
 
             #print new_theta0,new_nu0,new_nu
 
             #equation (17)
             #print new_nu,new_nu0,new_lambdl
-            if (new_nu >= new_nu0 + new_lambdl) :
-              new_theta =  np.log(new_nu-new_lambdl) - np.log(1-(new_nu-new_lambdl))
-              self.flag_selected = 1;
+            if (new_nu >= new_nu0 + new_lambdl):
+                new_theta = np.log(new_nu - new_lambdl) - np.log(1 - (new_nu - new_lambdl))
+                self.flag_selected = 1;
             elif (new_nu <= new_nu0 - new_lambdl):
-              new_theta =  np.log(new_nu+new_lambdl) - np.log(1-(new_nu-new_lambdl))
-              self.flag_selected = 1;
+                new_theta = np.log(new_nu + new_lambdl) - np.log(1 - (new_nu - new_lambdl))
+                self.flag_selected = 1;
             else:
-              new_theta = new_theta0;
-              self.flag_selected = 0;
-              #print "non selected", self.flag_selected
+                new_theta = new_theta0;
+                self.flag_selected = 0;
+                #print "non selected", self.flag_selected
         else:
-            raise InvalidPosteriorDistribution, "Sum of posterior is zero: "+str(self)+" has zero likelihood for data set."
+            raise InvalidPosteriorDistribution, "Sum of posterior is zero: " + str(self) + " has zero likelihood for data set."
 
         # assigning updated parameter values
         #self.lambdl = new_lambdl
@@ -343,37 +350,38 @@ class BinomialRegularizedDistribution(ProbDistribution):
         self.nu = new_nu
 
 
-    def isValid(self,x):
+    def isValid(self, x):
         try:
             float(x)
         except (ValueError):
             #print "Invalid data: ",x,"in BinomialDistribution."
-            raise InvalidDistributionInput, "\n\tInvalid data: "+str(x)+" in BinomialDistribution."
+            raise InvalidDistributionInput, "\n\tInvalid data: " + str(x) + " in BinomialDistribution."
 
-    def formatData(self,x):
-        if isinstance(x,list) and len(x) == 1:
+    def formatData(self, x):
+        if isinstance(x, list) and len(x) == 1:
             x = x[0]
         self.isValid(x)  # make sure x is valid argument
-        return [self.p,[x]]
+        return [self.dimension, [x]]
 
 
-    def flatStr(self,offset):
-        offset +=1
-        return "\t"*+offset + ";Binomial;"+str(self.theta)+";"+str(self.lambd)+"\n"
+    def flatStr(self, offset):
+        offset += 1
+        return "\t" * +offset + ";Binomial;" + str(self.theta) + ";" + str(self.lambd) + "\n"
 
-    def posteriorTraceback(self,x):
+    def posteriorTraceback(self, x):
         return self.pdf(x)
 
-    def merge(self,dlist, weights):
+    def merge(self, dlist, weights):
         raise DeprecationWarning, 'Part of the outdated structure learning implementation.'
 
     def selectionScore(self):
         # Evaluation of features
         # Eq. 26 of tsuda (nu is proportional to it)
         if self.flag_selected:
-          return self.nu
+            return self.nu
         else:
-          return 0
+            return 0
+
 
 class MixtureModelFeatureSelection(MixtureModel):
     """
@@ -388,21 +396,21 @@ class MixtureModelFeatureSelection(MixtureModel):
         # for all dimensions
         flags = np.zeros(len(self.components[0]))
         for i in range(len(self.components[0])):
-          for j in range(self.G):
-            flags[i] = flags[i] or self.components[j][i].flag_selected
+            for j in range(self.G):
+                flags[i] = flags[i] or self.components[j][i].flag_selected
         return flags
 
-    def rankFeatures(self,tissues=1):
+    def rankFeatures(self, tissues=1):
         # if multiple tisses, check sub-graph and tissue
         dim = len(self.components[0])
-        features = dim/tissues
+        features = dim / tissues
         scores = []
         for i in range(dim):
-          #scoreaux = 0
-          scoreaux = [self.components[j][i].selectionScore() for j in range(self.G)]
-          argmax = np.argmax(scoreaux)
-          max = np.max(scoreaux)
-          scores.append((max,argmax+1,i/features+1,i%features+1))
+            #scoreaux = 0
+            scoreaux = [self.components[j][i].selectionScore() for j in range(self.G)]
+            argmax = np.argmax(scoreaux)
+            max = np.max(scoreaux)
+            scores.append((max, argmax + 1, i / features + 1, i % features + 1))
         scores.sort()
         scores.reverse()
         return scores
@@ -414,7 +422,7 @@ class MixtureModelFeatureSelection(MixtureModel):
         for i in range(self.G):
             copy_components.append(copy.deepcopy(self.components[i]))
 
-        copy_model = MixtureModelFeatureSelection(self.G, copy_pi, copy_components,compFix = copy_compFix)
+        copy_model = MixtureModelFeatureSelection(self.G, copy_pi, copy_components, compFix=copy_compFix)
         copy_model.nr_tilt_steps = self.nr_tilt_steps
         copy_model.suff_p = self.suff_p
         copy.identFlag = self.identFlag
@@ -430,17 +438,19 @@ class MixtureModelFeatureSelection(MixtureModel):
 
         return copy_model
 
-def printFeatureResults(fileName,features):
+
+def printFeatureResults(fileName, features):
     """
     Outputs the results of the feature selection criteria from
     function rankFeatures to a flat file
     """
 
-    file = open(fileName,'w')
+    file = open(fileName, 'w')
     file.write('Feature\tTissue\tGroup\tIndex\n')
-    for (r,g,t,f) in features:
-        file.write(str(f)+'\t'+str(t)+'\t'+str(g)+'\t'+str(r)+'\n')
+    for (r, g, t, f) in features:
+        file.write(str(f) + '\t' + str(t) + '\t' + str(g) + '\t' + str(r) + '\n')
     file.close()
+
 
 def estimateWithReplication(mixture, data, repetitions, iterations, stopCriteria):
     """
@@ -449,163 +459,161 @@ def estimateWithReplication(mixture, data, repetitions, iterations, stopCriteria
     mixtureBest = []
     max = -9999999999999999.99;
     for j in range(repetitions):
-      try:
-        maux = copy.copy(mixture)
-        maux.modelInitialization(data)
-        #print maux
-        maux.EM(data,iterations,stopCriteria)
-        [l,log_l] = maux.EStep(data)
-        if log_l > max:
-          max = log_l
-          mixtureBest = maux
-      except  ConvergenceFailureEM:
-        pass
+        try:
+            maux = copy.copy(mixture)
+            maux.modelInitialization(data)
+            #print maux
+            maux.EM(data, iterations, stopCriteria)
+            [l, log_l] = maux.EStep(data)
+            if log_l > max:
+                max = log_l
+                mixtureBest = maux
+        except  ConvergenceFailureEM:
+            pass
     if mixtureBest == []:
-        raise ConvergenceFailureEM,"Convergence failed."
+        raise ConvergenceFailureEM, "Convergence failed."
     return mixtureBest
 
 
 if __name__ == '__main__':
 
-  from pymix import mixture
-  import scipy.stats
+    from pymix import mixture
+    import scipy.stats
 
 
 
-  # repeat 15 random samplings and estimate accuracies of clustering
+    # repeat 15 random samplings and estimate accuracies of clustering
 
-  datasets = 10 # no o datasets
-  dim = 100 # no of random dimesions
-  real = 10 # no of real dimensions
-  # varying feature selection variable (lambda)
-  laux=range(0,10)
-  laux=np.array(laux)*0.005
+    datasets = 10 # no o datasets
+    dim = 100 # no of random dimesions
+    real = 10 # no of real dimensions
+    # varying feature selection variable (lambda)
+    laux = range(0, 10)
+    laux = np.array(laux) * 0.005
 
-  resall = []
-  specall = []
-  sensall = []
-  featuresSelectedAll = []
+    resall = []
+    specall = []
+    sensall = []
+    featuresSelectedAll = []
 
+    for i in range(datasets):
 
-  for i in range(datasets):
+        featuresTrue = []
 
-      featuresTrue = []
+        # for simple testing, I sample data from a bernouli distribition with arbitrarly large dimension
 
-      # for simple testing, I sample data from a bernouli distribition with arbitrarly large dimension
+        # group 1
+        # first random dimensions
+        components = []
+        for i in range(dim):
+            components.append(BernoulliDistribution(0.2))
+            featuresTrue.append(0)
 
-      # group 1
-      # first random dimensions
-      components = []
-      for i in range(dim):
-        components.append(BernoulliDistribution(0.2))
-        featuresTrue.append(0)
+        # few real dimensions
+        for i in range(dim, dim + real):
+            components.append(BernoulliDistribution(0.1))
+            featuresTrue.append(1)
 
-      # few real dimensions
-      for i in range(dim,dim+real):
-        components.append(BernoulliDistribution(0.1))
-        featuresTrue.append(1)
-
-      c1 = ProductDistribution(components)
-
-
-      # group 2
-      # first random dimensions
-      components=[]
-      for i in range(dim):
-        components.append(BernoulliDistribution(0.2))
-      # few real dimensions
-      for i in range(dim,dim+real):
-        components.append(BernoulliDistribution(0.9))
-
-      c2 = ProductDistribution(components)
-
-      # creating the mixture mode model
-      pi = [0.5,0.5]
-      m = MixtureModel(2,pi,[c1,c2])
-
-      # sample data
-      data = m.sampleDataSet(200)
-      # get real classes
-      creal = m.classify(data,silent=1)
-
-      res = []
-      sens = []
-      spec = []
-      featuresSelected = []
+        c1 = ProductDistribution(components)
 
 
-      # test now all selections of lambda
+        # group 2
+        # first random dimensions
+        components = []
+        for i in range(dim):
+            components.append(BernoulliDistribution(0.2))
+            # few real dimensions
+        for i in range(dim, dim + real):
+            components.append(BernoulliDistribution(0.9))
 
-      for l in laux:
+        c2 = ProductDistribution(components)
 
-        # starting the mixture model
+        # creating the mixture mode model
+        pi = [0.5, 0.5]
+        m = MixtureModel(2, pi, [c1, c2])
 
-        component = []
-        for i in range(dim+real):
-          component.append(BinomialRegularizedDistribution(0,l))
-        c1 = ProductDistribution(component)
-        component = []
-        for i in range(dim+real):
-          component.append(BinomialRegularizedDistribution(0,l))
-        c2 = ProductDistribution(component)
-        # creating the model
-        pi = [0.4,0.6]
+        # sample data
+        data = m.sampleDataSet(200)
+        # get real classes
+        creal = m.classify(data, silent=1)
 
-
-        try:
-
-          m2 = MixtureModelFeatureSelection(2,pi,[c1,c2])
-
-          m2 = estimateWithReplication(m2,data,5,30,0.1)
-          c = m2.classify(data)
-          res.append(min(float(sum(c == creal))/len(creal),1-float(sum(c == creal))/len(creal)))
-
-          # keeping selected features
-          featuresSelected.append(m2.rankFeatures())
-
-          # checking feature selection
-          # as we have only two, we simply need to check of the components
-          total = 0
-          rightfeature = 0
-
-          featuresFlags =  m2.selectedFeatures()
-
-          total = sum(featuresFlags)
-          rightfeature = sum((featuresTrue+featuresFlags)==2)
-
-          print featuresFlags, rightfeature, sum(featuresTrue), float(rightfeature)/sum(featuresTrue)
-
-          #for (i,dist) in enumerate(c1):
-          #  total = total + dist.flag_selected;
-          #  if featuresTrue[i] == 1 and (dist.flag_selected == 1):
-          #      rightfeature = 1 + rightfeature;
-#         #   elif featuresTrue[i] == 1 and (dist.flag_selected == 0):
-#         #       missedFeature = 1 + missedFeature;
+        res = []
+        sens = []
+        spec = []
+        featuresSelected = []
 
 
-          sens.append(float(rightfeature)/sum(featuresTrue));
-          spec.append(float(total)/len(featuresTrue));
+        # test now all selections of lambda
+
+        for l in laux:
+
+            # starting the mixture model
+
+            component = []
+            for i in range(dim + real):
+                component.append(BinomialRegularizedDistribution(0, l))
+            c1 = ProductDistribution(component)
+            component = []
+            for i in range(dim + real):
+                component.append(BinomialRegularizedDistribution(0, l))
+            c2 = ProductDistribution(component)
+            # creating the model
+            pi = [0.4, 0.6]
+
+            try:
+
+                m2 = MixtureModelFeatureSelection(2, pi, [c1, c2])
+
+                m2 = estimateWithReplication(m2, data, 5, 30, 0.1)
+                c = m2.classify(data)
+                res.append(min(float(sum(c == creal)) / len(creal), 1 - float(sum(c == creal)) / len(creal)))
+
+                # keeping selected features
+                featuresSelected.append(m2.rankFeatures())
+
+                # checking feature selection
+                # as we have only two, we simply need to check of the components
+                total = 0
+                rightfeature = 0
+
+                featuresFlags = m2.selectedFeatures()
+
+                total = sum(featuresFlags)
+                rightfeature = sum((featuresTrue + featuresFlags) == 2)
+
+                print featuresFlags, rightfeature, sum(featuresTrue), float(rightfeature) / sum(featuresTrue)
+
+                #for (i,dist) in enumerate(c1):
+                #  total = total + dist.flag_selected;
+                #  if featuresTrue[i] == 1 and (dist.flag_selected == 1):
+                #      rightfeature = 1 + rightfeature;
+                #         #   elif featuresTrue[i] == 1 and (dist.flag_selected == 0):
+                #         #       missedFeature = 1 + missedFeature;
 
 
-        except  ConvergenceFailureEM:
-          print "Convergence error "
-          res.append('nan')
-          spec.append('nan')
-          sens.append('nan')
-          featuresSelected.append([])
+                sens.append(float(rightfeature) / sum(featuresTrue));
+                spec.append(float(total) / len(featuresTrue));
 
-      resall.append(res)
-      sensall.append(sens)
-      specall.append(spec)
-      featuresSelectedAll.append(featuresSelected)
 
-  print  scipy.stats.stats.nanmean(resall,0)
-  print  scipy.stats.stats.nanstd(resall,0)
-  print  scipy.stats.stats.nanmean(specall,0)
-  print  scipy.stats.stats.nanmean(sensall,0)
+            except  ConvergenceFailureEM:
+                print "Convergence error "
+                res.append('nan')
+                spec.append('nan')
+                sens.append('nan')
+                featuresSelected.append([])
 
-  for fs in featuresSelectedAll:
-      for f in fs:
-          print f
+        resall.append(res)
+        sensall.append(sens)
+        specall.append(spec)
+        featuresSelectedAll.append(featuresSelected)
+
+    print  scipy.stats.stats.nanmean(resall, 0)
+    print  scipy.stats.stats.nanstd(resall, 0)
+    print  scipy.stats.stats.nanmean(specall, 0)
+    print  scipy.stats.stats.nanmean(sensall, 0)
+
+    for fs in featuresSelectedAll:
+        for f in fs:
+            print f
 
 

@@ -39,6 +39,7 @@ import copy
 import random
 import numpy as np
 from .multinomial import MultinomialDistribution
+from pyLibrary.debugs.logs import Log
 from ..util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from ..util.dataset import DataSet
 
@@ -70,7 +71,7 @@ class DiscreteDistribution(MultinomialDistribution):
 
     def pdf(self, data):
         if isinstance(data, DataSet):
-            assert data.p == 1
+            assert data.dimension == 1
             x = data.getInternalFeature(0)
         elif hasattr(data, "__iter__"):
             x = data
@@ -129,8 +130,8 @@ class DiscreteDistribution(MultinomialDistribution):
             dsum = sum(self.phi[ind])
             self.phi[ind] = (self.phi[ind] * fix_phi) / dsum
 
-    def sample(self):
-        for i in range(self.p):
+    def sample(self, native=False):
+        for i in range(self.dimension):
             sum = 0.0
             p = random.random()
             for k in range(self.M):
@@ -156,20 +157,25 @@ class DiscreteDistribution(MultinomialDistribution):
         self.isValid(x)
         if type(x) == list:
             assert len(x) == 1
-            internal = self.alphabet.internal(str(x[0]))
+            internal = self.alphabet.internal(x[0])
         else:
-            internal = self.alphabet.internal(str(x))
+            internal = self.alphabet.internal(x)
         return [1, [internal]]
 
     def isValid(self, x):
-        if type(x) == str or type(x) == int or type(x) == float:
-            if not self.alphabet.isAdmissable(str(x)):
-                raise InvalidDistributionInput, "\n\tInvalid data: " + str(x) + " in DiscreteDistribution(" + str(self.alphabet.listOfCharacters) + ")."
+        if isinstance(x, (basestring, int, float)):
+            if not self.alphabet.isAdmissable(x):
+                Log.error("Invalid data: {{x}} in DiscreteDistribution({{chars}})", {
+                    "chars": self.alphabet.listOfCharacters,
+                    "x": repr(x)
+                })
+        elif type(x) == list and len(x) == 1:
+            self.isValid(x[0])
         else:
-            if type(x) == list and len(x) == 1:
-                self.isValid(x[0])
-            else:
-                raise InvalidDistributionInput, "\n\tInvalid data: " + str(x) + " in DiscreteDistribution(" + str(self.alphabet.listOfCharacters) + ")."
+            Log.error("Invalid data: {{x}} in DiscreteDistribution({{chars}})", {
+                "chars": self.alphabet.listOfCharacters,
+                "x": repr(x)
+            })
 
     def flatStr(self, offset):
         offset += 1

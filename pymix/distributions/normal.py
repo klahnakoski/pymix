@@ -41,6 +41,10 @@ import math
 from scipy import stats
 import numpy as np
 from .prob import ProbDistribution
+from pyLibrary.maths import Math
+from pyLibrary.testing.fuzzytestcase import assertAlmostEqual
+from pymix.util.ghmm import random_mt
+from pymix.util.ghmm.randvar import sqr
 from ..util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from ..util.dataset import DataSet
 
@@ -51,34 +55,36 @@ class NormalDistribution(ProbDistribution):
 
     """
 
-    def __init__(self, mu, sigma):
+    def __init__(self, mu, sigma, *dummy_args):
         """
         Constructor
 
         @param mu: mean parameter
         @param sigma: standard deviation parameter
+        @param dummy_args: for when initialization from number arrays
         """
-        self.p = 1
+        self.dimension = 1
         self.suff_p = 1
-        self.mu = mu
-        self.sigma = sigma
+        self.mean = mu
+        self.variance = sigma
 
         self.freeParams = 2
 
         self.min_sigma = 0.25  # minimal standard deviation
+        self.fixed = 0  #allow parameter update
 
     def __eq__(self, other):
         res = False
         if isinstance(other, NormalDistribution):
-            if np.allclose(other.mu, self.mu) and np.allclose(other.sigma, self.sigma):
+            if np.allclose(other.mean, self.mean) and np.allclose(other.variance, self.variance):
                 res = True
         return res
 
     def __copy__(self):
-        return NormalDistribution(copy.deepcopy(self.mu), copy.deepcopy(self.sigma))
+        return NormalDistribution(copy.deepcopy(self.mean), copy.deepcopy(self.variance))
 
     def __str__(self):
-        return "Normal:  [" + str(self.mu) + ", " + str(self.sigma) + "]"
+        return "Normal:  [" + str(self.mean) + ", " + str(self.variance) + "]"
 
 
     def pdf(self, data):
@@ -106,18 +112,34 @@ class NormalDistribution(ProbDistribution):
             raise TypeError, "Unknown/Invalid input type:" + str(type(data))
 
         # computing log likelihood
-        res = stats.norm.pdf(x, loc=self.mu, scale=self.sigma)
+        res = stats.norm.pdf(x, loc=self.mean, scale=self.variance)
         return np.log(res)
 
-    def sample(self):
-        return random.normalvariate(self.mu, self.sigma)
+    def linear_pdf(self, x):
+        # computing log likelihood
+        res = stats.norm.pdf(x, loc=self.mean, scale=math.sqrt(self.variance))
+
+        expo = math.exp(-1 * sqr(self.mean - x) / (2 * self.variance))
+        res2 = expo / math.sqrt(2 * math.pi * self.variance)
+
+        assertAlmostEqual(res, res2, places=10)
+
+        return res
+
+    def sample(self, native=False):
+        if native:
+            return random.normalvariate(self.mean, self.variance)
+        else:
+            r2 = -2.0 * Math.log(random_mt.float23())   # r2 ~ chi-square(2)
+            theta = 2.0 * math.pi * random_mt.float23()  # theta ~ uniform(0, 2 \pi)
+            return math.sqrt(self.variance) * math.sqrt(r2) * math.cos(theta) + self.mean
 
 
-    def sampleSet(self, nr):
+    def sampleSet(self, nr, native=False):
         res = np.zeros(nr, dtype='Float64')
 
         for i in range(nr):
-            res[i] = self.sample()
+            res[i] = self.sample(native=native)
 
         return res
 
@@ -165,8 +187,8 @@ class NormalDistribution(ProbDistribution):
             new_sigma = self.min_sigma
 
         # assigning updated parameter values
-        self.mu = new_mu
-        self.sigma = new_sigma
+        self.mean = new_mu
+        self.variance = new_sigma
 
     def isValid(self, x):
         try:
@@ -179,15 +201,16 @@ class NormalDistribution(ProbDistribution):
         if isinstance(x, list) and len(x) == 1:
             x = x[0]
         self.isValid(x)  # make sure x is valid argument
-        return [self.p, [x]]
+        return [self.dimension, [x]]
 
 
     def flatStr(self, offset):
         offset += 1
-        return "\t" * +offset + ";Norm;" + str(self.mu) + ";" + str(self.sigma) + "\n"
+        return "\t" * +offset + ";Norm;" + str(self.mean) + ";" + str(self.variance) + "\n"
 
     def posteriorTraceback(self, x):
         return self.pdf(x)
 
     def merge(self, dlist, weights):
         raise DeprecationWarning, 'Part of the outdated structure learning implementation.'
+

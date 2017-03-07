@@ -521,9 +521,9 @@ def plotPosteriorMax(mix, axis):
     pylab.title('Posterior Maximum Plot')
 
 def plotMixtureStructure(mix,headers,transpose=1):
-    plot = np.zeros(( mix.G,mix.dist_nr ) )
+    plot = np.zeros(( mix.G, mix.dist_nr ) )
 
-    for i in range(mix.dist_nr):
+    for i in range(len(mix.leaders)):
         #print "-------------\n",headers[i]
         #print mix.leaders[i]
         #print mix.groups[i]
@@ -545,7 +545,7 @@ def plotMixtureStructure(mix,headers,transpose=1):
                for g in mix.groups[i][l]:
                    plot[g,i] = l+3
 
-    for j in range(mix.dist_nr):
+    for j in range(plot.shape[1]):
         t = {}
         t[2] = 2
         t[1] = 1

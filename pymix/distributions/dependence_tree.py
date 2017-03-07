@@ -74,10 +74,10 @@ class DependenceTreeDistribution(ConditionalGaussDistribution):
             raise TypeError, "Unknown/Invalid input to MStep."
 
         post = posterior.sum() # sum of posteriors
-        self.mu = np.dot(posterior, x) / post
+        self.mean = np.dot(posterior, x) / post
 
         # centered input values (with new mus)
-        centered = np.subtract(x, np.repeat([self.mu], len(x), axis=0));
+        centered = np.subtract(x, np.repeat([self.mean], len(x), axis=0));
 
 
         # estimating correlation factor
@@ -107,11 +107,11 @@ class DependenceTreeDistribution(ConditionalGaussDistribution):
 
         # start with an empty tree and random vertex
         edgestree = {}
-        for i in range(self.p):
+        for i in range(self.dimension):
             edgestree[i] = []
         verticestree = [0]
 
-        while len(verticestree) < self.p:
+        while len(verticestree) < self.dimension:
             # possible edges = only ones form vertices at the current tree
             candidates = weights[verticestree, :]
 
@@ -142,7 +142,7 @@ class DependenceTreeDistribution(ConditionalGaussDistribution):
         queue = []
         # directing the tree from the root
         parent[root] = -1
-        visited = np.zeros((self.p, 1))
+        visited = np.zeros((self.dimension, 1))
         for u in tree[root]:
             queue.append((root, u))
             visited[root] = 1
@@ -164,6 +164,6 @@ class DependenceTreeDistribution(ConditionalGaussDistribution):
         return struct
 
     def __str__(self):
-        return 'Dependence Tree: \nmu=' + str(self.mu) + ' \nsigma=' + str(self.sigma) + '\nw=' + str(self.w) + '\nparents=' + str(self.parents)
+        return 'Dependence Tree: \nmu=' + str(self.mean) + ' \nsigma=' + str(self.variance) + '\nw=' + str(self.w) + '\nparents=' + str(self.parents)
 
 

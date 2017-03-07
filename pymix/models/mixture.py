@@ -36,12 +36,12 @@
 ################################################################################
 
 import copy
-import math
 import random
 import sys
 
 import numpy as np
 
+from pyLibrary.maths import Math
 from ..util import mixextend
 from ..distributions.prob import ProbDistribution
 from ..distributions.product import ProductDistribution
@@ -49,6 +49,7 @@ from ..util.errors import InvalidPosteriorDistribution, ConvergenceFailureEM, In
 from ..util.dataset import DataSet
 from ..util.maths import sum_logs, dict_intersection
 from ..util.stats import entropy, sym_kl_dist, get_posterior
+from pyLibrary.collections import array
 
 
 class MixtureModel(ProbDistribution):
@@ -73,7 +74,7 @@ class MixtureModel(ProbDistribution):
         assert abs((1.0 - sum(pi))) < 1e-12, "sum(pi) = " + str(sum(pi)) + ", " + str(abs((1.0 - sum(pi))))
 
         self.freeParams = 0
-        self.p = components[0].p
+        self.dimension = components[0].dimension
 
         # Internally components must be a list of ProductDistribution objects. In case the input is a list of
         # ProbDistributions we convert components accordingly.
@@ -81,18 +82,16 @@ class MixtureModel(ProbDistribution):
             # make sure all elements of components are ProbDistribution of the same dimension
             for c in components:
                 assert isinstance(c, ProbDistribution)
-                assert c.p == self.p
+                assert c.dimension == self.dimension
             for i, c in enumerate(components):
                 components[i] = ProductDistribution([c])
-
-        self.dist_nr = components[0].dist_nr
 
         # some checks to ensure model validity
         for c in components:
             # components have to be either ProductDistribution objects or a list of univariate ProbDistribution objects
             assert isinstance(c, ProductDistribution), "Got " + str(c.__class__) + " as component."
-            assert self.p == c.p, str(self.p) + " != " + str(c.p)
-            assert self.dist_nr == c.dist_nr
+            assert self.dimension == c.dimension, str(self.dimension) + " != " + str(c.dimension)
+            assert len(components[0]) == len(c)
             self.freeParams += c.freeParams
 
         self.freeParams += G - 1  # free parameters of the mixture coefficients
@@ -169,7 +168,7 @@ class MixtureModel(ProbDistribution):
 
     def __str__(self):
         s = "G = " + str(self.G)
-        s += "\np = " + str(self.p)
+        s += "\np = " + str(self.dimension)
         s += "\npi =" + str(self.pi) + "\n"
         s += "compFix = " + str(self.compFix) + "\n"
         for i in range(self.G):
@@ -192,13 +191,13 @@ class MixtureModel(ProbDistribution):
         # for a model with group structure we have to check for valid model topology
         if self.struct:
             # ensuring identical number of distributions in all components
-            nr = self.components[0].dist_nr
+            nr = len(self.components[0])
             for i in range(1, self.G):
                 assert isinstance(self.components[i], ProductDistribution)
-                assert self.components[i].dist_nr == nr
+                assert len(self.components[i]) == nr
                 # checking for consistent dimensionality of elementar distributions among components
                 for j in range(nr):
-                    assert self.components[i][j].p == self.components[0][j].p
+                    assert self.components[i][j].dimension == self.components[0][j].dimension
                     assert self.components[i][j].freeParams == self.components[0][j].freeParams
 
             # if there is already a CSI structure in the model, components within the same group
@@ -280,7 +279,7 @@ class MixtureModel(ProbDistribution):
                 # components are product distributions that may contain mixtures
                 last_index = 0
 
-                for j in range(self.components[i].dist_nr):
+                for j in range(len(self.components[i])):
                     if isinstance(self.components[i][j], MixtureModel):
                         dat_j = data.singleFeatureSubset(j)
                         self.components[i][j].modelInitialization(dat_j, rtype=rtype, missing_value=missing_value)
@@ -323,16 +322,16 @@ class MixtureModel(ProbDistribution):
             p[j] = sum_logs(logp_list[:, j])
         return p
 
-    def sample(self):
+    def sample(self, native=False):
         sum = 0.0
         p = random.random()
         for k in range(self.G):
             sum += self.pi[k]
             if sum >= p:
                 break
-        return self.components[k].sample()
+        return self.components[k].sample(native=native)
 
-    def sampleSet(self, nr):
+    def sampleSet(self, nr, native=False):
         ls = []
         for i in range(nr):
             sum = 0.0
@@ -341,11 +340,11 @@ class MixtureModel(ProbDistribution):
                 sum += self.pi[k]
                 if sum >= p:
                     break
-            ls.append(self.components[k].sample())
+            ls.append(self.components[k].sample(native=native))
         return ls
 
 
-    def sampleDataSet(self, nr):
+    def sampleDataSet(self, nr, native=False):
         """
         Returns a DataSet object of size 'nr'.
 
@@ -353,17 +352,17 @@ class MixtureModel(ProbDistribution):
 
         @return: DataSet object
         """
-        ls = self.sampleSet(nr)
+        ls = self.sampleSet(nr, native=native)
         data = DataSet()
         data.dataMatrix = ls
         data.N = nr
-        data.p = self.p
+        data.dimension = self.dimension
         data.sampleIDs = []
 
         for i in range(data.N):
             data.sampleIDs.append("sample" + str(i))
 
-        for h in range(data.p):
+        for h in range(data.dimension):
             data.headers.append("X_" + str(h))
 
         data.internalInit(self)
@@ -383,13 +382,13 @@ class MixtureModel(ProbDistribution):
         data = DataSet()
         data.dataMatrix = ls
         data.N = nr
-        data.p = self.p
+        data.dimension = self.dimension
         data.sampleIDs = []
 
         for i in range(data.N):
             data.sampleIDs.append("sample" + str(i))
 
-        for h in range(data.p):
+        for h in range(data.dimension):
             data.headers.append("X_" + str(h))
 
         data.internalInit(self)
@@ -544,7 +543,7 @@ class MixtureModel(ProbDistribution):
             if self.struct:
                 datRange = self.components[0].suff_dataRange
 
-                for j in range(self.dist_nr):
+                for j in range(len(self.components[0])):
                     for k in self.leaders[j]:
                         if j == 0:
                             prev = 0
@@ -657,7 +656,7 @@ class MixtureModel(ProbDistribution):
         @return: tuple of log likelihood matrices and sum of log-likelihood of components
 
         """
-        log_l = np.zeros((self.G, data.N), dtype='Float64')
+        log_l = array.zeros(self.G)
         log_col_sum = np.zeros(data.N, dtype='Float64')  # array of column sums of log_l
         log_pi = np.log(self.pi)  # array of log mixture coefficients
 
@@ -987,7 +986,7 @@ class MixtureModel(ProbDistribution):
 
             # if there is a model structure we update the leader distributions only
             if self.struct:
-                for j in range(self.dist_nr):
+                for j in range(len(self.components[0])):
                     for k in self.leaders[j]:
                         # compute group posterior
                         # XXX extension function for pooled posterior ?
@@ -1064,7 +1063,7 @@ class MixtureModel(ProbDistribution):
         z = np.ones(data.N, dtype='Int32') * -1
 
         entropy_list = np.zeros(data.N, dtype='Float64')
-        max_entropy = math.log(self.G, 2)
+        max_entropy = Math.log(self.G, 2)
 
         # compute posterior entropies
         for i in range(data.N):
@@ -1162,7 +1161,7 @@ class MixtureModel(ProbDistribution):
         # updating structure if necessary
         if self.struct:
             f = lambda x: index_map[x]
-            for j in range(self.dist_nr):
+            for j in range(len(self.components[0])):
                 new_l = map(f, self.leaders[j])
                 order_leaders.append(new_l)
                 d = {}
@@ -1173,7 +1172,7 @@ class MixtureModel(ProbDistribution):
 
             # reformat leaders and groups such that the minimal
             # index of a group is used as the leader
-            for j in range(self.dist_nr):
+            for j in range(len(self.components[0])):
                 for lind, lead in enumerate(order_leaders[j]):
                     tg = [lead] + order_groups[j][lead]
 
@@ -1269,7 +1268,7 @@ class MixtureModel(ProbDistribution):
 
         l, log_p = self.EStep(data)
 
-        print "seqLen = ", data.p
+        print "seqLen = ", data.dimension
         print "pi = ", self.pi
         max_en = entropy([1.0 / self.G] * self.G)
         for c in range(self.G):
@@ -1358,8 +1357,8 @@ class MixtureModel(ProbDistribution):
         change = 0
 
         # building posterior factor matrix for the current group structure
-        l = np.zeros((self.G, data.N, self.dist_nr ), dtype='Float64')
-        for j in range(self.dist_nr):
+        l = np.zeros((self.G, data.N, len(self.components[0]) ), dtype='Float64')
+        for j in range(len(self.components[0])):
             if j == 0:
                 prev = 0
             else:
@@ -1376,11 +1375,11 @@ class MixtureModel(ProbDistribution):
         g = np.sum(l, 2)
         for k in range(self.G):
             g[k, :] += np.log(self.pi[k])
-        sum_logs = np.zeros(data.N, dtype='Float64')
+        _sum_logs = np.zeros(data.N, dtype='Float64')
         for n in range(data.N):
-            sum_logs[n] = sum_logs(g[:, n])
-        lk = sum(sum_logs)
-        for j in range(self.dist_nr):
+            _sum_logs[n] = sum_logs(g[:, n])
+        lk = sum(_sum_logs)
+        for j in range(len(self.components[0])):
             # initialize free parameters
             full_fp_0 = self.freeParams
             if not silent:
@@ -1462,10 +1461,10 @@ class MixtureModel(ProbDistribution):
                 for k in range(self.G):
                     g[k, :] += np.log(self.pi[k])
 
-                sum_logs = np.zeros(data.N, dtype='Float64')
+                _sum_logs = np.zeros(data.N, dtype='Float64')
                 for n in range(data.N):
-                    sum_logs[n] = sum_logs(g[:, n])
-                lk_1 = sum(sum_logs)
+                    _sum_logs[n] = sum_logs(g[:, n])
+                lk_1 = sum(_sum_logs)
                 full_BIC_1 = -2 * lk_1 + (full_fp_1 * np.log(data.N))
                 AIC_0 = -2 * lk + ( 2 * full_fp_0 )
                 AIC_1 = -2 * lk_1 + ( 2 * full_fp_1 )
@@ -1521,7 +1520,7 @@ class MixtureModel(ProbDistribution):
                     term = 1
 
                     # reassinging groups and leaders
-        for j in range(self.dist_nr):
+        for j in range(len(self.components[0])):
             for l in self.leaders[j]:
                 for g in self.groups[j][l]:
                     self.components[g][j] = self.components[l][j]
@@ -1533,7 +1532,7 @@ class MixtureModel(ProbDistribution):
         """
         assert self.struct == 1, "No structure in model."
 
-        distNr = self.components[0].dist_nr
+        distNr = len(self.components[0])
         # features with only one group can be excluded
         exclude = []
         for i in range(distNr):
@@ -1732,8 +1731,8 @@ class MixtureModel(ProbDistribution):
         if data:
             headers = data.headers
         else:
-            headers = range(self.dist_nr)
-        for i in range(self.dist_nr):
+            headers = range(len(self.components[0]))
+        for i in range(len(self.components[0])):
             print "Feature " + str(i) + ": " + str(headers[i])
             for j, l in enumerate(self.leaders[i]):
                 if self.groups[i][l] == []:
@@ -1759,7 +1758,7 @@ class MixtureModel(ProbDistribution):
                     #self.freeParams = (self.components[0].freeParams * self.G) + self.G-1
         else:
             fp = 0
-            for i in range(self.dist_nr):
+            for i in range(len(self.components[0])):
                 for l in self.leaders[i]:
                     fp += self.components[l][i].freeParams
             fp += self.G - 1
@@ -1775,13 +1774,13 @@ class MixtureModel(ProbDistribution):
         r = range(self.G)
         try:
             # check valid entries in group and leader
-            for j in range(self.dist_nr):
+            for j in range(len(self.components[0])):
                 for l in self.leaders[j]:
                     assert l in r
                     for g in self.groups[j][l]:
                         assert g in r
                 # check completeness of structure
-            for j in range(self.dist_nr):
+            for j in range(len(self.components[0])):
                 tmp = copy.copy(self.leaders[j])
                 for g in self.groups[j].keys():
                     tmp += copy.copy(self.groups[j][g])
@@ -1797,7 +1796,7 @@ class MixtureModel(ProbDistribution):
         """
         Returns sufficient statistics for a given data set and posterior.
         """
-        assert self.dist_nr == 1
+        assert len(self.components[0]) == 1
         sub_post = get_posterior(self, data, logreturn=True)
 
         suff_stat = []
@@ -1807,9 +1806,9 @@ class MixtureModel(ProbDistribution):
                 suff_stat.append([float('-inf'), float('inf')])
                 continue
 
-            np = sub_post[i] + posterior
-            inds = np.where(np != float('-inf'))
-            suff_stat.append(self.components[i][0].sufficientStatistics(np[inds], dat[inds]))
+            np_ = sub_post[i] + posterior
+            inds = np.where(np_ != float('-inf'))
+            suff_stat.append(self.components[i][0].sufficientStatistics(np_[inds], dat[inds]))
 
         return suff_stat
 

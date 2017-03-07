@@ -37,6 +37,7 @@
 
 import copy
 import numpy as np
+import scipy
 from ..distributions.discrete import DiscreteDistribution
 from ..distributions.multinomial import MultinomialDistribution
 from ..util import mixextend
@@ -62,7 +63,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
         self.M = M
         self.alpha = np.array(alpha, dtype='Float64')
         self.alpha_sum = np.sum(alpha) # assumes alphas to remain constant !
-        self.p = M
+        self.dimension = M
         self.suff_p = M
         self.freeParams = M
 
@@ -88,7 +89,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
         """
         Samples from Dirichlet distribution
         """
-        phi = mixextend.wrap_gsl_dirichlet_sample(self.alpha, self.M)
+        phi = scipy.random.dirichlet(self.alpha, self.M)
 
         d = DiscreteDistribution(self.M, phi)
         return d
@@ -141,7 +142,7 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
 
         term1 = mixextend.wrap_gsl_sf_lngamma(self.alpha_sum) - mixextend.wrap_gsl_sf_lngamma(self.alpha_sum + x_sum)
         term2 = 0.0
-        for i in range(self.p):
+        for i in range(self.dimension):
             term2 += mixextend.wrap_gsl_sf_lngamma(self.alpha[i] + x[i]) - mixextend.wrap_gsl_sf_lngamma(self.alpha[i])
 
         res = term1 + term2

@@ -73,7 +73,7 @@ setup(
     license='LGPL',
     author="Benjamin Georgi",
     author_email="georgi@molgen.mpg.de",
-    install_requires=['numpy', 'scipy'],
+    install_requires=['numpy', 'scipy', 'pyLibrary'],
     ext_modules=[
         Extension('_C_mixextend',
             ['C_mixextend.c'],

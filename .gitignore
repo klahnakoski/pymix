@@ -5,3 +5,6 @@ __pycache__
 .svn
 *.mix
 *.pyc
+/.env
+/pyLibrary
+/out

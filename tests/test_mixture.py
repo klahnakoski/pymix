@@ -63,12 +63,11 @@ from pymix.priors.dirichlet import DirichletPrior
 from pymix.priors.dirichlet_mixture import DirichletMixturePrior
 from pymix.priors.mixture_model import MixtureModelPrior
 from pymix.priors.product import ProductDistributionPrior
-from pymix.util.alphabet import Alphabet
 from pymix.util.candidate_group import CandidateGroup
 from pymix.util.constrained_dataset import ConstrainedDataSet
 from pymix.util.dataset import DataSet
-from pymix.vendor.pyLibrary.thread.threads import Thread
-from pymix.vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
+from pyLibrary.thread.threads import Thread
+from pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 
 
@@ -120,6 +119,8 @@ from pymix.vendor.pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 #            print ' '*14 ,row,','
 #    print ' '*8 +'data.fromList(l)'
 #    print ' '*8 +'data.internalInit(gen)'
+from pymix.util.ghmm import random_mt
+from pymix.vendor.ghmm.emission_domain import Alphabet
 
 
 def _testLists(tcase, list1, list2, places):
@@ -189,7 +190,7 @@ class DataSetTests(FuzzyTestCase):
 
             self.assertEqual(self.d1.N, 234)
 
-            self.assertEqual(self.d1.p, 42)
+            self.assertEqual(self.d1.dimension, 42)
 
             self.d1.fromFile('./tests/test_fromfile1.txt', col_headers=True)
 
@@ -223,7 +224,7 @@ class DataSetTests(FuzzyTestCase):
         self.d1.fromArray(a, IDs=sID, headers=cH)
 
         self.assertEqual(self.d1.N, 5)
-        self.assertEqual(self.d1.p, 3)
+        self.assertEqual(self.d1.dimension, 3)
         self.assertEqual(self.d1.sampleIDs, sID)
         self.assertEqual(self.d1.headers, cH)
 
@@ -239,7 +240,7 @@ class DataSetTests(FuzzyTestCase):
         self.d2.fromArray(dat, IDs=datID, headers=datHeaders, col_headers=datClass)
 
         self.assertEqual(self.d2.N, 4)
-        self.assertEqual(self.d2.p, 10)
+        self.assertEqual(self.d2.dimension, 10)
         self.assertEqual(self.d2.sampleIDs, datID)
         self.assertEqual(self.d2.headers, datHeaders)
         self.assertEqual(self.d2.col_headers, datClass)
@@ -258,7 +259,7 @@ class DataSetTests(FuzzyTestCase):
         self.d1.fromList(l, IDs=sID, headers=cH)
 
         self.assertEqual(self.d1.N, 5)
-        self.assertEqual(self.d1.p, 4)
+        self.assertEqual(self.d1.dimension, 4)
         self.assertEqual(self.d1.sampleIDs, sID)
         self.assertEqual(self.d1.headers, cH)
 
@@ -274,7 +275,7 @@ class DataSetTests(FuzzyTestCase):
         self.d2.fromList(dat, IDs=datID, headers=datHeaders, col_headers=datClass)
 
         self.assertEqual(self.d2.N, 4)
-        self.assertEqual(self.d2.p, 10)
+        self.assertEqual(self.d2.dimension, 10)
         self.assertEqual(self.d2.sampleIDs, datID)
         self.assertEqual(self.d2.headers, datHeaders)
         self.assertEqual(self.d2.col_headers, datClass)
@@ -295,12 +296,12 @@ class DataSetTests(FuzzyTestCase):
             self.assertEqual(self.d1.row_headers, [])
 
             self.assertEqual(self.d1.N, 1095)
-            self.assertEqual(self.d1.p, 42)
+            self.assertEqual(self.d1.dimension, 42)
 
             self.d1.transpose()
 
             self.assertEqual(self.d1.N, 42)
-            self.assertEqual(self.d1.p, 1095)
+            self.assertEqual(self.d1.dimension, 1095)
 
             self.assertEqual(self.d1.row_headers, ['DLBCL2', 'DLBCL2', 'DLBCL2',
                 'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1', 'DLBCL1',
@@ -343,7 +344,7 @@ class DataSetTests(FuzzyTestCase):
         gen = MixtureModel(2, pi, [n1, n2])
 
         random.seed(3586662)
-        data = gen.sampleDataSet(10)
+        data = gen.sampleDataSet(10, native=True)
 
         f0 = data.getInternalFeature(0)
 
@@ -409,12 +410,12 @@ class DataSetTests(FuzzyTestCase):
             [['8', '0', '1'], ['.', '.', '8'], ['1', '8', '1'], ['.', '1', '.'], ['1', '.', '.'], ['.', '.', '.'], ['.', '0', '0'], ['1', '.', '.'], ['.', '.', '.'], ['0', '8', '1'], ['1', '0', '8'],
                 ['1', '8', '0'], ['0', '.', '.']])
         self.assertEqual(data.headers, [1, 2, 3])
-        self.assertEqual(data.p, 3)
+        self.assertEqual(data.dimension, 3)
 
         data.removeFeatures([1, 3], silent=1)
         self.assertEqual(data.dataMatrix, [['0'], ['.'], ['8'], ['1'], ['.'], ['.'], ['0'], ['.'], ['.'], ['8'], ['0'], ['8'], ['.']])
         self.assertEqual(data.headers, [2])
-        self.assertEqual(data.p, 1)
+        self.assertEqual(data.dimension, 1)
 
         dat = [['0.25', '0.70', '-0.22', '-0.80', '-0.10', '-0.23', '-0.37', '-0.74', '0.33', '0.15'],
             ['0.31', '1.12', '-0.25', '1.24', '1.06', '0.49', '0.46', '-0.82', '0.68', '1.03'],
@@ -439,7 +440,7 @@ class DataSetTests(FuzzyTestCase):
                 ['0.09', '-0.08', '0.92', '0.58', '0.02', '0.81', '-0.12', '0.12', '0.35'], ['0.01', '1.04', '-0.08', '-0.18', '-0.01', '0.20', '-0.77', '0.01', '-0.01']])
         self.assertEqual(self.d1.headers, ['g0', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9'])
         self.assertEqual(self.d1.col_headers, ['DLBCL2', 'DLBCL2', 'DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL1'])
-        self.assertEqual(self.d1.p, 9)
+        self.assertEqual(self.d1.dimension, 9)
 
         self.d1.removeFeatures(['g0', 'g3'], silent=1)
         self.assertEqual(self.d1.dataMatrix,
@@ -448,7 +449,7 @@ class DataSetTests(FuzzyTestCase):
                 ['-0.08', '0.58', '0.02', '0.81', '-0.12', '0.12', '0.35'], ['1.04', '-0.18', '-0.01', '0.20', '-0.77', '0.01', '-0.01']])
         self.assertEqual(self.d1.headers, ['g2', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9'])
         self.assertEqual(self.d1.col_headers, ['DLBCL2', 'DLBCL1', 'DLBCL1', 'DLBCL2', 'DLBCL1', 'DLBCL2', 'DLBCL1'])
-        self.assertEqual(self.d1.p, 7)
+        self.assertEqual(self.d1.dimension, 7)
 
     def testremovesamples(self):
         data = DataSet()
@@ -569,7 +570,7 @@ class FormatDataTests(FuzzyTestCase):
         self.assertEqual(s, [1, [0]])
 
         # single multivariate Normal distribution
-        dist = MultiNormalDistribution(2, [0.0, 1.0], [[0.3, 0.2], [0.1, 1.0]])
+        dist = MultiNormalDistribution([0.0, 1.0], [[0.3, 0.2], [0.1, 1.0]])
         s = dist.formatData([0.3, 1.2])
         self.assertEqual(s, [2, [0.29999999999999999, 1.2]])
 
@@ -637,6 +638,7 @@ class NormalDistributionTests(FuzzyTestCase):
     """
 
     def setUp(self):
+        self.set_default_places(8)
         self.dist = NormalDistribution(0.0, 1.0)
 
 
@@ -651,13 +653,13 @@ class NormalDistributionTests(FuzzyTestCase):
     def testcopy(self):
         cp = copy.copy(self.dist)
 
-        self.dist.mu = 5.0
-        self.assertEqual(self.dist.mu, 5.0)
-        self.dist.sigma = 3.2
-        self.assertEqual(self.dist.sigma, 3.2)
+        self.dist.mean = 5.0
+        self.assertEqual(self.dist.mean, 5.0)
+        self.dist.variance = 3.2
+        self.assertEqual(self.dist.variance, 3.2)
 
-        self.assertEqual(cp.mu, 0.0)
-        self.assertEqual(cp.sigma, 1.0)
+        self.assertEqual(cp.mean, 0.0)
+        self.assertEqual(cp.variance, 1.0)
 
 
     def testpdf(self):
@@ -672,29 +674,29 @@ class NormalDistributionTests(FuzzyTestCase):
         post1 = np.array([0.5, 0.5, 0.5, 0.5, 0.5])   # dummy posterior
 
         self.dist.MStep(post1, a)
-        self.assertEqual(self.dist.mu, 2.04)
-        self.assertEqual(self.dist.sigma, 3.37081592497)
+        self.assertEqual(self.dist.mean, 2.04)
+        self.assertEqual(self.dist.variance, 3.37081592497)
 
         post2 = np.array([0.1, 0.1, 0.8, 0.1, 0.8])   # dummy posterior
         self.dist.MStep(post2, a)
-        self.assertEqual(self.dist.mu, 4.58947368421)
-        self.assertEqual(self.dist.sigma, 3.03469321034)
+        self.assertEqual(self.dist.mean, 4.58947368421)
+        self.assertEqual(self.dist.variance, 3.03469321034)
 
     def testsample(self):
         random.seed(3586662)
-        x = self.dist.sample()
+        x = self.dist.sample(native=True)
         self.assertEqual(x, -1.130581561)
 
 
     def testsampleset(self):
         random.seed(3586662)
-        x = self.dist.sampleSet(10)
+        x = self.dist.sampleSet(10, native=True)
         self.assertEqual(x, [-1.13058156, -1.66891075, -3.05726151, -0.63949235, -1.57436875, -0.46658398, 0.8928686, -1.97693209, 0.17397463, 0.48817142])
 
 
     def testisvalid(self):
         self.dist.isValid(0.5)
-        self.assertRaises(InvalidDistributionInput, self.dist.isValid, 'A')
+        self.assertRaises(Exception, self.dist.isValid, 'A')
 
     def testflatstr(self):
         f = self.dist.flatStr(1)
@@ -713,12 +715,13 @@ class NormalDistributionTests(FuzzyTestCase):
 
 class MultiNormalDistributionTests(FuzzyTestCase):
     def setUp(self):
+        self.set_default_places(8)
         random.seed(3586662)
 
-        self.dist = MultiNormalDistribution(3, [0.0, 1.0, 2.0], [[1.0, 0.1, 0.04], [0.1, 1.0, 0.2], [0.2, 0.12, 1.0]])
+        self.dist = MultiNormalDistribution([0.0, 1.0, 2.0], [[1.0, 0.1, 0.04], [0.1, 1.0, 0.2], [0.2, 0.12, 1.0]])
         #print self.dist
 
-        self.data = self.dist.sampleSet(10)
+        self.data = self.dist.sampleSet(10, native=True)
         #?!# self.data
 
 
@@ -738,18 +741,18 @@ class MultiNormalDistributionTests(FuzzyTestCase):
         post = np.ones(10, dtype='Float64')
         self.dist.MStep(post, self.data)
 
-        self.assertEqual([round(m, 14) for m in self.dist.mu], [-0.35102902303187, 0.41163352335608999, 1.16925349374317])
-        self.assertEqual([round(s, 14) for s in self.dist.sigma[0]], [0.58092143386218997, -0.017474956383180001, 0.58669594241713996])
-        self.assertEqual([round(s, 14) for s in self.dist.sigma[1]], [-0.017474956383180001, 1.08875448993966, 0.44125993864780999])
-        self.assertEqual([round(s, 14) for s in self.dist.sigma[2]], [0.58669594241713996, 0.44125993864780999, 1.1047533761494699])
+        self.assertEqual([round(m, 14) for m in self.dist.mean], [-0.35102902303187, 0.41163352335608999, 1.16925349374317])
+        self.assertEqual([round(s, 14) for s in self.dist.variance[0]], [0.58092143386218997, -0.017474956383180001, 0.58669594241713996])
+        self.assertEqual([round(s, 14) for s in self.dist.variance[1]], [-0.017474956383180001, 1.08875448993966, 0.44125993864780999])
+        self.assertEqual([round(s, 14) for s in self.dist.variance[2]], [0.58669594241713996, 0.44125993864780999, 1.1047533761494699])
 
 
     def testsample(self):
-        s = self.dist.sample()
-        self.assertEqual([round(v, 14) for v in s], [-1.3330318465269, 1.2010161194550599, 0.35547714589259])
+        s = self.dist.sample(native=True)
+        self.assertEqual(s, [-1.3330318465269, 1.2010161194550599, 0.35547714589259], places=14)
 
     def testsampleset(self):
-        s = self.dist.sampleSet(3)
+        s = self.dist.sampleSet(3, native=True)
         self.assertEqual(s, [[-1.33303185, 1.20101612, 0.35547715], [0.45069163, 0.39710096, 3.32416995], [0.29382531, 1.33373668, 2.58634925]])
 
 
@@ -758,9 +761,9 @@ class MultiNormalDistributionTests(FuzzyTestCase):
 
 
     def testflatstr(self):
-        self.assertEqual(self.dist.p, 3)
-        self.assertEqual(self.dist.mu, [0.0, 1.0, 2.0])
-        self.assertEqual(self.dist.sigma, [[1.0, 0.10000000000000001, 0.040000000000000001], [0.10000000000000001, 1.0, 0.20000000000000001], [0.20000000000000001, 0.12, 1.0]])
+        self.assertEqual(self.dist.dimension, 3)
+        self.assertEqual(self.dist.mean, [0.0, 1.0, 2.0])
+        self.assertEqual(self.dist.variance, [[1.0, 0.10000000000000001, 0.040000000000000001], [0.10000000000000001, 1.0, 0.20000000000000001], [0.20000000000000001, 0.12, 1.0]])
         # f = self.dist.flatStr(1)
         # self.assertEqual(f, '\t\t;MultiNormal;3;[0.0,1.0,2.0];[[1.0,0.10000000000000001,0.040000000000000001], [0.10000000000000001,1.0,0.20000000000000001], [0.20000000000000001,0.12,1.0]]\n')
 
@@ -901,6 +904,8 @@ class DiscreteDistributionTests(FuzzyTestCase):
     """
 
     def setUp(self):
+        self.set_default_places(8)
+
         self.DNA = Alphabet(['A', 'C', 'G', 'T'])
 
         self.d = DiscreteDistribution(4, [0.2, 0.3, 0.4, 0.1], self.DNA)
@@ -924,7 +929,7 @@ class DiscreteDistributionTests(FuzzyTestCase):
     def testmstep(self):
         post = np.array([0.4, 0.2, 0.1, 0.8, 0.9])
         self.d.MStep(post, self.dat)
-        self.assertEqual(self.d.phi, [0.20833333, 0.08333333, 0.33333333, 0.375])
+        self.assertEqual(self.d.phi, [0.20833333, 0.08333333, 0.33333333, 0.375], digits=9)
 
     def testsample(self):
         random.seed(3586662)
@@ -939,9 +944,9 @@ class DiscreteDistributionTests(FuzzyTestCase):
 
     def testisvalid(self):
         self.d.isValid('A')
-        self.assertRaises(InvalidDistributionInput, self.d.isValid, 'U')
+        self.assertRaises(Exception, self.d.isValid, 'U')
         self.d.isValid(['T'])
-        self.assertRaises(InvalidDistributionInput, self.d.isValid, ['U'])
+        self.assertRaises(Exception, self.d.isValid, ['U'])
 
 
     def testflatstr(self):
@@ -993,6 +998,7 @@ class DirichletPriorTests(FuzzyTestCase):
     """
 
     def setUp(self):
+        self.set_default_places(7)
         self.d1 = DirichletPrior(4, [1.0, 1.0, 1.0, 1.0])  # uniform prior
         self.d2 = DirichletPrior(4, [1.5, 1.5, 1.5, 1.5])  # prior with emphasis on uniform phi
         self.d3 = DirichletPrior(4, [1.01, 1.01, 1.01, 3.0])  # prior with emphasis on the last symbol
@@ -1055,13 +1061,13 @@ class DirichletPriorTests(FuzzyTestCase):
 
     def testmarginal(self):
         res1 = self.d1.marginal([1.0, 2.0, 11.0, 3.0])
-        self.assertEqual(res1, -20.5566424959)
+        self.assertEqual(res1, -20.5566424959, places=12)
         res2 = self.d2.marginal([5.0, 8.0, 6.0, 1.0])
-        self.assertEqual(res2, -27.5620419418)
+        self.assertEqual(res2, -27.5620419418, places=12)
         res3 = self.d3.marginal([5.0, 4.0, 5.0, 1.0])
-        self.assertEqual(res3, -23.6695641578)
+        self.assertEqual(res3, -23.6695641578, places=12)
         res4 = self.d4.marginal([5.0, 2.0, 1.0, 3.0])
-        self.assertEqual(res4, -15.7992843092)
+        self.assertEqual(res4, -15.7992843092, places=12)
 
     def testposterior(self):
         m = DiscreteDistribution(4, [0.1, 0.3, 0.2, 0.4])
@@ -1155,6 +1161,8 @@ class NormalGammaPriorTests(FuzzyTestCase):
 
 
     def testpdf(self):
+        self.set_default_places(8)
+
         n1 = NormalDistribution(0.5, 0.7)
         p1 = self.ng.pdf(n1)
         self.assertEqual(p1, -2.55726452327)
@@ -1168,14 +1176,16 @@ class NormalGammaPriorTests(FuzzyTestCase):
         self.assertEqual(p3, -90.6073056147)
 
         n4 = NormalDistribution(9.9, 0.01)  # -inf result raises exception
-        self.assertRaises(ValueError, self.ng.pdf, n4)
+        self.assertEqual(self.ng.pdf(n4), -float("inf"))
 
         # array valued input
         p5 = self.ng.pdf([n1, n2, n3])
         self.assertEqual(p5, [-2.55726452, -7.38114015, -90.60730561])
-        self.assertRaises(ValueError, self.ng.pdf, [n1, n2, n3, n4])
+        self.assertEqual(self.ng.pdf([n1, n2, n3, n4]), [-2.55726452327334, -7.38114015051443, -90.60730561473144, -float("inf")])
 
     def testmapmstepmerge(self):
+        self.set_default_places(8)
+
         post1 = np.array([0.3, 0.2, 0.5, 0.12, 0.5], dtype='Float64')
         post2 = np.array([0.4, 0.1, 0.1, 0.7, 0.3], dtype='Float64')
 
@@ -1185,7 +1195,7 @@ class NormalGammaPriorTests(FuzzyTestCase):
 
         self.ng.mapMStep(d, post1 + post2, data)
 
-        self.assertEqual(d, {"mu": 1.55481927711, "sigma": 0.803640227896})
+        self.assertEqual(d, {"mean": 1.55481927711, "variance": 0.803640227896})
         d2 = DiscreteDistribution(4, [0.25] * 4)
 
         req_stat1 = d.sufficientStatistics(post1, data)
@@ -1208,6 +1218,7 @@ class DirichletMixturePriorTests(FuzzyTestCase):
     """
 
     def setUp(self):
+        self.set_default_places(8)
 
         self.DNA = Alphabet(['A', 'C', 'G', 'T'])
 
@@ -1394,6 +1405,8 @@ class MixtureModelPriorTests(FuzzyTestCase):
     """
 
     def setUp(self):
+        self.set_default_places(8)
+
         piPrior = DirichletPrior(1, [1.0])
 
         mu = 2.0
@@ -1454,20 +1467,20 @@ class MixtureModelPriorTests(FuzzyTestCase):
         self.prior.isValid(m1)
 
         m2 = MixtureModel(2, [0.3, 0.7], [c, c])
-        self.assertRaises(InvalidDistributionInput, self.prior.isValid, m2)
+        self.assertRaises(Exception, self.prior.isValid, m2)
 
         c2 = ProductDistribution([DiscreteDistribution(4, [0.25] * 4),
             NormalDistribution(0.0, 1.0),
             MultinomialDistribution(3, 4, [0.1, 0.6, 0.1, 0.2]),
             NormalDistribution(-2.0, 0.5)])
         m3 = MixtureModel(1, [1.0], [c2])
-        self.assertRaises(InvalidDistributionInput, self.prior.isValid, m3)
+        self.assertRaises(Exception, self.prior.isValid, m3)
 
         c3 = ProductDistribution([DiscreteDistribution(4, [0.25] * 4),
             MultinomialDistribution(3, 4, [0.1, 0.6, 0.1, 0.2]),
             NormalDistribution(-2.0, 0.5)])
         m4 = MixtureModel(1, [1.0], [c3])
-        self.assertRaises(InvalidDistributionInput, self.prior.isValid, m4)
+        self.assertRaises(Exception, self.prior.isValid, m4)
 
 
 class ProductDistributionTests(FuzzyTestCase):
@@ -1476,32 +1489,41 @@ class ProductDistributionTests(FuzzyTestCase):
     """
 
     def setUp(self):
-        self.prod = ProductDistribution([DiscreteDistribution(4, [0.25] * 4),
+        self.prod = ProductDistribution([
+            DiscreteDistribution(4, [0.25] * 4),
             MultinomialDistribution(3, 4, [0.1, 0.6, 0.1, 0.2]),
             NormalDistribution(-2.0, 0.5),
             ExponentialDistribution(1.0),
-            MultiNormalDistribution(2, [0.0, 1.0], [[0.3, 0.2], [0.1, 1.0]])])
+            MultiNormalDistribution([0.0, 1.0], [[0.3, 0.2], [0.1, 1.0]])
+        ])
 
     def testpdf(self):
-        l = [['0', '0', '1', '2', -2.3, 0.1, 0.2, 1.1], ['1', '1', '1', '1', 0.3, 0.14, 0.6, 1.3], ['2', '0', '1', '2', -3.1, 0.4, -0.2, 0.8]]
+        l = [
+            [0, 0, 1, 2, -2.3, 0.1, 0.2, 1.1],
+            [1, 1, 1, 1, 0.3, 0.14, 0.6, 1.3],
+            [2, 0, 1, 2, -3.1, 0.4, -0.2, 0.8]
+        ]
 
         data = DataSet()
         data.fromList(l)
 
         m = MixtureModel(1, [1.0], [self.prod])
         data.internalInit(m)
-        self.assertEqual(self.prod.pdf(data), [-8.27554718, -15.66059967, -10.82090432])
+        self.assertEqual(self.prod.pdf(data), [-8.27554718, -15.66059967, -10.82090432], places=10)
 
     def testisvalid(self):
-        l = [['0', '0', '1', '2', -2.3, 0.1, 0.2, 1.1], ['4', '1', '1', '1', 0.3, 0.14, 0.6, 1.3],
-            ['2', '0', '1', '2', -3.1, 0.4, 0.8], ['1', '0', '2', -3.1, 0.4, 0.8, 0.78],
-            ['2', '0', '1', '2', -3.1, -1.0, 0.4, 0.8]]
+        l = [
+            [0, 0, 1, 2, -2.3, 0.1, 0.2, 1.1],
+            [4, 1, 1, 1, 0.3, 0.14, 0.6, 1.3],
+            [2, 0, 1, 2, -3.1, 0.4, 0.8],
+            [1, 0, 2, -3.1, 0.4, 0.8, 0.78],
+            [2, 0, 1, 2, -3.1, -1.0, 0.4, 0.8]]
 
         self.prod.isValid(l[0])
-        self.assertRaises(InvalidDistributionInput, self.prod.isValid, l[1])
-        self.assertRaises(InvalidDistributionInput, self.prod.isValid, l[2])
-        self.assertRaises(InvalidDistributionInput, self.prod.isValid, l[3])
-        self.assertRaises(InvalidDistributionInput, self.prod.isValid, l[4])
+        self.assertRaises(Exception, self.prod.isValid, l[1])
+        self.assertRaises(Exception, self.prod.isValid, l[2])
+        self.assertRaises(Exception, self.prod.isValid, l[3])
+        self.assertRaises(Exception, self.prod.isValid, l[4])
 
 #    def testeq(self):
 #        raise NotImplementedError
@@ -1526,6 +1548,8 @@ class MixtureModelPartialLearningTests(FuzzyTestCase):
     """
 
     def testemfixlabels(self):
+        self.set_default_places(8)
+
         l = [[3.6704548984145786], [7.4850458858888267], [5.5679870244380885], [1.8948738587656102], [6.3796597596325251], [6.7740700319588667], [5.3324147712221572], [6.0053993914010819],
             [6.0004977866626836], [2.3912721528162093], [1.2617720906388765], [2.2965179694073492], [6.2011150415322831]]
         dat = ConstrainedDataSet()
@@ -1546,11 +1570,13 @@ class MixtureModelPartialLearningTests(FuzzyTestCase):
         self.assertEqual(c, [0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1])
 
         self.assertEqual(train.pi, [0.66878953, 0.33121047])
-        self.assertEqual(train.components[0][0], {"mu": 3.84041070987, "sigma": 1.93327701521})
-        self.assertEqual(train.components[1][0], {"mu": 6.47311765018, "sigma": 0.50132494554})
+        self.assertEqual(train.components[0][0], {"mean": 3.84041070987, "variance": 1.93327701521})
+        self.assertEqual(train.components[1][0], {"mean": 6.47311765018, "variance": 0.50132494554})
 
 
     def testemconstraints(self):
+        self.set_default_places(8)
+
         l = [[3.6704548984145786], [7.4850458858888267], [4.8679870244380885], [1.8948738587656102], [6.3796597596325251], [6.7740700319588667], [5.3324147712221572], [6.0053993914010819],
             [6.0004977866626836], [2.3912721528162093], [1.2617720906388765], [2.2965179694073492], [6.2011150415322831]]
         dat = ConstrainedDataSet()
@@ -1590,8 +1616,8 @@ class MixtureModelPartialLearningTests(FuzzyTestCase):
         c = train.classify(dat, 100, 100, np.exp(log_l), 3, silent=1)
         self.assertEqual(c, [0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1])
         self.assertEqual(train.pi, [0.46997507, 0.53002493])
-        self.assertEqual(train.components[0][0], {"mu": 2.79334411699, "sigma": 1.27604735923})
-        self.assertEqual(train.components[1][0], {"mu": 6.31242489602, "sigma": 0.630612790811})
+        self.assertEqual(train.components[0][0], {"mean": 2.79334411699, "variance": 1.27604735923})
+        self.assertEqual(train.components[1][0], {"mean": 6.31242489602, "variance": 0.630612790811})
 
 
 class BayesMixtureModelTests(FuzzyTestCase):
@@ -1600,6 +1626,7 @@ class BayesMixtureModelTests(FuzzyTestCase):
     """
 
     def setUp(self):
+        self.set_default_places(7)
         G = 3
         p = 4
         # Bayesian Mixture with three components and four discrete features
@@ -1651,40 +1678,42 @@ class BayesMixtureModelTests(FuzzyTestCase):
         self.data.fromList(l)
         self.data.internalInit(self.m)
 
-        l2 = [[0.84415734210279203, 3.4831252651390257, -2.0114691015214223, '1'],
-            [0.57222942131134247, -6.3745496428062598, -2.8601051092050338, '3'],
-            [1.1034642666571195, -5.3577275348876148, -3.1146891814304389, '2'],
-            [-0.19927292611462444, -1.1937256801018536, -2.7907449952182222, '1'],
-            [0.97243650579331242, 1.7350289551506874, -3.6354683780255805, '2'],
-            [0.99177414545803999, -5.7626163860784603, -3.3466535599578462, '2'],
-            [1.0060590118349366, -5.7890643159612312, -2.2450385318798691, '3'],
-            [1.5835914152104689, 1.5961551732250574, -2.7523093515605876, '3'],
-            [1.0031284888519361, -7.1523637186251907, -3.8985888193923208, '2'],
-            [1.4908256849813117, 1.3877005773065594, -3.1067879105457417, '2'],
-            [0.69214327179122326, -0.30344817528702617, -2.7973949321854077, '2'],
-            [0.91916318214912751, 3.1000346363444757, -2.8666720793510647, '0'],
-            [2.345633352473679, 0.16087200224272347, -2.6257350900065619, '3'],
-            [0.95235835374739464, 1.4732654415792585, -3.2545450565085483, '0'],
-            [1.602157719545996, 2.8661497991259446, -3.0635175786389524, '1'],
-            [0.69299355409901375, -5.3246941979332627, -3.1479143643427232, '2'],
-            [1.0892917304906975, -6.1040097897649792, -2.8655423737527177, '3'],
-            [0.2005153638949998, 0.52479824903375505, -3.8636374393910309, '1'],
-            [1.1678705443107265, -0.37585185162193335, -3.0787761392845416, '3'],
-            [0.88892153171856414, -5.5167558427884877, -2.6124201493076677, '3'],
-            [-0.041974139334297167, 4.2507769624060083, -3.4465950645179126, '2'],
-            [1.1515887636499875, 2.7972154367508821, -3.2448434191382911, '3'],
-            [1.3680765819454179, -6.1971982186874248, -2.3337352134059639, '3'],
-            [0.64791981966297785, -5.3058036013081082, -1.7402431491674624, '2'],
-            [1.3379548269757844, 2.5366270204479782, -2.9907335954687384, '0'],
-            [0.73718903725569729, 1.7476289380420684, -2.7259761936547089, '2'],
-            [0.51046926111166369, 0.30877915224043528, -2.7541222082323213, '2'],
-            [0.55635267700522939, 3.0615003341802636, -1.5241436184074817, '2'],
-            [1.3010558053932728, -6.4069872160494779, -3.6973625379097883, '3'],
-            [1.7623420534183178, -6.2936580073616213, -2.1875623544962508, '2'],
-            [0.45923118840055943, 0.34066275417435632, -2.6072343220803438, '1'],
-            [0.56386731177265648, 5.1028744187156487, -3.1729979696411719, '0'],
-            [0.63053217827641972, 3.1550913701986953, -2.8000747628496803, '1'],
-            [0.74349439801247064, 5.4136966332598302, -2.6245681527263272, '3']]
+        l2 = [
+            [0.84415734210279203, 3.4831252651390257, -2.0114691015214223, 1],
+            [0.57222942131134247, -6.3745496428062598, -2.8601051092050338, 3],
+            [1.1034642666571195, -5.3577275348876148, -3.1146891814304389, 2],
+            [-0.19927292611462444, -1.1937256801018536, -2.7907449952182222, 1],
+            [0.97243650579331242, 1.7350289551506874, -3.6354683780255805, 2],
+            [0.99177414545803999, -5.7626163860784603, -3.3466535599578462, 2],
+            [1.0060590118349366, -5.7890643159612312, -2.2450385318798691, 3],
+            [1.5835914152104689, 1.5961551732250574, -2.7523093515605876, 3],
+            [1.0031284888519361, -7.1523637186251907, -3.8985888193923208, 2],
+            [1.4908256849813117, 1.3877005773065594, -3.1067879105457417, 2],
+            [0.69214327179122326, -0.30344817528702617, -2.7973949321854077, 2],
+            [0.91916318214912751, 3.1000346363444757, -2.8666720793510647, 0],
+            [2.345633352473679, 0.16087200224272347, -2.6257350900065619, 3],
+            [0.95235835374739464, 1.4732654415792585, -3.2545450565085483, 0],
+            [1.602157719545996, 2.8661497991259446, -3.0635175786389524, 1],
+            [0.69299355409901375, -5.3246941979332627, -3.1479143643427232, 2],
+            [1.0892917304906975, -6.1040097897649792, -2.8655423737527177, 3],
+            [0.2005153638949998, 0.52479824903375505, -3.8636374393910309, 1],
+            [1.1678705443107265, -0.37585185162193335, -3.0787761392845416, 3],
+            [0.88892153171856414, -5.5167558427884877, -2.6124201493076677, 3],
+            [-0.041974139334297167, 4.2507769624060083, -3.4465950645179126, 2],
+            [1.1515887636499875, 2.7972154367508821, -3.2448434191382911, 3],
+            [1.3680765819454179, -6.1971982186874248, -2.3337352134059639, 3],
+            [0.64791981966297785, -5.3058036013081082, -1.7402431491674624, 2],
+            [1.3379548269757844, 2.5366270204479782, -2.9907335954687384, 0],
+            [0.73718903725569729, 1.7476289380420684, -2.7259761936547089, 2],
+            [0.51046926111166369, 0.30877915224043528, -2.7541222082323213, 2],
+            [0.55635267700522939, 3.0615003341802636, -1.5241436184074817, 2],
+            [1.3010558053932728, -6.4069872160494779, -3.6973625379097883, 3],
+            [1.7623420534183178, -6.2936580073616213, -2.1875623544962508, 2],
+            [0.45923118840055943, 0.34066275417435632, -2.6072343220803438, 1],
+            [0.56386731177265648, 5.1028744187156487, -3.1729979696411719, 0],
+            [0.63053217827641972, 3.1550913701986953, -2.8000747628496803, 1],
+            [0.74349439801247064, 5.4136966332598302, -2.6245681527263272, 3]
+        ]
 
         self.data2 = DataSet()
         self.data2.fromList(l2)
@@ -1780,7 +1809,7 @@ class BayesMixtureModelTests(FuzzyTestCase):
         self.assertEqual(self.m.groups, [{0: [1], 2: []}, {0: [1], 2: []}, {0: [1, 2]}, {0: [1, 2]}])
 
         self.assertEqual(self.m.pi, [0.16045824, 0.38332446, 0.4562173])
-        self.assertEqual(self.m.components[0].distList[1].phi, [0.09299761, 0.41397815, 0.49067351, 0.00235072])
+        self.assertEqual(self.m.components[0].distList[1].phi, [0.09299761, 0.41397815, 0.49067351, 0.00235072], digits=8)
         self.assertEqual(self.m.components[1].distList[3].phi, [0.4246507, 0.0503992, 0.1501996, 0.3747505])
 
         logp = self.m.mapEM(self.data, 1, 0.1, silent=1)
@@ -1792,14 +1821,14 @@ class BayesMixtureModelTests(FuzzyTestCase):
         #print self.m2
 
         self.assertEqual(self.m2.pi, [0.35293918, 0.64706082])
-        self.assertEqual(self.m2.components[0].distList[0], {"mu": 1.03551857564, "sigma": 0.267379671329})
-        self.assertEqual(self.m2.components[0].distList[1], {"mu": -5.96118416543, "sigma": 0.655891604822})
-        self.assertEqual(self.m2.components[0].distList[2], {"mu": -2.83752030449, "sigma": 0.508436811645})
-        self.assertEqual(self.m2.components[0].distList[3], {"M": 4, "phi": [0.00165564, 0.00165564, 0.49834223, 0.49834649]})
+        self.assertEqual(self.m2.components[0].distList[0], {"mean": 1.03551857564, "variance": 0.267379671329})
+        self.assertEqual(self.m2.components[0].distList[1], {"mean": -5.96118416543, "variance": 0.655891604822})
+        self.assertEqual(self.m2.components[0].distList[2], {"mean": -2.83752030449, "variance": 0.508436811645})
+        self.assertEqual(self.m2.components[0].distList[3], {"M": 4, "phi": [0.00165564, 0.00165564, 0.49834223, 0.49834649]}, delta=1e-8)
 
-        self.assertEqual(self.m2.components[1].distList[0], {"mu": 0.873675185386, "sigma": 0.504040070827})
-        self.assertEqual(self.m2.components[1].distList[1], {"mu": 1.96093124967, "sigma": 1.59585315625})
-        self.assertEqual(self.m2.components[1].distList[2], {"mu": -2.89718774482, "sigma": 0.434882981521})
+        self.assertEqual(self.m2.components[1].distList[0], {"mean": 0.873675185386, "variance": 0.504040070827})
+        self.assertEqual(self.m2.components[1].distList[1], {"mean": 1.96093124967, "variance": 1.59585315625})
+        self.assertEqual(self.m2.components[1].distList[2], {"mean": -2.89718774482, "variance": 0.434882981521})
         self.assertEqual(self.m2.components[1].distList[3], {"M": 4, "phi": [0.18206466, 0.27264409, 0.31793651, 0.22735474]})
 
     def testbayesstructureem(self):
@@ -1809,7 +1838,7 @@ class BayesMixtureModelTests(FuzzyTestCase):
         self.assertEqual(self.m.leaders, [[0, 1], [0, 1], [0], [0, 2]])
         self.assertEqual(self.m.groups, [{0: [2], 1: []}, {0: [2], 1: []}, {0: [1, 2]}, {0: [1], 2: []}])
         self.assertEqual(self.m.components[0][0], {"M": 4, "phi": [0.37830054, 0.27666408, 0.28029575, 0.06473962]})
-        self.assertEqual(self.m.components[0][1], {"M": 4, "phi": [0.00066029, 0.18665376, 0.55106449, 0.26162146]})
+        self.assertEqual(self.m.components[0][1], {"M": 4, "phi": [0.00066029, 0.18665376, 0.55106449, 0.26162146]}, delta=1e-8)
         self.assertEqual(self.m.components[0][3], {"M": 4, "phi": [0.11779314, 0.13479561, 0.14112911, 0.60628214]})
 
     def testklfeatureranks(self):
@@ -1865,6 +1894,7 @@ class MixtureModelTests(FuzzyTestCase):
     """
 
     def setUp(self):
+        self.set_default_places(8)
         self.DIAG = Alphabet(['.', '0', '8', '1'])
         n1 = NormalDistribution(2.5, 0.5)
         n2 = NormalDistribution(6.0, 0.8)
@@ -1882,13 +1912,13 @@ class MixtureModelTests(FuzzyTestCase):
         mult1 = MultinomialDistribution(3, 4, [0.23, 0.26, 0.26, 0.25], alphabet=self.DIAG)
         d1 = DiscreteDistribution(4, [0.23, 0.26, 0.26, 0.25], alphabet=self.DIAG)
         e1 = ExponentialDistribution(1.0)
-        mn1 = MultiNormalDistribution(2, [1.0, 2.0], [[1.0, 0.5], [0.5, 1.0]])
+        mn1 = MultiNormalDistribution([1.0, 2.0], [[1.0, 0.5], [0.5, 1.0]])
 
         n2 = NormalDistribution(-2.0, 1.0)
         mult2 = MultinomialDistribution(3, 4, [0.5, 0.2, 0.2, 0.1], alphabet=self.DIAG)
         d2 = DiscreteDistribution(4, [0.1, 0.3, 0.1, 0.5], alphabet=self.DIAG)
         e2 = ExponentialDistribution(2.0)
-        mn2 = MultiNormalDistribution(2, [1.5, 2.0], [[0.8, 0.1], [0.2, 1.0]])
+        mn2 = MultiNormalDistribution([1.5, 2.0], [[0.8, 0.1], [0.2, 1.0]])
 
         c1 = ProductDistribution([n1, mult1, d1, e1, mn1])
         c2 = ProductDistribution([n2, mult2, d2, e2, mn2])
@@ -1899,7 +1929,7 @@ class MixtureModelTests(FuzzyTestCase):
 
     #    def testmixturesuffstatattributes(self):
     #        print "----------------------"
-    #        print "p:",self.m.p
+    #        print "p:",self.m.dimension
     #        print "suff_p:",self.m.suff_p
     #        print self.m.components[0].dataRange
     #        print self.m.components[0].suff_dataRange
@@ -1923,7 +1953,7 @@ class MixtureModelTests(FuzzyTestCase):
         m2.pi = np.array([0.4, 0.6], dtype='Float64')
         self.assertEqual(self.m == m2, False)
 
-        m2.components[0][0].mu = 2.5
+        m2.components[0][0].mean = 2.5
         self.assertEqual(self.m == m2, False)
 
         m2.components[1][1] = MultinomialDistribution(3, 4, [0.7, 0.1, 0.1, 0.1], alphabet=self.DIAG)
@@ -1954,13 +1984,13 @@ class MixtureModelTests(FuzzyTestCase):
         gmult1 = MultinomialDistribution(3, 4, [0.1, 0.4, 0.4, 0.1], alphabet=self.DIAG)
         gd1 = DiscreteDistribution(4, [0.5, 0.1, 0.1, 0.3], alphabet=self.DIAG)
         ge1 = ExponentialDistribution(0.6)
-        gmn1 = MultiNormalDistribution(2, [0.7, 2.2], [[1.0, 0.6], [0.8, 1.2]])
+        gmn1 = MultiNormalDistribution([0.7, 2.2], [[1.0, 0.6], [0.8, 1.2]])
 
         gn2 = NormalDistribution(3.0, 1.1)
         gmult2 = MultinomialDistribution(3, 4, [0.2, 0.2, 0.2, 0.4], alphabet=self.DIAG)
         gd2 = DiscreteDistribution(4, [0.3, 0.3, 0.1, 0.3], alphabet=self.DIAG)
         ge2 = ExponentialDistribution(2.8)
-        gmn2 = MultiNormalDistribution(2, [1.3, 1.0], [[0.9, 0.5], [0.6, 1.3]])
+        gmn2 = MultiNormalDistribution([1.3, 1.0], [[0.9, 0.5], [0.6, 1.3]])
 
         gc1 = ProductDistribution([gn1, gmult1, gd1, ge1, gmn1])
         gc2 = ProductDistribution([gn2, gmult2, gd2, ge2, gmn2])
@@ -1979,32 +2009,32 @@ class MixtureModelTests(FuzzyTestCase):
         #        print g.components[0].distList[4]
 
 
-        self.assertEqual(g.components[0].distList[0], {"mu": 2.38220637305, "sigma": 0.34999339552})
-        self.assertEqual(g.components[0].distList[1], {"M": 4, "p": 3, "phi": [0.22222222, 0.44444444, 0.22222222, 0.11111111]})
+        self.assertEqual(g.components[0].distList[0], {"mean": 2.38220637305, "variance": 0.34999339552})
+        self.assertEqual(g.components[0].distList[1], {"M": 4, "dimension": 3, "phi": [0.22222222, 0.44444444, 0.22222222, 0.11111111]})
         self.assertEqual(g.components[0].distList[2], {"M": 4, "phi": [2.49875062e-04, 6.66333500e-01, 3.33166750e-01, 2.49875062e-04]})
         self.assertEqual(g.components[0].distList[3], {"lambd": 0.725388448525})
         self.assertAlmostEqual(g.components[0].distList[4], {
-            "mu": [-0.047241636484129997, 1.88664266223455],
-            "sigma": [[0.68770018725283, 0.88014718559524996], [0.88014718559524996, 1.1868910971984099]]
+            "mean": [-0.047241636484129997, 1.88664266223455],
+            "variance": [[0.68770018725283, 0.88014718559524996], [0.88014718559524996, 1.1868910971984099]]
         }, places=14)
-        # self.assertEqual( [ round(m,14) for m in g.components[0].distList[4].mu], [-0.047241636484129997,1.88664266223455])
-        # self.assertEqual( [round(s,14) for s in g.components[0].distList[4].sigma[0]] , [0.68770018725283,0.88014718559524996])
-        # self.assertEqual( [round(s,14) for s in g.components[0].distList[4].sigma[1]] , [0.88014718559524996,1.1868910971984099])
+        # self.assertEqual( [ round(m,14) for m in g.components[0].distList[4].mean], [-0.047241636484129997,1.88664266223455])
+        # self.assertEqual( [round(s,14) for s in g.components[0].distList[4].variance[0]] , [0.68770018725283,0.88014718559524996])
+        # self.assertEqual( [round(s,14) for s in g.components[0].distList[4].variance[1]] , [0.88014718559524996,1.1868910971984099])
 
 
 
 
-        self.assertEqual(g.components[1].distList[0], {"mu": -2.60101221587, "sigma": 0.744405770895})
-        self.assertEqual(g.components[1].distList[1], {"M": 4, "p": 3, "phi": [0.46666667, 0.2, 0.23333333, 0.1]})
+        self.assertEqual(g.components[1].distList[0], {"mean": -2.60101221587, "variance": 0.744405770895})
+        self.assertEqual(g.components[1].distList[1], {"M": 4, "dimension": 3, "phi": [0.46666667, 0.2, 0.23333333, 0.1]})
         self.assertEqual(g.components[1].distList[2], {"M": 4, "phi": [9.99750062e-02, 3.99900025e-01, 2.49937516e-04, 4.99875031e-01]})
         self.assertEqual(g.components[1].distList[3], {"lambd": 2.34674997335})
         self.assertAlmostEqual(g.components[1].distList[4], {
-            "mu": [1.2031898954151901, -2.2125948910136199],
-            "sigma": [[0.15099010970408, 0.060671540603359997], [0.060671540603359997, 0.65526254779920001]]
-        }, places=14)
-        # self.assertEqual( [ round(m,14) for m in g.components[1].distList[4].mu], [1.2031898954151901,-2.2125948910136199])
-        # self.assertEqual( [round(s,14) for s in g.components[1].distList[4].sigma[0]] , [0.15099010970408,0.060671540603359997])
-        # self.assertEqual( [round(s,14) for s in g.components[1].distList[4].sigma[1]] , [0.060671540603359997,0.65526254779920001])
+            "mean": [1.2031898954151901, -2.2125948910136199],
+            "variance": [[0.15099010970408, 0.060671540603359997], [0.060671540603359997, 0.65526254779920001]]
+        }, digits=14)
+        # self.assertEqual( [ round(m,14) for m in g.components[1].distList[4].mean], [1.2031898954151901,-2.2125948910136199])
+        # self.assertEqual( [round(s,14) for s in g.components[1].distList[4].variance[0]] , [0.15099010970408,0.060671540603359997])
+        # self.assertEqual( [round(s,14) for s in g.components[1].distList[4].variance[1]] , [0.060671540603359997,0.65526254779920001])
 
     def testmixgaussdisc(self):
         n1 = NormalDistribution(2.5, 0.5)
@@ -2048,9 +2078,9 @@ class MixtureModelTests(FuzzyTestCase):
         g.EM(data, 40, 0.1, silent=1)
 
         self.assertEqual(g.pi, [0.39999861, 0.60000139])
-        self.assertEqual(g.components[0].distList[0], {"mu": 2.67473242494, "sigma": 0.397801961454})
+        self.assertEqual(g.components[0].distList[0], {"mean": 2.67473242494, "variance": 0.397801961454})
         self.assertEqual(g.components[0].distList[1], {"M": 4, "phi": [3.33251094e-01, 2.49937516e-04, 1.66625589e-01, 4.99873379e-01]})
-        self.assertEqual(g.components[1].distList[0], {"mu": -2.74010633306, "sigma": 1.02615649886})
+        self.assertEqual(g.components[1].distList[0], {"mean": -2.74010633306, "variance": 1.02615649886})
         self.assertEqual(g.components[1].distList[1], {"M": 4, "phi": [1.11083139e-01, 4.44332332e-01, 2.49937516e-04, 4.44334591e-01]})
 
 
@@ -2076,8 +2106,8 @@ class MixtureModelTests(FuzzyTestCase):
         train.EM(dat, 40, 0.1, silent=1)
 
         self.assertEqual(train.pi[0], 0.384611609936)
-        self.assertEqual(train.components[0].distList[0].mu, 2.30296658077)
-        self.assertEqual(train.components[1].distList[0].sigma, 0.636459666505)
+        self.assertEqual(train.components[0].distList[0].mean, 2.30296658077)
+        self.assertEqual(train.components[1].distList[0].variance, 0.636459666505)
 
     def testrandmaxem(self):
         random.seed(3586662)
@@ -2106,10 +2136,10 @@ class MixtureModelTests(FuzzyTestCase):
         train.randMaxEM(dat, 3, 40, 0.1, silent=1)
 
         self.assertEqual(train.pi, [0.38461049, 0.61538951])
-        self.assertEqual(train.components[0].distList[0], {"mu": 2.30296118599, "sigma": 0.791001832397})
-        self.assertEqual(train.components[0].distList[1], {"M": 4, "p": 3, "phi": [0.06666768, 0.33333757, 0.26666578, 0.33332897]})
-        self.assertEqual(train.components[1].distList[0], {"mu": 6.21825321628, "sigma": 0.63646629643})
-        self.assertEqual(train.components[1].distList[1], {"M": 4, "p": 3, "phi": [8.33118326e-01, 2.49937516e-04, 4.16585950e-02, 1.24973141e-01]})
+        self.assertEqual(train.components[0].distList[0], {"mean": 2.30296118599, "variance": 0.791001832397})
+        self.assertEqual(train.components[0].distList[1], {"M": 4, "dimension": 3, "phi": [0.06666768, 0.33333757, 0.26666578, 0.33332897]})
+        self.assertEqual(train.components[1].distList[0], {"mean": 6.21825321628, "variance": 0.63646629643})
+        self.assertEqual(train.components[1].distList[1], {"M": 4, "dimension": 3, "phi": [8.33118326e-01, 2.49937516e-04, 4.16585950e-02, 1.24973141e-01]})
 
     def testrandmaxemsimple(self):
         random.seed(3586662)
@@ -2161,8 +2191,8 @@ class MixtureModelTests(FuzzyTestCase):
         train = MixtureModel(2, pi, [n1, n2])
         train.randMaxEM(data, 3, 10, 0.1, silent=1)
         self.assertEqual(train.pi, [0.43290601, 0.56709399])
-        self.assertEqual(train.components[0].distList[0], {"mu": 3.448722685, "sigma": 3.93454729029})
-        self.assertEqual(train.components[1].distList[0], {"mu": 1.89876256628, "sigma": 4.23502285951})
+        self.assertEqual(train.components[0].distList[0], {"mean": 3.448722685, "variance": 3.93454729029})
+        self.assertEqual(train.components[1].distList[0], {"mean": 1.89876256628, "variance": 4.23502285951})
 
         # simple multinomial model
         mult1 = ProductDistribution([MultinomialDistribution(3, 4, [0.23, 0.26, 0.26, 0.25], alphabet=self.DIAG)])
@@ -2211,8 +2241,8 @@ class MixtureModelTests(FuzzyTestCase):
 
         train.randMaxEM(data, 3, 10, 0.1, silent=1)
         self.assertEqual(train.pi, [0.48717885, 0.51282115])
-        self.assertEqual(train.components[0].distList[0], {"M": 4, "p": 3, "phi": [0.14164446, 0.30563449, 0.40080779, 0.15191326]})
-        self.assertEqual(train.components[1].distList[0], {"M": 4, "p": 3, "phi": [0.62377049, 0.16464741, 0.11756629, 0.09401581]})
+        self.assertEqual(train.components[0].distList[0], {"M": 4, "dimension": 3, "phi": [0.14164446, 0.30563449, 0.40080779, 0.15191326]})
+        self.assertEqual(train.components[1].distList[0], {"M": 4, "dimension": 3, "phi": [0.62377049, 0.16464741, 0.11756629, 0.09401581]})
 
     def testsimplegaussian(self):
         n1 = ProductDistribution([NormalDistribution(-2.5, 0.5)])
@@ -2271,8 +2301,8 @@ class MixtureModelTests(FuzzyTestCase):
         train.EM(data, 40, 0.1, silent=1)
 
         self.assertEqual(train.pi, [0.35, 0.65])
-        self.assertEqual(train.components[0].distList[0], {"mu": -2.47506049216, "sigma": 0.471475077261})
-        self.assertEqual(train.components[1].distList[0], {"mu": 6.03055782897, "sigma": 0.858213254015})
+        self.assertEqual(train.components[0].distList[0], {"mean": -2.47506049216, "variance": 0.471475077261})
+        self.assertEqual(train.components[1].distList[0], {"mean": 6.03055782897, "variance": 0.858213254015})
 
 
     def testsimplemultinom(self):
@@ -2314,8 +2344,8 @@ class MixtureModelTests(FuzzyTestCase):
         train.EM(data, 40, 0.1, silent=1)
 
         self.assertEqual(train.pi, [0.4191391, 0.5808609])
-        self.assertEqual(train.components[0].distList[0], {"M": 4, "p": 3, "phi": [7.28784278e-01, 2.49948455e-04, 2.49948455e-04, 2.70715826e-01]})
-        self.assertEqual(train.components[1].distList[0], {"M": 4, "p": 3, "phi": [0.36349785, 0.20076187, 0.31550092, 0.12023937]})
+        self.assertEqual(train.components[0].distList[0], {"M": 4, "dimension": 3, "phi": [7.28784278e-01, 2.49948455e-04, 2.49948455e-04, 2.70715826e-01]})
+        self.assertEqual(train.components[1].distList[0], {"M": 4, "dimension": 3, "phi": [0.36349785, 0.20076187, 0.31550092, 0.12023937]})
 
 
     def testsimplediscrete(self):
@@ -2342,7 +2372,7 @@ class MixtureModelTests(FuzzyTestCase):
 
         self.assertEqual(train.pi, [0.21783681, 0.78216319])
         self.assertEqual(train.components[0].distList[0], {"M": 4, "phi": [0.16289199, 0.24303136, 0.13501742, 0.45905923]})
-        self.assertEqual(train.components[1].distList[0], {"M": 4, "phi": [0.42341905, 0.31586608, 0.17548116, 0.08523371]})
+        self.assertEqual(train.components[1].distList[0], {"M": 4, "phi": [0.42341905, 0.31586608, 0.17548116, 0.08523371]}, digits=8)
 
 
     def testmixmixsimple(self):
@@ -2380,12 +2410,12 @@ class MixtureModelTests(FuzzyTestCase):
 
         m.EM(data, 40, 0.1, silent=1)
 
-        self.assertEqual(m.components[0].distList[0].components[0].distList[0].mu, -9999.9)
-        self.assertEqual(m.components[1].distList[0].components[0].distList[0].sigma, 1e-05)
-        self.assertEqual(m.components[0].distList[0].components[1].distList[0].mu, -1.95423960866)
-        self.assertEqual(m.components[0].distList[0].components[1].distList[0].sigma, 0.877001461343)
-        self.assertEqual(m.components[1].distList[0].components[1].distList[0].mu, 2.12222668098)
-        self.assertEqual(m.components[1].distList[0].components[1].distList[0].sigma, 1.18534559105)
+        self.assertEqual(m.components[0].distList[0].components[0].distList[0].mean, -9999.9)
+        self.assertEqual(m.components[1].distList[0].components[0].distList[0].variance, 1e-05)
+        self.assertEqual(m.components[0].distList[0].components[1].distList[0].mean, -1.95423960866)
+        self.assertEqual(m.components[0].distList[0].components[1].distList[0].variance, 0.877001461343)
+        self.assertEqual(m.components[1].distList[0].components[1].distList[0].mean, 2.12222668098)
+        self.assertEqual(m.components[1].distList[0].components[1].distList[0].variance, 1.18534559105)
 
     def testmixmixgauss(self):
         n11 = ProductDistribution([NormalDistribution(2.0, 0.5)])
@@ -2433,12 +2463,12 @@ class MixtureModelTests(FuzzyTestCase):
 
         tm.EM(data, 40, 0.1, silent=1)
 
-        self.assertEqual(tm.components[0].distList[0].components[0].distList[0].mu, -2.10888808641)
-        self.assertEqual(tm.components[1].distList[0].components[0].distList[0].sigma, 1.22362958167)
-        self.assertEqual(tm.components[0].distList[0].components[1].distList[0].mu, -7.77015137509)
-        self.assertEqual(tm.components[0].distList[0].components[1].distList[0].sigma, 0.75197914841)
-        self.assertEqual(tm.components[1].distList[0].components[1].distList[0].mu, 2.12813631991)
-        self.assertEqual(tm.components[1].distList[0].components[1].distList[0].sigma, 0.538936095872)
+        self.assertEqual(tm.components[0].distList[0].components[0].distList[0].mean, -2.10888808641)
+        self.assertEqual(tm.components[1].distList[0].components[0].distList[0].variance, 1.22362958167)
+        self.assertEqual(tm.components[0].distList[0].components[1].distList[0].mean, -7.77015137509)
+        self.assertEqual(tm.components[0].distList[0].components[1].distList[0].variance, 0.75197914841)
+        self.assertEqual(tm.components[1].distList[0].components[1].distList[0].mean, 2.12813631991)
+        self.assertEqual(tm.components[1].distList[0].components[1].distList[0].variance, 0.538936095872)
 
 
     def testclassify(self):
@@ -2467,7 +2497,7 @@ class MixtureModelTests(FuzzyTestCase):
 
         data.dataMatrix[5][1] = 'A'
 
-        self.assertRaises(InvalidDistributionInput, self.m.isValid, data)
+        self.assertRaises(Exception, self.m.isValid, data)
 
     def testwritemixture(self):
         writeMixture(self.m_all, 'testwrite.mix', silent=True)
@@ -2504,12 +2534,12 @@ class MixtureModelTests(FuzzyTestCase):
         self.m.pi = np.array([0.9, 0.1], dtype='Float64')
         self.m.identifiable()
         self.assertEqual(self.m.pi, [0.1, 0.9])
-        self.assertEqual(self.m.components[1][0].mu, 2.5)
+        self.assertEqual(self.m.components[1][0].mean, 2.5)
 
         self.m.pi = np.array([0.9, 0.1], dtype='Float64')
         self.m.identifiable()
         self.assertEqual(self.m.pi, [0.1, 0.9])
-        self.assertEqual(self.m.components[0][0].mu, 2.5)
+        self.assertEqual(self.m.components[0][0].mean, 2.5)
 
 
 class ModelInitTests(FuzzyTestCase):
@@ -2518,11 +2548,12 @@ class ModelInitTests(FuzzyTestCase):
     """
 
     def setUp(self):
+        self.set_default_places(8)
         self.DIAG = Alphabet(['.', '0', '8', '1'])
+        random.seed(3586662)
 
 
     def testmixturecomponentsproductatomar(self):
-        random.seed(3586662)
         n1 = NormalDistribution(2.5, 0.5)
         n2 = NormalDistribution(6.0, 0.8)
 
@@ -2536,7 +2567,8 @@ class ModelInitTests(FuzzyTestCase):
         m = MixtureModel(2, mpi, [c1, c2])
 
         data = DataSet()
-        l = [[2.3248630375235071, '8', '0', '1'],
+        l = [
+            [2.3248630375235071, '8', '0', '1'],
             [4.950009051623474, '.', '.', '8'],
             [2.7476916816642873, '1', '8', '1'],
             [7.5525326592401942, '.', '1', '.'],
@@ -2565,16 +2597,17 @@ class ModelInitTests(FuzzyTestCase):
             [5.7955733032762664, '.', '.', '0'],
             [4.7742014292462898, '.', '.', '1'],
             [6.5445727620632344, '.', '.', '1'],
-            [5.3552893128649091, '.', '.', '1']]
+            [5.3552893128649091, '.', '.', '1']
+        ]
         data.fromList(l)
         data.internalInit(m)
         m.modelInitialization(data)
 
         self.assertEqual(m.pi, [0.43333333, 0.56666667])
-        self.assertEqual(m.components[0].distList[0], {"mu": 4.25527682308, "sigma": 1.87053050907})
-        self.assertEqual(m.components[0].distList[1], {"M": 4, "p": 3, "phi": [0.46153846, 0.17948718, 0.17948718, 0.17948718]})
-        self.assertEqual(m.components[1].distList[0], {"mu": 4.52356582315, "sigma": 1.78556613542})
-        self.assertEqual(m.components[1].distList[1], {"M": 4, "p": 3, "phi": [0.47058824, 0.23529412, 0.17647059, 0.11764706]})
+        self.assertEqual(m.components[0].distList[0], {"mean": 4.25527682308, "variance": 1.87053050907})
+        self.assertEqual(m.components[0].distList[1], {"M": 4, "dimension": 3, "phi": [0.46153846, 0.17948718, 0.17948718, 0.17948718]})
+        self.assertEqual(m.components[1].distList[0], {"mean": 4.52356582315, "variance": 1.78556613542})
+        self.assertEqual(m.components[1].distList[1], {"M": 4, "dimension": 3, "phi": [0.47058824, 0.23529412, 0.17647059, 0.11764706]})
 
 
     def testmixturecomponentsproductmixtures(self):
@@ -2644,16 +2677,27 @@ class ModelInitTests(FuzzyTestCase):
 
         m.modelInitialization(data)
 
-        self.assertEqual(m.pi, [0.625, 0.375])
-        self.assertEqual(m.components[0].distList[0], {"mu": 4.6127407387, "sigma": 1.73433950115})
-        self.assertEqual(m.components[0].distList[1], {"M": 4, "p": 3, "phi": [0.48, 0.16, 0.17333333, 0.18666667]})
-        self.assertEqual(m.components[0].distList[2].pi, [0.45, 0.55])
-        self.assertEqual(m.components[0].distList[2].components[0].distList[0], {"mu": 2.21433669974, "sigma": 5.225569022})
-        self.assertEqual(m.components[0].distList[2].components[1].distList[0], {"mu": 1.88381651676, "sigma": 5.2347237821})
-        self.assertEqual(m.components[1].distList[0], {"mu": 4.84509415887, "sigma": 1.74646782345})
-        self.assertEqual(m.components[1].distList[1], {"M": 4, "p": 3, "phi": [0.46666667, 0.15555556, 0.17777778, 0.2]})
-        self.assertEqual(m.components[1].distList[2].components[0].distList[0], {"mu": 0.943819933008, "sigma": 5.82352459352})
-        self.assertEqual(m.components[1].distList[2].components[1].distList[0], {"mu": 3.50553914735, "sigma": 3.8447406861})
+        self.assertEqual(m.pi, [0.45, 0.55])
+        self.assertEqual(m.components[0].distList[0], {"mean": 4.42679975935, "variance": 1.71233290834})
+        self.assertEqual(m.components[0].distList[1], {"M": 4, "dimension": 3, "phi": [0.37037037, 0.22222222, 0.18518519, 0.22222222]})
+        self.assertEqual(m.components[0].distList[2].pi, [0.6, 0.4])
+        self.assertEqual(m.components[0].distList[2].components[0].distList[0], {"mean": 1.58910628608, "variance": 5.21254926301})
+        self.assertEqual(m.components[0].distList[2].components[1].distList[0], {"mean": 2.69771706864, "variance": 5.19348438479})
+        self.assertEqual(m.components[1].distList[0], {"mean": 4.92329705373, "variance": 1.73518099104})
+        self.assertEqual(m.components[1].distList[1], {"M": 4, "dimension": 3, "phi": [0.56060606, 0.10606061, 0.16666667, 0.16666667]})
+        self.assertEqual(m.components[1].distList[2].components[0].distList[0], {"mean": 1.7234797754, "variance": 5.48433197041})
+        self.assertEqual(m.components[1].distList[2].components[1].distList[0], {"mean": 2.34162142281, "variance": 4.950112089})
+
+        # self.assertEqual(m.pi, [0.625, 0.375])
+        # self.assertEqual(m.components[0].distList[0], {"mean": 4.6127407387, "variance": 1.73433950115})
+        # self.assertEqual(m.components[0].distList[1], {"M": 4, "dimension": 3, "phi": [0.48, 0.16, 0.17333333, 0.18666667]})
+        # self.assertEqual(m.components[0].distList[2].pi, [0.45, 0.55])
+        # self.assertEqual(m.components[0].distList[2].components[0].distList[0], {"mean": 2.21433669974, "variance": 5.225569022})
+        # self.assertEqual(m.components[0].distList[2].components[1].distList[0], {"mean": 1.88381651676, "variance": 5.2347237821})
+        # self.assertEqual(m.components[1].distList[0], {"mean": 4.84509415887, "variance": 1.74646782345})
+        # self.assertEqual(m.components[1].distList[1], {"M": 4, "dimension": 3, "phi": [0.46666667, 0.15555556, 0.17777778, 0.2]})
+        # self.assertEqual(m.components[1].distList[2].components[0].distList[0], {"mean": 0.943819933008, "variance": 5.82352459352})
+        # self.assertEqual(m.components[1].distList[2].components[1].distList[0], {"mean": 3.50553914735, "variance": 3.8447406861})
 
 
     def testbayesmixturecomponentsproductatomar(self):
@@ -2709,11 +2753,16 @@ class ModelInitTests(FuzzyTestCase):
 
         m.modelInitialization(data)
 
-        self.assertEqual(m.pi, [0.5, 0.5])
-        self.assertEqual(m.components[0].distList[0], {"mu": 4.09877480669, "sigma": 1.72702515813})
-        self.assertEqual(m.components[0].distList[1], {"M": 4, "p": 3, "phi": [0.35536823, 0.22227152, 0.2444543, 0.17790594]})
-        self.assertEqual(m.components[1].distList[0], {"mu": 4.72579700206, "sigma": 1.83827093592})
-        self.assertEqual(m.components[1].distList[1], {"M": 4, "p": 3, "phi": [0.5771961, 0.06699201, 0.22227152, 0.13354037]})
+        self.assertEqual(m.pi, [0.43333333, 0.56666667])
+        self.assertEqual(m.components[0].distList[0], {"mean": 4.64363192804, "variance": 1.73670576496})
+        self.assertEqual(m.components[0].distList[1], {"M": 4, "dimension": 3, "phi": [0.5122825, 0.12845445, 0.15404299, 0.20522006]})
+        self.assertEqual(m.components[1].distList[0], {"mean": 4.23505590964, "variance": 1.84171435887})
+        self.assertEqual(m.components[1].distList[1], {"M": 4, "dimension": 3, "phi": [0.43108849, 0.15700861, 0.29404855, 0.11785435]})
+        # self.assertEqual(m.pi, [0.5, 0.5])
+        # self.assertEqual(m.components[0].distList[0], {"mean": 4.09877480669, "variance": 1.72702515813})
+        # self.assertEqual(m.components[0].distList[1], {"M": 4, "dimension": 3, "phi": [0.35536823, 0.22227152, 0.2444543, 0.17790594]})
+        # self.assertEqual(m.components[1].distList[0], {"mean": 4.72579700206, "variance": 1.83827093592})
+        # self.assertEqual(m.components[1].distList[1], {"M": 4, "dimension": 3, "phi": [0.5771961, 0.06699201, 0.22227152, 0.13354037]})
 
 
     def testbayesmixturecomponentsproductmixtures(self):
@@ -2780,17 +2829,29 @@ class ModelInitTests(FuzzyTestCase):
         data.internalInit(m)
 
         m.modelInitialization(data)
-        self.assertEqual(m.pi, [0.66666667, 0.33333333])
-        self.assertEqual(m.components[0].distList[0], {"mu": 4.51427440311, "sigma": 1.75358833435})
-        self.assertEqual(m.components[0].distList[1], {"M": 4, "p": 3, "phi": [0.49966711, 0.16677763, 0.16677763, 0.16677763]})
-        self.assertEqual(m.components[0].distList[2].pi, [0.36666667, 0.63333333])
-        self.assertEqual(m.components[0].distList[2].components[0].distList[0], {"mu": 1.18018741932, "sigma": 5.30822827248})
-        self.assertEqual(m.components[0].distList[2].components[1].distList[0], {"mu": 0.786817074047, "sigma": 5.65990534226})
-        self.assertEqual(m.components[1].distList[0], {"mu": 4.93684928834, "sigma": 1.35601386675})
-        self.assertEqual(m.components[1].distList[1], {"M": 4, "p": 3, "phi": [0.59906915, 0.20013298, 0.06715426, 0.13364362]})
-        self.assertEqual(m.components[1].distList[2].pi, [0.46666667, 0.53333333])
-        self.assertEqual(m.components[1].distList[2].components[0].distList[0], {"mu": 2.23150044795, "sigma": 5.40884624383})
-        self.assertEqual(m.components[1].distList[2].components[1].distList[0], {"mu": -0.206838765738, "sigma": 5.39509340632})
+
+        self.assertEqual(m.pi, [0.43333333, 0.56666667])
+        self.assertEqual(m.components[0].distList[0], {"mean": 4.70175367255, "variance": 1.50834329009})
+        self.assertEqual(m.components[0].distList[1], {"M": 4, "dimension": 3, "phi": [0.56345957, 0.17963153, 0.07727738, 0.17963153]})
+        self.assertEqual(m.components[0].distList[2].pi, [0.56666667, 0.43333333])
+        self.assertEqual(m.components[0].distList[2].components[0].distList[0], {"mean": 1.54971219191, "variance": 5.33456501185})
+        self.assertEqual(m.components[0].distList[2].components[1].distList[0], {"mean": 0.122036827465, "variance": 5.69000568389})
+        self.assertEqual(m.components[1].distList[0], {"mean": 4.62024094763, "variance": 1.71102646007})
+        self.assertEqual(m.components[1].distList[1], {"M": 4, "dimension": 3, "phi": [0.50939702, 0.17658575, 0.17658575, 0.13743148]})
+        self.assertEqual(m.components[1].distList[2].pi, [0.63333333, 0.36666667])
+        self.assertEqual(m.components[1].distList[2].components[0].distList[0], {"mean": -0.174774874659, "variance": 5.46666527355})
+        self.assertEqual(m.components[1].distList[2].components[1].distList[0], {"mean": 2.84111896709, "variance": 5.1213807494})
+        # self.assertEqual(m.pi, [0.66666667, 0.33333333])
+        # self.assertEqual(m.components[0].distList[0], {"mean": 4.51427440311, "variance": 1.75358833435})
+        # self.assertEqual(m.components[0].distList[1], {"M": 4, "dimension": 3, "phi": [0.49966711, 0.16677763, 0.16677763, 0.16677763]})
+        # self.assertEqual(m.components[0].distList[2].pi, [0.36666667, 0.63333333])
+        # self.assertEqual(m.components[0].distList[2].components[0].distList[0], {"mean": 1.18018741932, "variance": 5.30822827248})
+        # self.assertEqual(m.components[0].distList[2].components[1].distList[0], {"mean": 0.786817074047, "variance": 5.65990534226})
+        # self.assertEqual(m.components[1].distList[0], {"mean": 4.93684928834, "variance": 1.35601386675})
+        # self.assertEqual(m.components[1].distList[1], {"M": 4, "dimension": 3, "phi": [0.59906915, 0.20013298, 0.06715426, 0.13364362]})
+        # self.assertEqual(m.components[1].distList[2].pi, [0.46666667, 0.53333333])
+        # self.assertEqual(m.components[1].distList[2].components[0].distList[0], {"mean": 2.23150044795, "variance": 5.40884624383})
+        # self.assertEqual(m.components[1].distList[2].components[1].distList[0], {"mean": -0.206838765738, "variance": 5.39509340632})
 
 
 class ModelSelectionTests(FuzzyTestCase):
@@ -2814,7 +2875,7 @@ class ModelSelectionTests(FuzzyTestCase):
         self.m2 = MixtureModel(2, [0.4, 0.6], [c1, c2])
         self.m3 = MixtureModel(3, [0.2, 0.3, 0.5], [c1, c2, c3])
 
-        self.data = self.m2.sampleDataSet(100)
+        self.data = self.m2.sampleDataSet(100, native=True)
 
     def testmodelselection(self):
         mlist = [self.m1, self.m2, self.m3]

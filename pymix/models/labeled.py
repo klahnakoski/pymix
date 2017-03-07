@@ -208,7 +208,7 @@ class LabeledMixtureModel(MixtureModel):
                 continue
             else:
                 last_index = 0
-                for j in range(self.components[i].dist_nr):
+                for j in range(len(self.components[i])):
                     if isinstance(self.components[i][j], MixtureModel):
                         self.components[i][j].modelInitialization(data.getInternalFeature(j), rtype=rtype, missing_value=missing_value)
                     else:

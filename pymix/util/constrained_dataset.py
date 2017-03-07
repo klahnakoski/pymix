@@ -77,9 +77,9 @@ class ConstrainedDataSet(DataSet):
                     index = self.headers.index(i)
                 except ValueError:
                     pass
-                for component in range(0, len(self.labels)):
+                for component in range(len(self.labels)):
                     component_lst = self.labels[component]
-                    for element in range(0, len(component_lst)):
+                    for element in range(len(component_lst)):
                         if component_lst[element] == index:
                             self.labels[component].pop(element)
                             break
@@ -126,7 +126,7 @@ class ConstrainedDataSet(DataSet):
 
         for uc in unique_classes:
             class_list = []
-            for index in range(0, len(self.col_headers)):
+            for index in range(len(self.col_headers)):
                 if uc == self.col_headers[index]:
                     class_list.append(index)
             self.labels.append(class_list)
@@ -138,7 +138,7 @@ class ConstrainedDataSet(DataSet):
 
         for uc in unique_classes:
             class_list = []
-            for index in range(0, len(self.row_headers)):
+            for index in range(len(self.row_headers)):
                 if uc == self.row_headers[index]:
                     class_list.append(index)
             self.labels.append(class_list)
@@ -152,9 +152,9 @@ class ConstrainedDataSet(DataSet):
         XXX add params
         """
         #if positive != None:
-        #    assert len(positive) == self.p, 'Pairwise Constraints should cover the all observations'
+        #    assert len(positive) == self.dimension, 'Pairwise Constraints should cover the all observations'
         #if negative != None:
-        #    assert len(negative) == self.p, 'Pairwise Constraints should cover the all observations'
+        #    assert len(negative) == self.dimension, 'Pairwise Constraints should cover the all observations'
         self.pairwisepositive = positive
         self.pairwisenegative = negative
 

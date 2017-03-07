@@ -40,7 +40,10 @@ import random
 import numpy as np
 from numpy import linalg as la
 from .prob import ProbDistribution
-from ..util.errors import InvalidDistributionInput
+from pyLibrary.debugs.logs import Log
+from pyLibrary.testing.fuzzytestcase import assertAlmostEqual
+from pymix.distributions.normal import NormalDistribution
+from pymix.util.ghmm.matrixop import ighmm_determinant, ighmm_inverse
 from ..util.dataset import DataSet
 
 
@@ -50,7 +53,7 @@ class MultiNormalDistribution(ProbDistribution):
 
     """
 
-    def __init__(self, p, mu, sigma):
+    def __init__(self, mu, sigma):
         """
         Constructor
 
@@ -59,27 +62,43 @@ class MultiNormalDistribution(ProbDistribution):
         @param sigma: covariance matrix
         """
 
-        assert len(mu) == len(sigma) == len(sigma[0]) == p, str(len(mu)) + ' == ' + str(len(sigma)) + ' == ' + str(len(sigma[0])) + ' == ' + str(p)
-        self.p = p
-        self.suff_p = p
-        self.mu = np.array(mu, dtype='Float64')
-        self.sigma = np.array(sigma, dtype='Float64')
-        self.freeParams = p + p ** 2
+        assert len(mu) == len(sigma) == len(sigma[0]), str(len(mu)) + ' == ' + str(len(sigma)) + ' == ' + str(len(sigma[0]))
+        self.mean = np.array(mu, dtype='Float64')
+        self.variance = np.array(sigma, dtype='Float64')
+        self.variance_det = ighmm_determinant(self.variance, len(sigma))
+        self.variance_inv = ighmm_inverse(self.variance, len(sigma))
+        self.fixed = 0  #allow parameter update
+        self.sigmacd=None  #PLACEHOLDER FOR IF NEEDED TO BE CALCULATED
 
+
+    @property
+    def dimension(self):
+        """
+        @return: Number of dimensions
+        """
+        return len(self.mean)
+
+    @property
+    def freeParams(self):
+        return self.dimension + self.dimension ** 2
+
+    @property
+    def suff_p(self):
+        return self.dimension
 
     def __copy__(self):
-        return MultiNormalDistribution(self.p, self.mu, self.sigma)
+        return MultiNormalDistribution(self.mean, self.variance)
 
 
     def __str__(self):
-        return "Normal:  [" + str(self.mu) + ", " + str(self.sigma.tolist()) + "]"
+        return "Normal:  [" + str(self.mean) + ", " + str(self.variance.tolist()) + "]"
 
     def __eq__(self, other):
         if not isinstance(other, MultiNormalDistribution):
             return False
-        if self.p != other.p:
+        if self.dimension != other.dimension:
             return False
-        if not np.allclose(self.mu, other.mu) or not np.allclose(self.sigma, other.sigma):
+        if not np.allclose(self.mean, other.mean) or not np.allclose(self.variance, other.variance):
             return False
         return True
 
@@ -91,18 +110,36 @@ class MultiNormalDistribution(ProbDistribution):
         else:
             raise TypeError, "Unknown/Invalid input type."
 
-        # initial part of the formula
-        # this code depends only on the model parameters ... optmize?
-        dd = la.det(self.sigma);
-        inverse = la.inv(self.sigma);
-        ff = math.pow(2 * math.pi, -self.p / 2.0) * math.pow(dd, -0.5);
+        ff = math.pow(2 * math.pi, -self.dimension / 2.0) * math.pow(self.variance_det, -0.5)
 
         # centered input values
-        centered = np.subtract(x, np.repeat([self.mu], len(x), axis=0))
+        centered = np.subtract(x, np.repeat([self.mean], len(x), axis=0))
 
-        res = ff * np.exp(-0.5 * np.sum(np.multiply(centered, np.dot(centered, inverse)), 1))
+        res = ff * np.exp(-0.5 * np.sum(centered * centered.dot(self.variance_inv), axis=1))
 
         return np.log(res)
+
+
+    def linear_pdf(self, x):
+        ay = 0
+        for i in range(self.dimension):
+            tempv = 0
+            for j in range(self.dimension):
+                tempv += (x[j] - self.mean[j]) * self.variance_inv[j][i]  # sigmainv == transpose(sigmainv) so i, j mixup has no effect
+
+            ay += tempv * (x[i] - self.mean[i])
+
+        res2 = math.exp(-0.5 * ay) / math.sqrt(pow(2* math.pi, self.dimension) * self.variance_det)
+
+        #--------------------------------------------------
+
+        ff = math.pow(2 * math.pi, -self.dimension / 2.0) * math.pow(self.variance_det, -0.5)
+        centered = x-self.mean
+        res = ff * np.exp(-0.5 * np.sum(centered * centered.dot(self.variance_inv)))
+
+        assertAlmostEqual(res2, res, places=12)
+        return res
+
 
     def MStep(self, posterior, data, mix_pi=None):
 
@@ -114,48 +151,57 @@ class MultiNormalDistribution(ProbDistribution):
             raise TypeError, "Unknown/Invalid input to MStep."
 
         post = posterior.sum() # sum of posteriors
-        self.mu = np.dot(posterior, x) / post
+        self.mean = np.dot(posterior, x) / post
 
         # centered input values (with new mus)
-        centered = np.subtract(x, np.repeat([self.mu], len(x), axis=0));
-        self.sigma = np.dot(np.transpose(np.dot(np.identity(len(posterior)) * posterior, centered)), centered) / post
+        centered = np.subtract(x, np.repeat([self.mean], len(x), axis=0))
+        self.variance = np.dot(np.transpose(np.dot(np.identity(len(posterior)) * posterior, centered)), centered) / post
 
 
-    def sample(self, A=None):
+    def sample(self, A=None, native=False):
         """
         Samples from the mulitvariate Normal distribution.
 
-        @param A: optional Cholesky decomposition of the covariance matrix self.sigma, can speed up
+        @param A: optional Cholesky decomposition of the covariance matrix self.variance, can speed up
         the sampling
         """
-        if A == None:
-            A = la.cholesky(self.sigma)
 
-        z = np.zeros(self.p, dtype='Float64')
-        for i in range(self.p):
+        if self.sigmacd == None:
+            self.sigmacd = la.cholesky(self.variance)
+
+        if not native:
+            # multivariate random numbers without gsl
+            x=[0]*self.dimension
+            for i in range(self.dimension):
+                randuni = NormalDistribution(0, 1).sample(native)
+                for j in range(self.dimension):
+                    if i == 0:
+                        x[j] = self.mean[j]
+                    x[j] += randuni * self.sigmacd[j][i]
+            return x
+
+        z = np.zeros(self.dimension, dtype='Float64')
+        for i in range(self.dimension):
             z[i] = random.normalvariate(0.0, 1.0)  # sample p iid N(0,1) RVs
-
-        X = np.dot(A, z) + self.mu
+        X = np.dot(self.sigmacd, z) + self.mean
         return X.tolist()  # return value of sample must be Python list
 
-    def sampleSet(self, nr):
-        A = la.cholesky(self.sigma)
-        res = np.zeros((nr, self.p), dtype='Float64')
+    def sampleSet(self, nr, native=False):
+        A = la.cholesky(self.variance)
+        res = np.zeros((nr, self.dimension), dtype='Float64')
         for i in range(nr):
-            res[i, :] = self.sample(A=A)
+            res[i, :] = self.sample(A=A, native=native)
         return res
 
     def isValid(self, x):
-        if not len(x) == self.p:
-            raise InvalidDistributionInput, "\n\tInvalid data: wrong dimension(s) " + str(len(x)) + " in MultiNormalDistribution(p=" + str(self.p) + ")."
+        if len(x) != len(self.mean):
+            Log.error("Expecting {{expected}} dimensions, got {{given}}", {"given":len(x), "expected":len(self.mean)})
         for v in x:
             try:
                 float(v)
-            except (ValueError):
-                raise InvalidDistributionInput, "\n\tInvalid data: " + str(x) + " in MultiNormalDistribution."
+            except ValueError:
+                Log.error("Invalid data: {{value}}", {"value": v})
 
     def flatStr(self, offset):
         offset += 1
-        return "\t" * offset + ";MultiNormal;" + str(self.p) + ";" + str(self.mu.tolist()) + ";" + str(self.sigma.tolist()) + "\n"
-
-
+        return "\t" * offset + ";MultiNormal;" + str(self.dimension) + ";" + str(self.mean.tolist()) + ";" + str(self.variance.tolist()) + "\n"

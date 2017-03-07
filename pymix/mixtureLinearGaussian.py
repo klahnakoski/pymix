@@ -38,10 +38,10 @@
 import random
 
 from numpy.linalg import linalg as la
-from numpy.oldnumeric.functions import argmax
 import numpy as np
 import scipy.stats
 from pymix.distributions.prob import ProbDistribution
+from pymix.distributions.uniform import UniformDistribution
 
 from pymix.priors.prior import PriorDistribution
 from pymix.util.dataset import DataSet
@@ -69,27 +69,27 @@ class LinearGaussianDistribution(ProbDistribution):
         @param sigma: desvio padrao do erro
         """
         assert len(beta) == p, len(sigma) == 1
-        self.p = p
+        self.dimension = p
         self.suff_p = p
         self.beta = np.array(beta, dtype='Float64')        # create a array (numpy) for variable beta
-        self.sigma = np.array(sigma, dtype='Float64')    # create a array (numpy) for variable sigma
+        self.variance = np.array(sigma, dtype='Float64')    # create a array (numpy) for variable sigma
         self.freeParams = p + 1
         self.predicted = []
         self.noise = noise
         self.alpha = alpha
 
     def __copy__(self):
-        return LinearGaussianDistribution(self.p, self.beta, self.sigma, alpha=self.alpha)
+        return LinearGaussianDistribution(self.dimension, self.beta, self.variance, alpha=self.alpha)
 
     def __str__(self):
-        return "LinearGaussian:  [" + str(self.beta) + ", " + str(self.sigma) + "]"
+        return "LinearGaussian:  [" + str(self.beta) + ", " + str(self.variance) + "]"
 
     def __eq__(self, other):
         if not isinstance(other, LinearGaussianDistribution):
             return False
-        if self.p != other.p:
+        if self.dimension != other.dimension:
             return False
-        if not np.allclose(self.beta, other.beta) or not np.allclose(self.sigma, other.sigma):
+        if not np.allclose(self.beta, other.beta) or not np.allclose(self.variance, other.variance):
             return False
         return True
 
@@ -108,9 +108,9 @@ class LinearGaussianDistribution(ProbDistribution):
         x = dt[:, 1:]
 
         ## Calculating the expoent (y - x*beta)^2 / (sigma)^2
-        #exp = np.divide(np.power(np.subtract(y, np.dot(x, self.beta)),2), self.sigma[0] ** 2)
+        #exp = np.divide(np.power(np.subtract(y, np.dot(x, self.beta)),2), self.variance.0] ** 2)
         ## Calculating the factor 1/sqrt(2*pi)*sigma)
-        #fat = 1 / (((2 * np.pi)**2) * self.sigma[0])
+        #fat = 1 / (((2 * np.pi)**2) * self.variance[0])
         ## Probability result
         #res = np.log(fat) - exp
 
@@ -118,7 +118,7 @@ class LinearGaussianDistribution(ProbDistribution):
         # computing log likelihood
 
 
-        res = scipy.stats.norm.pdf(y - xbt, 0, self.sigma[0])
+        res = scipy.stats.norm.pdf(y - xbt, 0, self.variance[0])
         if self.noise > 0:
             print self.noise
             res = (1 - self.noise) * res + self.noise * scipy.stats.norm.pdf(y, 0, 5)
@@ -165,7 +165,7 @@ class LinearGaussianDistribution(ProbDistribution):
         sigma_numerator = np.dot(np.multiply(y_x_betat, posterior), y_x_betat)
         sigma_denominator = posterior.sum()
 
-        self.sigma[0] = max(0.0001, np.sqrt(sigma_numerator / sigma_denominator))
+        self.variance[0] = max(0.0001, np.sqrt(sigma_numerator / sigma_denominator))
         self.currentPosterior = posterior
 
     def predict(self, data, posterior=[]):
@@ -189,7 +189,7 @@ class LinearGaussianDistribution(ProbDistribution):
         """
         Samples from the Linear Gaussian Distribution
         """
-        s = [None] * self.p
+        s = [None] * self.dimension
 
         beta_zero = np.array([self.beta[0]]).T
         beta_lin = self.beta[1:]
@@ -197,25 +197,25 @@ class LinearGaussianDistribution(ProbDistribution):
         s[0] = 1
         # x's samples
         res = 1 * self.beta[0]
-        for i in range(1, self.p):
-            s[i] = random.uniform(0, 1)
+        for i in range(1, self.dimension):
+            s[i] = UniformDistribution(0,1).sample()
             res = res + self.beta[i] * s[i]
 
         # y sample
-        s[0] = random.normalvariate(res, self.sigma[0])
+        s[0] = random.normalvariate(res, self.variance[0])
 
         return s
 
     def sampleSet(self, nr):
-        s = np.zeros((nr, self.p))
+        s = np.zeros((nr, self.dimension))
         for i in range(nr):
             x = self.sample()
             s[i, :] = x
         return s
 
     def isValid(self, x):
-        if not len(x) == self.p:
-            raise InvalidDistributionInput, "\n\tInvalid data: wrong dimension(s) " + str(len(x)) + " in MultiNormalDistribution(p=" + str(self.p) + ")."
+        if not len(x) == self.dimension:
+            raise InvalidDistributionInput, "\n\tInvalid data: wrong dimension(s) " + str(len(x)) + " in MultiNormalDistribution(p=" + str(self.dimension) + ")."
         for v in x:
             try:
                 float(v)
@@ -224,7 +224,7 @@ class LinearGaussianDistribution(ProbDistribution):
 
     def flatStr(self, offset):
         offset += 1
-        return "\t" * offset + ";LinearGaussian;" + str(self.p) + ";" + str(self.mu.tolist()) + ";" + str(self.sigma.tolist()) + "\n"
+        return "\t" * offset + ";LinearGaussian;" + str(self.dimension) + ";" + str(self.mean.tolist()) + ";" + str(self.variance.tolist()) + "\n"
 
 
 class LinearGaussianPriorDistribution(PriorDistribution):
@@ -305,7 +305,7 @@ class LinearGaussianPriorDistribution(PriorDistribution):
 
         #eigen values of X^t.X/sigma^2
         xaux = np.array(np.multiply(x, np.matrix(posterior).T))
-        XXs = np.dot(xaux.T, x) / np.power(dist.sigma[0], 2)
+        XXs = np.dot(xaux.T, x) / np.power(dist.variance[0], 2)
 
         if (self.fixed == 0):
             lambdas = la.eigvals(XXs)
@@ -313,7 +313,7 @@ class LinearGaussianPriorDistribution(PriorDistribution):
             self.gamma = np.sum(np.divide(lambdas, lambdas + self.alpha[dist_ind]))
 
         # Beta estimation
-        beta_numerator = np.dot(xaux.T, y) / np.power(dist.sigma[0], 2)
+        beta_numerator = np.dot(xaux.T, y) / np.power(dist.variance[0], 2)
         beta_denominator = self.alpha[dist_ind] * np.identity(len(x[0])) + XXs
         try:
             betashort = np.dot(np.linalg.inv(beta_denominator), beta_numerator)
@@ -333,9 +333,9 @@ class LinearGaussianPriorDistribution(PriorDistribution):
             sigma_denominator = posterior.sum() - 1
 
         try:
-            dist.sigma[0] = np.sqrt(sigma_numerator / sigma_denominator)
+            dist.variance[0] = np.sqrt(sigma_numerator / sigma_denominator)
         except FloatingPointError:
-            dist.sigma[0] = 0.0001
+            dist.variance[0] = 0.0001
 
         # alpha
         if (self.fixed == 0):
@@ -345,7 +345,7 @@ class LinearGaussianPriorDistribution(PriorDistribution):
 
         #print 'alpha', self.alpha
         #print 'gamma', self.gamma
-        #print 'sigma', self.sigma
+        #print 'sigma', self.variance
 
 
 def evaluateRegression(mix, data, type=2, train=[], sparse=[]):
@@ -429,7 +429,7 @@ def evaluateRegression(mix, data, type=2, train=[], sparse=[]):
         predyaux = np.array(predyaux).T
         posteriorpred = np.array(posteriorpred).T
         for i, d in enumerate(data):
-            predy = predyaux[i, argmax(posteriorpred[i, :])]
+            predy = predyaux[i, np.argmax(posteriorpred[i, :])]
 
     # estimate pearson
     [r, p] = scipy.stats.pearsonr(y, predy)

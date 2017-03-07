@@ -38,6 +38,7 @@
 import copy
 import numpy as np
 from ..distributions.discrete import DiscreteDistribution
+from pymix.util.logs import Log
 from ..util.errors import InvalidDistributionInput
 
 from ..models.mixture import MixtureModel
@@ -68,13 +69,12 @@ class MixtureModelPrior(PriorDistribution):
             assert isinstance(p, PriorDistribution)
 
         self.compPrior = ProductDistributionPrior(compPrior)
-        self.dist_nr = len(compPrior)
         self.structPrior = np.log(structPrior)
         self.nrCompPrior = np.log(nrCompPrior)
 
         self.constant_hyperparams = 1
         self.hp_update_indices = []
-        for i in range(self.dist_nr):
+        for i in range(len(self.compPrior.priorList)):
             if self.compPrior.priorList[i].constant_hyperparams == 0:
                 self.hp_update_indices.append(i)
 
@@ -84,7 +84,7 @@ class MixtureModelPrior(PriorDistribution):
 
     def __str__(self):
         outstr = "MixtureModelPrior: \n"
-        outstr += "dist_nr=" + str(self.dist_nr) + "\n"
+        outstr += "num_prior=" + str(len(self.compPrior.priorList)) + "\n"
         outstr += "structPrior =" + str(self.structPrior) + "\n"
         outstr += "nrCompPrior =" + str(self.nrCompPrior) + "\n"
         outstr += "  piPrior = " + str(self.piPrior) + "\n"
@@ -112,7 +112,7 @@ class MixtureModelPrior(PriorDistribution):
     def __copy__(self):
         cp_pi = copy.copy(self.piPrior)
         cp_comp = []
-        for i in range(self.dist_nr):
+        for i in range(len(self.compPrior.priorList)):
             cp_comp.append(copy.copy(self.compPrior[i]))
 
         # initialise copy with dummy values for .structPrior, .nrCompPrior
@@ -133,14 +133,14 @@ class MixtureModelPrior(PriorDistribution):
         # XXX fixed components do not contribute to the prior (HACK)
         # this is needed if we use mixtures of mixtures to model missing data XXX
         if sum(mix.compFix) > 0:
-            for j in range(mix.components[0].dist_nr):
+            for j in range(len(mix.components[0])):
                 for l in range(mix.G):
                     if mix.compFix[l] != 2:
                         p = self.compPrior[j].pdf(mix.components[l][j])
                         res += p
         else:
             # operate column wise on mix.components
-            for j in range(self.dist_nr):
+            for j in range(len(self.compPrior.priorList)):
 
                 if not isinstance(mix.components[0].distList[j], MixtureModel):
                     d_j = [mix.components[i].distList[j] for i in range(mix.G)]
@@ -155,10 +155,10 @@ class MixtureModelPrior(PriorDistribution):
 
         # prior over number of distinct groups
         if mix.struct:
-            for j in range(mix.components[0].dist_nr):
+            for j in range(len(mix.components[0].distList)):
                 res += self.structPrior * len(mix.leaders[j])
         else:
-            for j in range(mix.components[0].dist_nr):
+            for j in range(len(mix.components[0].distList)):
                 res += self.structPrior * mix.G
 
         if np.isnan(res):
@@ -168,7 +168,7 @@ class MixtureModelPrior(PriorDistribution):
         #            temp = DiscreteDistribution(mix.G,mix.pi)
         #            print '   MixPrior.pdf.pi:',temp,self.piPrior.pdf(temp)
         #            if sum(mix.compFix) > 0:
-        #                for j in range(mix.components[0].dist_nr):
+        #                for j in range(len(mix.components[0].distList)):
         #                    for l in range(mix.G):
         #                        if mix.compFix[l] != 2:
         #                            p = self.compPrior[j].pdf( mix.components[l][j] )
@@ -184,10 +184,10 @@ class MixtureModelPrior(PriorDistribution):
         #
         #            # prior over number of distinct groups
         #            if mix.struct:
-        #                for j in range(mix.components[0].dist_nr):
+        #                for j in range(len(mix.components[0].distList)):
         #                    print '    struct:',self.structPrior * len(mix.leaders[j])
         #            else:
-        #                for j in range(mix.components[0].dist_nr):
+        #                for j in range(len(mix.components[0].distList)):
         #                  print '    struct:', self.structPrior * mix.G
             raise ValueError, 'nan result in MixtureModelPrior.pdf'
         return res
@@ -209,7 +209,7 @@ class MixtureModelPrior(PriorDistribution):
 
     def flatStr(self, offset):
         offset += 1
-        s = "\t" * offset + ";MixPrior;" + str(self.dist_nr) + ";" + str(np.exp(self.structPrior)) + ";" + str(np.exp(self.nrCompPrior)) + "\n"
+        s = "\t" * offset + ";MixPrior;" + str(len(self.compPrior.priorList)) + ";" + str(np.exp(self.structPrior)) + ";" + str(np.exp(self.nrCompPrior)) + "\n"
 
         s += self.piPrior.flatStr(offset)
         for d in self.compPrior:
@@ -232,8 +232,7 @@ class MixtureModelPrior(PriorDistribution):
                 for i in range(m.G):
                     self.compPrior.isValid(m.components[i])
             except InvalidDistributionInput, ex:
-                ex.message += "\n\tin MixtureModelPrior for component " + str(i)
-                raise
+                Log.error("in MixtureModelPrior for component " + str(i), ex)
 
     def structPriorHeuristic(self, delta, N):
         """
@@ -247,7 +246,7 @@ class MixtureModelPrior(PriorDistribution):
         new_dist = copy.copy(group_list[0].dist)
         new_req_stat = copy.deepcopy(group_list[0].req_stat)
 
-        assert new_dist.dist_nr == 1 # XXX
+        assert len(new_dist.distList) == 1 # XXX
         assert new_dist.G == 2
 
         for i in range(new_dist.G):

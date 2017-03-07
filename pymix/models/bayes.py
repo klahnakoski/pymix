@@ -47,7 +47,7 @@ from ..util import setPartitions, mixextend, stats
 from ..util.candidate_group import CandidateGroup
 from ..util.dataset import DataSet
 from ..util.errors import InvalidPosteriorDistribution, ConvergenceFailureEM
-from ..util.maths import matrix_sum_logs, sum_logs
+from ..util.maths import matrix_sum_logs
 from ..util.setPartitions import init_last, prev_partition
 from ..util.stats import sym_kl_dist
 
@@ -132,7 +132,7 @@ class BayesMixtureModel(MixtureModel):
         else:
             if data.internalData is None:
                 data.internalInit(self)
-            # reset structure if applicable
+                # reset structure if applicable
         if self.struct:
             self.initStructure()
             # generate 'random posteriors'
@@ -158,7 +158,7 @@ class BayesMixtureModel(MixtureModel):
                 fix_flag = 1
             else:
                 #self.pi[i] =  l[i,:].sum() / len(data)
-                self.pi[i] = ( l[i, :].sum() + self.prior.piPrior.alpha[i] - 1.0 ) / (len(data) + ( self.prior.piPrior.alpha_sum - self.G) )
+                self.pi[i] = (l[i, :].sum() + self.prior.piPrior.alpha[i] - 1.0) / (len(data) + ( self.prior.piPrior.alpha_sum - self.G))
                 unfix_pi += self.pi[i]
             if self.compFix[i] == 1 or self.compFix[i] == 2:
                 # fixed component
@@ -167,7 +167,7 @@ class BayesMixtureModel(MixtureModel):
                 # components are product distributions that may contain mixtures
                 if isinstance(self.components[i], ProductDistribution):
                     last_index = 0
-                    for j in range(self.components[i].dist_nr):
+                    for j in range(len(self.components[i])):
                         if isinstance(self.components[i][j], MixtureModel):
                             dat_j = data.singleFeatureSubset(j)
                             self.components[i][j].modelInitialization(dat_j, rtype=rtype)
@@ -243,8 +243,8 @@ class BayesMixtureModel(MixtureModel):
         new_groups = []
         change = 0
         # building data likelihood factor matrix for the current group structure
-        l = np.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
-        for j in range(self.dist_nr):
+        l = np.zeros((len(self.components[0]), self.G, data.N), dtype='Float64')
+        for j in range(len(self.components[0])):
             # extracting current feature from the DataSet
             if isinstance(self.components[0][j], MixtureModel): # XXX
                 data_j = data.singleFeatureSubset(j)
@@ -282,8 +282,8 @@ class BayesMixtureModel(MixtureModel):
         temp = DiscreteDistribution(self.G, self.pi)
         pi_prior = self.prior.piPrior.pdf(temp)
         log_prior = pi_prior
-        log_prior_list = [0.0] * self.dist_nr
-        for j in range(self.dist_nr):
+        log_prior_list = [0.0] * len(self.components[0])
+        for j in range(len(self.components[0])):
             for r in range(self.G):
                 log_prior_list[j] += self.prior.compPrior[j].pdf(self.components[r][j])
         log_prior += sum(log_prior_list)
@@ -291,7 +291,7 @@ class BayesMixtureModel(MixtureModel):
         # prior over number of components
         log_prior += self.prior.nrCompPrior * self.G
         # prior over number of distinct groups
-        for j in range(self.dist_nr):
+        for j in range(len(self.components[0])):
             log_prior += self.prior.structPrior * len(self.leaders[j])
 
         # get posterior
@@ -307,7 +307,7 @@ class BayesMixtureModel(MixtureModel):
         # initialising temporary group structure with copies of the current structure
         temp_leaders = copy.deepcopy(self.leaders)
         temp_groups = copy.deepcopy(self.groups)
-        for j in range(self.dist_nr):
+        for j in range(len(self.components[0])):
             L = {}  # initialize merge history
 
             if not silent:
@@ -462,7 +462,7 @@ class BayesMixtureModel(MixtureModel):
                         # prior over number of components
                         log_prior_1 += self.prior.nrCompPrior * self.G
                         # prior over number of distinct groups
-                        for z in range(self.dist_nr):
+                        for z in range(len(self.components[0])):
                             if z == j:
                                 log_prior_1 += self.prior.structPrior * nr_leaders_j
                             else:
@@ -553,8 +553,8 @@ class BayesMixtureModel(MixtureModel):
         new_groups = []
         change = 0
         # building data likelihood factor matrix for the current group structure
-        l = np.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
-        for j in range(self.dist_nr):
+        l = np.zeros((len(self.components[0]), self.G, data.N), dtype='Float64')
+        for j in range(len(self.components[0])):
             for lead_j in self.leaders[j]:
                 l_row = self.components[lead_j][j].pdf(data.getInternalFeature(j))
                 l[j, lead_j, :] = l_row
@@ -580,8 +580,8 @@ class BayesMixtureModel(MixtureModel):
         temp = DiscreteDistribution(self.G, self.pi)
         pi_prior = self.prior.piPrior.pdf(temp)
         log_prior = pi_prior
-        log_prior_list = [0.0] * self.dist_nr
-        for j in range(self.dist_nr):
+        log_prior_list = [0.0] * len(self.components[0])
+        for j in range(len(self.components[0])):
             for r in range(self.G):
                 log_prior_list[j] += self.prior.compPrior[j].pdf(self.components[r][j])
         log_prior += sum(log_prior_list)
@@ -589,7 +589,7 @@ class BayesMixtureModel(MixtureModel):
         # prior over number of components
         log_prior += self.prior.nrCompPrior * self.G
         # prior over number of distinct groups
-        for j in range(self.dist_nr):
+        for j in range(len(self.components[0])):
             log_prior += self.prior.structPrior * len(self.leaders[j])
 
         # get posterior
@@ -605,7 +605,7 @@ class BayesMixtureModel(MixtureModel):
         # initialising temporary group structure with copies of the current structure
         #temp_leaders = copy.deepcopy(self.leaders)
         #temp_groups =  copy.deepcopy(self.groups)
-        for j in range(self.dist_nr):
+        for j in range(len(self.components[0])):
             L = {}  # initialize merge history
 
             if not silent:
@@ -679,7 +679,7 @@ class BayesMixtureModel(MixtureModel):
                     print 'Current structure:', kappa, '->', j, curr_part
 
                     fullstruct = []
-                    for jj in range(self.dist_nr):
+                    for jj in range(len(self.components[0])):
                         if jj != j:
                             fullstruct.append([tuple([ll] + self.groups[jj][ll]) for ll in self.leaders[jj]])
                         else:
@@ -738,7 +738,7 @@ class BayesMixtureModel(MixtureModel):
                 # prior over number of components
                 log_prior_1 += self.prior.nrCompPrior * self.G
                 # prior over number of distinct groups
-                for z in range(self.dist_nr):
+                for z in range(len(self.components[0])):
                     if z == j:
                         log_prior_1 += self.prior.structPrior * len(curr_part)
                     else:
@@ -789,7 +789,7 @@ class BayesMixtureModel(MixtureModel):
                 kappa, max_kappa = ret
 
 
-            #---------------------------------------------------------------------------------------------------------------
+                #---------------------------------------------------------------------------------------------------------------
 
     def updateStructureBayesianBottomUp(self, data, objFunction='MAP', silent=1):
         """
@@ -809,8 +809,8 @@ class BayesMixtureModel(MixtureModel):
         new_groups = []
         change = 0
         # building data likelihood factor matrix for the current group structure
-        l = np.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
-        for j in range(self.dist_nr):
+        l = np.zeros((len(self.components[0]), self.G, data.N), dtype='Float64')
+        for j in range(len(self.components[0])):
             for lead_j in self.leaders[j]:
                 l_row = self.components[lead_j][j].pdf(data.getInternalFeature(j))
                 l[j, lead_j, :] = l_row
@@ -837,8 +837,8 @@ class BayesMixtureModel(MixtureModel):
         pi_prior = self.prior.piPrior.pdf(temp)
 
         # compute feature wise parameter prior contributions
-        log_prior_list = [0.0] * self.dist_nr
-        for j in range(self.dist_nr):
+        log_prior_list = [0.0] * len(self.components[0])
+        for j in range(len(self.components[0])):
             for r in range(self.G):
                 log_prior_list[j] += self.prior.compPrior[j].pdf(self.components[r][j])
 
@@ -848,7 +848,7 @@ class BayesMixtureModel(MixtureModel):
         # initialising starting group structure
         temp_leaders = copy.copy(self.leaders)
         temp_groups = copy.copy(self.groups)
-        for j in range(self.dist_nr):
+        for j in range(len(self.components[0])):
             L = {}  # initialize merge history
 
             if not silent:
@@ -919,7 +919,7 @@ class BayesMixtureModel(MixtureModel):
             # prior over number of components
             log_prior += self.prior.nrCompPrior * self.G
             # prior over number of distinct groups
-            for jj in range(self.dist_nr):
+            for jj in range(len(self.components[0])):
                 log_prior += self.prior.structPrior * len(temp_leaders[jj])
 
             post = lk + log_prior
@@ -1061,7 +1061,7 @@ class BayesMixtureModel(MixtureModel):
                         # prior over number of components
                         log_prior_1 += self.prior.nrCompPrior * self.G
                         # prior over number of distinct groups
-                        for z in range(self.dist_nr):
+                        for z in range(len(self.components[0])):
                             if z == j:
                                 log_prior_1 += self.prior.structPrior * (len(temp_leaders[z]) + 1)
                             else:
@@ -1161,7 +1161,7 @@ class BayesMixtureModel(MixtureModel):
 
         comps.sort()
 
-        others = range(0, self.G)
+        others = range(self.G)
         for c in comps:
             others.remove(c)
 
@@ -1170,8 +1170,8 @@ class BayesMixtureModel(MixtureModel):
             print 'others:', others
 
         # building data likelihood factor matrix for the current group structure
-        l = np.zeros((self.dist_nr, self.G, data.N), dtype='Float64')
-        for j in range(self.dist_nr):
+        l = np.zeros((len(self.components[0]), self.G, data.N), dtype='Float64')
+        for j in range(len(self.components[0])):
             if isinstance(self.components[0][j], MixtureModel):
                 data_j = data.singleFeatureSubset(j)
             else:
@@ -1198,7 +1198,7 @@ class BayesMixtureModel(MixtureModel):
         tau = np.exp(g_norm)
         model = copy.copy(self)
         score = []
-        for j in range(model.dist_nr):
+        for j in range(len(model.leaders)):
             if len(model.leaders[j]) == 1:
                 if not silent:
                     print 'Feature ' + str(data.headers[j]) + ' uninformative.'

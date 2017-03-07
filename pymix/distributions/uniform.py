@@ -38,6 +38,7 @@
 import random
 import numpy as np
 from .prob import ProbDistribution
+from pymix.util.ghmm import random_mt
 from ..util.errors import InvalidDistributionInput
 from ..util.dataset import DataSet
 
@@ -46,21 +47,23 @@ class UniformDistribution(ProbDistribution):
     """
     Uniform distribution over a given intervall.
     """
-    def __init__(self, start, end):
+    def __init__(self, start, end, *dummy_args):
         """
         Constructor
 
         @param start: begin of interval
         @param end: end of interval
+        @param dummy_args: extra args for initialization using 4-tuples
         """
         assert start < end
 
-        self.p = self.suff_p = 1
+        self.dimension = self.suff_p = 1
         self.freeParams = 0
 
         self.start = start
         self.end = end
-        self.density = np.log(1.0 / (end - start))   # compute log density value only once
+        self.density = 1.0 / (end - start)
+        self.log_density = np.log(self.density)   # compute log density value only once
 
     def __eq__(self,other):
         raise NotImplementedError
@@ -82,18 +85,35 @@ class UniformDistribution(ProbDistribution):
         for i in range(len(x)):
             # density is self.density inside the interval and -inf (i.e. 0) outside
             if self.start <= x[i][0] <= self.end:
-                res[i] = self.density
+                res[i] = self.log_density
             else:
                 res[i] = float('-inf')
 
         return res
 
-    def MStep(self,posterior,data,mix_pi=None):
+    def linear_pdf(self, x):
+        if self.start <= x <= self.end:
+            return self.density
+        return 0
+
+    def cdf(self, x):
+        if x < self.start:
+            return 0.0
+
+        if x >= self.end:
+            return 1.0
+
+        return (x - self.start) / (self.end - self.start)
+
+    def MStep(self, posterior, data, mix_pi=None):
         # nothing to be done...
         pass
 
-    def sample(self):
-        return random.uniform( self.start, self.end)
+    def sample(self, native=False):
+        if native:
+            return random.uniform(self.start, self.end)
+        else:
+            return (random_mt.float23()*(self.end-self.start))+self.start
 
 
     def sampleSet(self,nr):
@@ -102,7 +122,7 @@ class UniformDistribution(ProbDistribution):
             set.append(self.sample())
         return set
 
-    def isValid(self,x):
+    def isValid(self, x):
         try:
             float(x)
         except (ValueError):
@@ -112,7 +132,7 @@ class UniformDistribution(ProbDistribution):
         if isinstance(x,list) and len(x) == 1:
             x = x[0]
         self.isValid(x)  # make sure x is valid argument
-        return [self.p,[x]]
+        return [self.dimension,[x]]
 
 
     def flatStr(self,offset):

@@ -57,18 +57,17 @@ class ProductDistribution(ProbDistribution):
         """
         # initialize attributes
         self.distList = distList
-        self.p = 0
+        self.dimension = 0
         self.freeParams = 0
         self.dataRange = []
-        self.dist_nr = len(distList)
 
         # dimension and dataRange for sufficient statistics data
         self.suff_p = 0
         self.suff_dataRange = None
         for dist in distList:
             assert isinstance(dist, ProbDistribution)
-            self.p += dist.p
-            self.dataRange.append(self.p)
+            self.dimension += dist.dimension
+            self.dataRange.append(self.dimension)
             self.freeParams += dist.freeParams
             self.suff_p += dist.suff_p
 
@@ -76,9 +75,9 @@ class ProductDistribution(ProbDistribution):
         self.update_suff_p()
 
     def __eq__(self, other):
-        if other.p != self.p or other.dist_nr != self.dist_nr:
+        if other.dimension != self.dimension or len(other.distList) != len(self.distList):
             return False
-        for i in range(self.dist_nr):
+        for i in range(len(self.distList)):
             if not (other.distList[i] == self.distList[i]):
                 return False
         return True
@@ -100,26 +99,26 @@ class ProductDistribution(ProbDistribution):
         return outstr
 
     def __getitem__(self, ind):
-        if ind < 0 or ind > self.dist_nr - 1:
+        if ind < 0 or ind > len(self.distList) - 1:
             raise IndexError
         else:
             return self.distList[ind]
 
     def __setitem__(self, ind, value):
-        if ind < 0 or ind > self.dist_nr - 1:
+        if ind < 0 or ind > len(self.distList) - 1:
             raise IndexError
         else:
             self.distList[ind] = value
 
     def __len__(self):
-        return self.dist_nr
+        return len(self.distList)
 
     def pdf(self, data):
         from ..models.mixture import MixtureModel
         assert self.suff_dataRange and self.suff_p, "Attributes for sufficient statistics not initialized."
         if isinstance(data, DataSet):
             res = np.zeros(data.N, dtype='Float64')
-            for i in range(self.dist_nr):
+            for i in range(len(self.distList)):
                 if isinstance(self.distList[i], MixtureModel): # XXX only necessary for mixtures of mixtures
                     res += self.distList[i].pdf(data.singleFeatureSubset(i))
                 else:
@@ -128,10 +127,13 @@ class ProductDistribution(ProbDistribution):
         else:
             raise TypeError, 'DataSet object required, got ' + str(type(data))
 
-    def sample(self):
+    def sample(self, native=False):
         ls = []
         for i in range(len(self.distList)):
-            s = self.distList[i].sample()
+            try:
+                s = self.distList[i].sample(native=native)
+            except Exception, e:
+                raise e
             if type(s) != list:
                 ls.append(s)
             else:
@@ -159,13 +161,13 @@ class ProductDistribution(ProbDistribution):
         data = DataSet()
         data.dataMatrix = ls
         data.N = nr
-        data.p = self.p
+        data.dimension = self.dimension
         data.sampleIDs = []
 
         for i in range(data.N):
             data.sampleIDs.append("sample" + str(i))
 
-        for h in range(data.p):
+        for h in range(data.dimension):
             data.headers.append("X_" + str(h))
 
         data.internalInit(self)
@@ -176,7 +178,7 @@ class ProductDistribution(ProbDistribution):
         assert self.suff_dataRange and self.suff_p, "Attributes for sufficient statistics not initialized."
         assert isinstance(data, DataSet), 'DataSet required, got ' + str(type(data)) + '.'
 
-        for i in range(self.dist_nr):
+        for i in range(len(self.distList)):
             if isinstance(self.distList[i], MixtureModel):
                 self.distList[i].MStep(posterior, data.singleFeatureSubset(i), mix_pi)
             else:
@@ -190,12 +192,12 @@ class ProductDistribution(ProbDistribution):
             # XXX HACK: if distList[i] is an HMM feature there is nothing to be done
             # since all the HMM code was moved to mixtureHMM.py we check whether self.distList[i]
             # is an HMM by string matching  __class__ (for now).
-            if self.distList[i].p == 1:
+            if self.distList[i].dimension == 1:
                 strg = str(self.distList[i].__class__)
-                if strg == 'mixtureHMM.HMM':
+                if strg.endswith('mixtureHMM.HMM'):
                     continue
 
-            if self.dist_nr == 1:
+            if len(self.distList) == 1:
                 [new_p, dat] = self.distList[i].formatData(x)
                 res += dat
             else:
@@ -211,7 +213,7 @@ class ProductDistribution(ProbDistribution):
     def isValid(self, x):
         last_index = 0
         for i in range(len(self.distList)):
-            if self.distList[i].p == 1:
+            if self.distList[i].dimension == 1:
                 try:
                     self.distList[i].isValid(x[self.dataRange[i] - 1])
                 except InvalidDistributionInput, ex:
@@ -227,7 +229,7 @@ class ProductDistribution(ProbDistribution):
 
     def flatStr(self, offset):
         offset += 1
-        s = "\t" * offset + ";Prod;" + str(self.p) + "\n"
+        s = "\t" * offset + ";Prod;" + str(self.dimension) + "\n"
         for d in self.distList:
             s += d.flatStr(offset)
         return s
