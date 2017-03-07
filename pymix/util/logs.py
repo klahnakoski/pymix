@@ -1,5 +1,6 @@
 import re
 from pyLibrary.debugs.logs import Log as moLog
+from pyLibrary.dot import Dict
 
 
 class Log(object):
@@ -25,7 +26,7 @@ class Log(object):
 
 
 def fix(template, params):
-    index = Struct(i=0)
+    index = Dict(i=0)
 
     def asMoustache(match):
         output = "{{" + unicode(index.i) + "}}"

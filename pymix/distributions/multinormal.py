@@ -137,7 +137,7 @@ class MultiNormalDistribution(ProbDistribution):
         centered = x-self.mean
         res = ff * np.exp(-0.5 * np.sum(centered * centered.dot(self.variance_inv)))
 
-        assertAlmostEqual(res2, res)
+        assertAlmostEqual(res2, res, places=12)
         return res
 
 

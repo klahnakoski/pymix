@@ -656,7 +656,7 @@ class MixtureModel(ProbDistribution):
         @return: tuple of log likelihood matrices and sum of log-likelihood of components
 
         """
-        log_l = array.zeros(self.G, data.N)
+        log_l = array.zeros(self.G)
         log_col_sum = np.zeros(data.N, dtype='Float64')  # array of column sums of log_l
         log_pi = np.log(self.pi)  # array of log mixture coefficients
 
