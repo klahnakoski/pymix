@@ -1,6 +1,5 @@
 import re
-from pyLibrary.env.logs import Log as moLog
-from pyLibrary.struct import Struct
+from pyLibrary.debugs.logs import Log as moLog
 
 
 class Log(object):

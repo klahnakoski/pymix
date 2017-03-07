@@ -65,7 +65,7 @@ from pymix.vendor.ghmm.distribution import MultivariateGaussianDistribution, Con
 from pymix.vendor.ghmm.emission_domain import IntegerRange, LabelDomain, Float, Alphabet, DNA
 from pymix.vendor.ghmm.ghmm import HMMFromMatrices, HMM, HMMOpen, BackgroundDistribution
 from pymix.vendor.ghmm.sequence_set import EmissionSequence, SequenceSet, ComplexEmissionSequence
-from pyLibrary.env.logs import Log
+from pyLibrary.debugs.logs import Log
 from pyLibrary.testing.fuzzytestcase import FuzzyTestCase
 
 

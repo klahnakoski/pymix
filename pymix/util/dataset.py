@@ -42,7 +42,7 @@ import sys
 from .errors import InvalidDistributionInput
 from ..parse import numerize
 from ..parse import chomp, strTabList
-from pyLibrary.env.logs import Log
+from pyLibrary.debugs.logs import Log
 
 
 class DataSet(object):

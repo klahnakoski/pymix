@@ -39,7 +39,7 @@ import copy
 import random
 import numpy as np
 from .multinomial import MultinomialDistribution
-from pyLibrary.env.logs import Log
+from pyLibrary.debugs.logs import Log
 from ..util.errors import InvalidPosteriorDistribution, InvalidDistributionInput
 from ..util.dataset import DataSet
 

@@ -40,7 +40,7 @@ import random
 import numpy as np
 from numpy import linalg as la
 from .prob import ProbDistribution
-from pyLibrary.env.logs import Log
+from pyLibrary.debugs.logs import Log
 from pyLibrary.testing.fuzzytestcase import assertAlmostEqual
 from pymix.distributions.normal import NormalDistribution
 from pymix.util.ghmm.matrixop import ighmm_determinant, ighmm_inverse

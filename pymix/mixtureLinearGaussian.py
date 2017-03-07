@@ -38,7 +38,6 @@
 import random
 
 from numpy.linalg import linalg as la
-from numpy.oldnumeric.functions import argmax
 import numpy as np
 import scipy.stats
 from pymix.distributions.prob import ProbDistribution
@@ -430,7 +429,7 @@ def evaluateRegression(mix, data, type=2, train=[], sparse=[]):
         predyaux = np.array(predyaux).T
         posteriorpred = np.array(posteriorpred).T
         for i, d in enumerate(data):
-            predy = predyaux[i, argmax(posteriorpred[i, :])]
+            predy = predyaux[i, np.argmax(posteriorpred[i, :])]
 
     # estimate pearson
     [r, p] = scipy.stats.pearsonr(y, predy)

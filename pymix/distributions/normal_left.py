@@ -1,7 +1,7 @@
 import copy
 import math
 import numpy as np
-from pyLibrary.env.logs import Log
+from pyLibrary.debugs.logs import Log
 from pyLibrary.maths import Math
 from pymix.distributions.normal import NormalDistribution
 from pymix.distributions.normal_right import NormalRight
